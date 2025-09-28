@@ -15,7 +15,7 @@ import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -33,27 +33,11 @@ export default function QuotePage() {
   const [dbLoading, setDbLoading] = useState(true);
 
   const getInitialState = useCallback((): Quote => {
-    if (typeof window === 'undefined') {
-      return defaultQuote;
-    }
-    try {
-      const savedQuote = localStorage.getItem('currentQuote');
-      if (savedQuote) {
-        const parsed = JSON.parse(savedQuote);
-        
-        if (parsed.quoteDate) parsed.quoteDate = new Date(parsed.quoteDate);
-        if (parsed.validUntil) parsed.validUntil = new Date(parsed.validUntil);
-        
-        const result = quoteSchema.safeParse(parsed);
-        if (result.success) {
-          return { ...defaultQuote, ...result.data };
-        }
-      }
-    } catch (error) {
-      // Silently fall back
-    }
+    // This function now only returns the default state, preventing localStorage race conditions.
+    // The actual quote is loaded from Firestore in the useEffect hook.
     return defaultQuote;
   }, []);
+
 
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
@@ -72,6 +56,40 @@ export default function QuotePage() {
 
     setDbLoading(true);
 
+    // Function to load the last active quote from Firestore
+    const loadLastActiveQuote = async () => {
+      const lastActiveQuoteId = localStorage.getItem('lastActiveQuoteId');
+      if (lastActiveQuoteId) {
+        try {
+          const quoteRef = doc(db, 'quotes', lastActiveQuoteId);
+          const docSnap = await getDoc(quoteRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const quoteData = {
+              ...data,
+              quoteDate: data.quoteDate?.toDate(),
+              validUntil: data.validUntil?.toDate(),
+            };
+             const parsedQuote = quoteSchema.parse(quoteData);
+             reset(parsedQuote);
+          } else {
+             handleNewQuote();
+          }
+        } catch (error) {
+          console.error("Error loading last active quote:", error);
+          localStorage.removeItem('lastActiveQuoteId'); // Clear invalid ID
+          reset(getInitialState());
+        }
+      } else {
+        // If no last active quote, start with a new one
+        reset(getInitialState());
+      }
+    };
+    
+    loadLastActiveQuote();
+
+
     const unsubscribes = [
       onSnapshot(collection(db, 'quotes'), (snapshot) => {
         try {
@@ -83,7 +101,7 @@ export default function QuotePage() {
               quoteDate: data.quoteDate?.toDate(),
               validUntil: data.validUntil?.toDate(),
             });
-          });
+          }).sort((a, b) => b.quoteDate.getTime() - a.quoteDate.getTime()); // Sort by date descending
           setSavedQuotes(quotes);
         } catch(error) {
             console.error("Error parsing quotes: ", error);
@@ -109,9 +127,6 @@ export default function QuotePage() {
 
     setDbLoading(false);
     
-    const currentQuote = getInitialState();
-    reset(currentQuote);
-
     const handleKeyDown = (event: KeyboardEvent) => {
       const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
       if (modifier && event.key === 's') {
@@ -135,16 +150,13 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [user, loading, router, reset, getInitialState]);
+  }, [user, loading, router]);
 
 
-  // --- LocalStorage sync for current quote ---
+  // --- LocalStorage sync for last active quote ID ---
   useEffect(() => {
     setIsClient(true);
-    const subscription = watch((value) => {
-      localStorage.setItem('currentQuote', JSON.stringify(value));
-    });
-    return () => subscription.unsubscribe();
+    // This effect no longer saves the whole quote, only the ID on save.
   }, [watch]);
   
   // --- Calculation Logic ---
@@ -205,15 +217,18 @@ export default function QuotePage() {
       companyEmail: getValues('companyEmail'),
       companyLogo: getValues('companyLogo'),
     };
+
+    const newQuoteId = `QT-${Date.now()}`;
     const newQuote = {
       ...defaultQuote,
       ...currentCompanyInfo,
-      id: `QT-${Date.now()}`,
+      id: newQuoteId,
       quoteNumber: newQuoteNumber,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
     };
     reset(newQuote);
+    localStorage.setItem('lastActiveQuoteId', newQuoteId);
     toast({
       title: "Yeni Teklif",
       description: "Form temizlendi ve yeni bir teklif oluşturuldu.",
@@ -224,7 +239,6 @@ export default function QuotePage() {
     try {
       const quoteRef = doc(db, 'quotes', data.id);
       
-      // Convert JS Date objects to Firestore Timestamps before saving
       const dataToSave = {
         ...data,
         quoteDate: Timestamp.fromDate(data.quoteDate),
@@ -232,6 +246,7 @@ export default function QuotePage() {
       };
 
       await setDoc(quoteRef, dataToSave);
+      localStorage.setItem('lastActiveQuoteId', data.id);
       
       toast({
         title: "Teklif Kaydedildi",
@@ -260,9 +275,8 @@ export default function QuotePage() {
   }, [getValues]);
 
   const handleLoadQuote = (quote: Quote) => {
-    // The quote object from savedQuotes should already have JS Date objects
-    // thanks to the parsing in the onSnapshot listener.
     reset(quote);
+    localStorage.setItem('lastActiveQuoteId', quote.id);
     toast({
       title: "Teklif Yüklendi",
       description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
@@ -272,6 +286,13 @@ export default function QuotePage() {
   const handleDeleteQuote = async (quoteId: string) => {
     try {
       await deleteDoc(doc(db, 'quotes', quoteId));
+      
+      const lastActiveId = localStorage.getItem('lastActiveQuoteId');
+      if(lastActiveId === quoteId) {
+        localStorage.removeItem('lastActiveQuoteId');
+        handleNewQuote();
+      }
+
       toast({
         title: "Teklif Silindi",
         variant: 'destructive',
@@ -411,9 +432,9 @@ export default function QuotePage() {
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
-  onSetCompanyProfile={handleSetCompanyProfile}
+          onSetCompanyProfile={handleSetCompanyProfile}
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
-      customers={customers}
+          customers={customers}
           onSaveCustomer={handleSaveCustomer}
           onSetCustomer={handleSetCustomer}
           onDeleteCustomer={handleDeleteCustomer}
@@ -445,5 +466,3 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
-
-    
