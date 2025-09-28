@@ -124,9 +124,9 @@ export default function QuotePage() {
   
   const handleNewQuote = () => {
     const date = new Date();
-    const datePart = format(date, 'yyyyMMdd');
-    const sequencePart = (savedQuotes.length + 1).toString().padStart(4, '0');
-    const newQuoteNumber = `QT-${datePart}-${sequencePart}`;
+    const datePart = format(date, 'yyyy-MM-dd');
+    const sequence = (savedQuotes.length + 1).toString().padStart(4, '0');
+    const newQuoteNumber = `QT-${datePart}-${sequence}`;
     
     const currentCompanyInfo = {
       companyName: getValues('companyName'),
@@ -278,7 +278,6 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
-  
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}

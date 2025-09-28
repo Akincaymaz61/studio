@@ -38,11 +38,11 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
       </div>
 
       <Card id="print-area" className="print-container">
-        <CardContent className="p-8 md:p-12">
-          <header className="grid grid-cols-2 gap-8 mb-10">
-            <div className="bg-muted/30 p-4 rounded-lg">
+        <CardContent className="p-12">
+          <header className="grid grid-cols-2 gap-12 mb-10 items-start">
+            <div className="bg-slate-100 p-6 rounded-lg">
               {quote.companyLogo && (
-                <div className="mb-4 relative w-48 h-24">
+                <div className="mb-4 relative w-56 h-28">
                   <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
                 </div>
               )}
@@ -53,7 +53,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               <p className="text-sm text-muted-foreground">{quote.companyEmail}</p>
             </div>
             <div className="text-right">
-              <h2 className="text-3xl font-bold text-gray-800 uppercase tracking-wider">TEKLİF</h2>
+              <h2 className="text-4xl font-bold text-gray-800 uppercase tracking-wider">FİYAT TEKLİFİ</h2>
               <div className="mt-4 space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Teklif No:</span> <span className="font-semibold">{quote.quoteNumber}</span></p>
                 <p><span className="text-muted-foreground">Teklif Tarihi:</span> <span className="font-semibold">{format(new Date(quote.quoteDate), "dd.MM.yyyy")}</span></p>
@@ -62,7 +62,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </div>
           </header>
 
-          <section className="mb-10 bg-muted/30 p-4 rounded-lg">
+          <section className="mb-10 bg-slate-100 p-6 rounded-lg">
               <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Müşteri</h3>
               <p className="font-bold text-primary">{quote.customerName}</p>
               {quote.customerContact && <p className="text-sm">{quote.customerContact}</p>}
@@ -97,27 +97,27 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           </section>
 
           <section className="flex justify-end mb-10">
-            <div className="w-full max-w-sm space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ara Toplam:</span>
-                <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
-              </div>
-              {calculations.discountAmount > 0 && (
+             <div className="w-full max-w-md space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">İndirim:</span>
-                  <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                    <span className="text-muted-foreground">Ara Toplam:</span>
+                    <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
                 </div>
-              )}
-               <div className="flex justify-between">
-                <span className="text-muted-foreground">KDV Toplam:</span>
-                <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
-              </div>
-              <Separator className="my-2"/>
-              <div className="flex justify-between font-bold text-xl">
-                <span className="text-primary">Genel Toplam:</span>
-                <span className="text-primary">{formatCurrency(calculations.grandTotal, quote.currency)}</span>
-              </div>
-            </div>
+                {calculations.discountAmount > 0 && (
+                    <div className="flex justify-between">
+                    <span className="text-muted-foreground">İndirim:</span>
+                    <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                    </div>
+                )}
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">KDV Toplam:</span>
+                    <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+                </div>
+                <Separator className="my-2 bg-gradient-to-r from-transparent via-primary/50 to-transparent"/>
+                <div className="flex justify-between font-bold text-lg p-3 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white">
+                    <span>Genel Toplam:</span>
+                    <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
+                </div>
+             </div>
           </section>
 
           {quote.notes && (
