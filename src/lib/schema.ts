@@ -48,6 +48,7 @@ export const quoteSchema = z.object({
   quoteNumber: z.string().optional(),
   quoteDate: z.coerce.date(),
   validUntil: z.coerce.date(),
+  updatedAt: z.coerce.date().optional(),
   
   currency: z.string().default('USD'),
   items: z.array(quoteItemSchema).min(1, 'En az bir kalem eklenmelidir'),
@@ -80,6 +81,7 @@ export const defaultQuote: Quote = {
   quoteNumber: defaultQuoteNumber,
   quoteDate: new Date(),
   validUntil: addDays(new Date(), 30),
+  updatedAt: new Date(),
   currency: 'USD',
   items: [
     {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
@@ -15,7 +15,7 @@ import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -31,20 +31,14 @@ export default function QuotePage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
-
-  const getInitialState = useCallback((): Quote => {
-    // This function now only returns the default state, preventing localStorage race conditions.
-    // The actual quote is loaded from Firestore in the useEffect hook.
-    return defaultQuote;
-  }, []);
-
+  const isInitialLoad = useRef(true);
 
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
-    defaultValues: getInitialState(),
+    defaultValues: defaultQuote,
   });
 
-  const { handleSubmit, reset, watch, getValues, setValue } = form;
+  const { handleSubmit, reset, watch, getValues, setValue, formState: {isDirty} } = form;
   
   // --- Auth & Data Loading Effect ---
   useEffect(() => {
@@ -56,38 +50,46 @@ export default function QuotePage() {
 
     setDbLoading(true);
 
-    // Function to load the last active quote from Firestore
-    const loadLastActiveQuote = async () => {
-      const lastActiveQuoteId = localStorage.getItem('lastActiveQuoteId');
-      if (lastActiveQuoteId) {
-        try {
-          const quoteRef = doc(db, 'quotes', lastActiveQuoteId);
-          const docSnap = await getDoc(quoteRef);
+    // Function to load the most recently updated quote from Firestore
+    const loadMostRecentQuote = async () => {
+      try {
+        const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
+        const querySnapshot = await getDocs(q);
 
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const quoteData = {
-              ...data,
-              quoteDate: data.quoteDate?.toDate(),
-              validUntil: data.validUntil?.toDate(),
-            };
-             const parsedQuote = quoteSchema.parse(quoteData);
-             reset(parsedQuote);
-          } else {
-             handleNewQuote();
-          }
-        } catch (error) {
-          console.error("Error loading last active quote:", error);
-          localStorage.removeItem('lastActiveQuoteId'); // Clear invalid ID
-          reset(getInitialState());
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0];
+          const data = docSnap.data();
+          const quoteData = {
+            ...data,
+            quoteDate: data.quoteDate?.toDate(),
+            validUntil: data.validUntil?.toDate(),
+            updatedAt: data.updatedAt?.toDate(),
+          };
+          const parsedQuote = quoteSchema.parse(quoteData);
+          reset(parsedQuote);
+        } else {
+          // No quotes found, start with a new one and save it.
+          const newQuote = { ...defaultQuote, updatedAt: new Date() };
+          reset(newQuote);
+          await setDoc(doc(db, 'quotes', newQuote.id), {
+            ...newQuote,
+            quoteDate: Timestamp.fromDate(newQuote.quoteDate),
+            validUntil: Timestamp.fromDate(newQuote.validUntil),
+            updatedAt: Timestamp.fromDate(newQuote.updatedAt as Date),
+          });
         }
-      } else {
-        // If no last active quote, start with a new one
-        reset(getInitialState());
+      } catch (error) {
+        console.error("Error loading most recent quote:", error);
+        reset(defaultQuote); // Fallback to default
+      } finally {
+        setDbLoading(false);
+        isInitialLoad.current = false;
       }
     };
     
-    loadLastActiveQuote();
+    if (isInitialLoad.current) {
+        loadMostRecentQuote();
+    }
 
 
     const unsubscribes = [
@@ -100,8 +102,9 @@ export default function QuotePage() {
               ...data,
               quoteDate: data.quoteDate?.toDate(),
               validUntil: data.validUntil?.toDate(),
+              updatedAt: data.updatedAt?.toDate(),
             });
-          }).sort((a, b) => b.quoteDate.getTime() - a.quoteDate.getTime()); // Sort by date descending
+          }).sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)); // Sort by date descending
           setSavedQuotes(quotes);
         } catch(error) {
             console.error("Error parsing quotes: ", error);
@@ -114,18 +117,8 @@ export default function QuotePage() {
       onSnapshot(collection(db, 'companyProfiles'), (snapshot) => {
         const profiles = snapshot.docs.map(doc => doc.data() as CompanyProfile);
         setCompanyProfiles(profiles);
-        
-        const activeProfileId = localStorage.getItem(`activeCompanyProfile`);
-        if(activeProfileId) {
-          const activeProfile = profiles.find(p => p.id === activeProfileId);
-          if (activeProfile) {
-            handleSetCompanyProfile(activeProfile, false);
-          }
-        }
       })
     ];
-
-    setDbLoading(false);
     
     const handleKeyDown = (event: KeyboardEvent) => {
       const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
@@ -150,14 +143,24 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [user, loading, router]);
+  }, [user, loading, router, reset]);
+
+  // --- Autosave Effect ---
+  useEffect(() => {
+    const subscription = watch((values, { name, type }) => {
+        // Don't autosave on initial load or if form is not dirty
+        if (isInitialLoad.current || !isDirty) return;
+        
+        // This function will be called on every form change
+        handleSaveQuote();
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, isDirty]);
 
 
-  // --- LocalStorage sync for last active quote ID ---
   useEffect(() => {
     setIsClient(true);
-    // This effect no longer saves the whole quote, only the ID on save.
-  }, [watch]);
+  }, []);
   
   // --- Calculation Logic ---
   const watchedItems = watch('items') || [];
@@ -196,7 +199,7 @@ export default function QuotePage() {
 
   // --- Handlers ---
   
-  const handleNewQuote = () => {
+  const handleNewQuote = async () => {
     const date = new Date();
     const datePart = format(date, 'yyyyMMdd');
     
@@ -218,39 +221,48 @@ export default function QuotePage() {
       companyLogo: getValues('companyLogo'),
     };
 
-    const newQuoteId = `QT-${Date.now()}`;
-    const newQuote = {
+    const newQuote: Quote = {
       ...defaultQuote,
       ...currentCompanyInfo,
-      id: newQuoteId,
+      id: `QT-${Date.now()}`,
       quoteNumber: newQuoteNumber,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
+      updatedAt: new Date(),
     };
     reset(newQuote);
-    localStorage.setItem('lastActiveQuoteId', newQuoteId);
-    toast({
-      title: "Yeni Teklif",
-      description: "Form temizlendi ve yeni bir teklif oluşturuldu.",
-    });
+
+    try {
+        await handleSaveQuote(newQuote);
+        toast({
+          title: "Yeni Teklif Oluşturuldu",
+          description: "Yeni, boş bir teklif oluşturuldu ve kaydedildi.",
+        });
+    } catch (error) {
+        toast({
+            title: "Yeni Teklif Kaydedilemedi",
+            description: "Yeni teklif oluşturulurken bir hata meydana geldi.",
+            variant: "destructive"
+        });
+    }
   };
 
-  const handleSaveQuote = handleSubmit(async (data) => {
+  const handleSaveQuote = useCallback(handleSubmit(async (data) => {
     try {
       const quoteRef = doc(db, 'quotes', data.id);
       
-      const dataToSave = {
+      const dataToSave: any = {
         ...data,
         quoteDate: Timestamp.fromDate(data.quoteDate),
         validUntil: Timestamp.fromDate(data.validUntil),
+        updatedAt: Timestamp.now(), // Always update timestamp on save
       };
 
-      await setDoc(quoteRef, dataToSave);
-      localStorage.setItem('lastActiveQuoteId', data.id);
+      await setDoc(quoteRef, dataToSave, { merge: true });
       
       toast({
         title: "Teklif Kaydedildi",
-        description: "Teklifiniz buluta başarıyla kaydedildi.",
+        description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
       });
     } catch (error) {
       console.error("Error saving quote: ", error);
@@ -260,7 +272,7 @@ export default function QuotePage() {
         variant: "destructive"
       });
     }
-  });
+  }), [toast]);
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
@@ -276,7 +288,6 @@ export default function QuotePage() {
 
   const handleLoadQuote = (quote: Quote) => {
     reset(quote);
-    localStorage.setItem('lastActiveQuoteId', quote.id);
     toast({
       title: "Teklif Yüklendi",
       description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
@@ -284,13 +295,19 @@ export default function QuotePage() {
   };
   
   const handleDeleteQuote = async (quoteId: string) => {
+    const currentQuoteId = getValues('id');
     try {
       await deleteDoc(doc(db, 'quotes', quoteId));
       
-      const lastActiveId = localStorage.getItem('lastActiveQuoteId');
-      if(lastActiveId === quoteId) {
-        localStorage.removeItem('lastActiveQuoteId');
-        handleNewQuote();
+      if(currentQuoteId === quoteId) {
+        // If the deleted quote was the active one, load the most recent one
+        const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          handleLoadQuote(querySnapshot.docs[0].data() as Quote);
+        } else {
+          handleNewQuote();
+        }
       }
 
       toast({
@@ -324,7 +341,6 @@ export default function QuotePage() {
     setValue('companyPhone', profile.companyPhone || '');
     setValue('companyEmail', profile.companyEmail || '');
     setValue('companyLogo', profile.companyLogo || '');
-    localStorage.setItem(`activeCompanyProfile`, profile.id);
     if (showToast) {
         toast({ title: `${profile.companyName} profili yüklendi.` });
     }
