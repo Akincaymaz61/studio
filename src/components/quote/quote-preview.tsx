@@ -100,16 +100,17 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </tbody>
             </table>
           </section>
+          
+          {quote.notes && (
+            <section className="mb-8">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                </div>
+            </section>
+          )}
 
-          <section className="flex justify-between items-start gap-10">
-             <div className="w-1/2">
-                {quote.notes && (
-                    <div className="bg-muted/50 p-4 rounded-lg h-full">
-                    <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-                    </div>
-                )}
-             </div>
+          <section className="flex justify-end">
              <div className="w-full max-w-xs space-y-2">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
