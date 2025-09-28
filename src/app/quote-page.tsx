@@ -15,7 +15,7 @@ import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, doc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -77,6 +77,7 @@ export default function QuotePage() {
         try {
           const quotes = snapshot.docs.map(doc => {
             const data = doc.data();
+            // Convert Firestore Timestamps to JS Date objects
             return quoteSchema.parse({
               ...data,
               quoteDate: data.quoteDate?.toDate(),
@@ -222,7 +223,16 @@ export default function QuotePage() {
   const handleSaveQuote = handleSubmit(async (data) => {
     try {
       const quoteRef = doc(db, 'quotes', data.id);
-      await setDoc(quoteRef, data);
+      
+      // Convert JS Date objects to Firestore Timestamps before saving
+      const dataToSave = {
+        ...data,
+        quoteDate: Timestamp.fromDate(data.quoteDate),
+        validUntil: Timestamp.fromDate(data.validUntil),
+      };
+
+      await setDoc(quoteRef, dataToSave);
+      
       toast({
         title: "Teklif Kaydedildi",
         description: "Teklifiniz buluta başarıyla kaydedildi.",
@@ -250,12 +260,9 @@ export default function QuotePage() {
   }, [getValues]);
 
   const handleLoadQuote = (quote: Quote) => {
-    const parsedQuote = quoteSchema.parse({
-      ...quote,
-      quoteDate: new Date(quote.quoteDate),
-      validUntil: new Date(quote.validUntil),
-    });
-    reset(parsedQuote);
+    // The quote object from savedQuotes should already have JS Date objects
+    // thanks to the parsing in the onSnapshot listener.
+    reset(quote);
     toast({
       title: "Teklif Yüklendi",
       description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
@@ -438,3 +445,5 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
+
+    
