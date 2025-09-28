@@ -45,8 +45,6 @@ export default function QuotePage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
-  const [calculations, setCalculations] = useState({ subtotal: 0, taxTotal: 0, discountAmount: 0, grandTotal: 0 });
-
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
     defaultValues: getInitialState(),
@@ -54,46 +52,46 @@ export default function QuotePage() {
 
   const { handleSubmit, reset, watch, getValues, setValue } = form;
   
-  const watchedItems = watch('items');
+  const watchedItems = watch('items') || [];
   const watchedDiscountType = watch('discountType');
-  const watchedDiscountValue = watch('discountValue');
+  const watchedDiscountValue = watch('discountValue') || 0;
 
-  useEffect(() => {
-    const items = watchedItems || [];
-    const discountType = watchedDiscountType;
-    const discountValue = watchedDiscountValue || 0;
-    
-    const subtotal = items.reduce((acc, item) => {
-        const quantity = Number(item.quantity) || 0;
-        const price = Number(item.price) || 0;
-        return acc + quantity * price;
-    }, 0);
+  // --- START OF CALCULATION LOGIC ---
+  const subtotal = watchedItems.reduce((acc, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      return acc + quantity * price;
+  }, 0);
 
-    let discountAmount = 0;
-    if (discountType === 'percentage') {
-        discountAmount = subtotal * (discountValue / 100);
-    } else {
-        discountAmount = discountValue;
-    }
+  let discountAmount = 0;
+  if (watchedDiscountType === 'percentage') {
+      discountAmount = subtotal * (watchedDiscountValue / 100);
+  } else {
+      discountAmount = watchedDiscountValue;
+  }
+  // Ensure discount doesn't exceed subtotal
+  discountAmount = Math.min(discountAmount, subtotal);
 
-    let taxTotal = 0;
-    items.forEach(item => {
-        const itemTotal = (Number(item.quantity) || 0) * (Number(item.price) || 0);
-        const itemTax = Number(item.tax) || 0;
-        
-        let itemDiscountShare = 0;
-        if (subtotal > 0) {
-            itemDiscountShare = (itemTotal / subtotal) * discountAmount;
-        }
 
-        const taxableAmount = itemTotal - itemDiscountShare;
-        taxTotal += taxableAmount * (itemTax / 100);
-    });
+  let taxTotal = 0;
+  watchedItems.forEach(item => {
+      const itemTotal = (Number(item.quantity) || 0) * (Number(item.price) || 0);
+      const itemTax = Number(item.tax) || 0;
+      
+      let itemDiscountShare = 0;
+      if (subtotal > 0) {
+          itemDiscountShare = (itemTotal / subtotal) * discountAmount;
+      }
 
-    const grandTotal = subtotal - discountAmount + taxTotal;
+      const taxableAmount = itemTotal - itemDiscountShare;
+      taxTotal += taxableAmount * (itemTax / 100);
+  });
+  
+  const grandTotal = subtotal - discountAmount + taxTotal;
 
-    setCalculations({ subtotal, taxTotal, discountAmount, grandTotal });
-  }, [watchedItems, watchedDiscountType, watchedDiscountValue]);
+  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
+  // --- END OF CALCULATION LOGIC ---
+
 
   useEffect(() => {
     setIsClient(true);
