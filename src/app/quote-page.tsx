@@ -34,14 +34,6 @@ export default function QuotePage() {
 
   const { handleSubmit, reset, watch, getValues, setValue, formState: { isDirty } } = form;
 
-  const getFullDbData = useCallback((): DbData => {
-    return {
-      quotes: savedQuotes,
-      customers: customers,
-      companyProfiles: companyProfiles,
-    };
-  }, [savedQuotes, customers, companyProfiles]);
-
   const handleSaveAll = useCallback(async (data: DbData) => {
     try {
       await saveDbData(data);
@@ -72,17 +64,7 @@ export default function QuotePage() {
         if (latestQuote) {
           reset(latestQuote, { keepDirty: false });
         } else {
-           const newQuote: Quote = {
-            ...defaultQuote,
-            id: `QT-${Date.now()}`,
-            quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
-            quoteDate: new Date(),
-            validUntil: addDays(new Date(), 30),
-            updatedAt: new Date(),
-          };
-          reset(newQuote, { keepDirty: false });
-          setSavedQuotes([newQuote]);
-          await handleSaveAll({ quotes: [newQuote], customers: [], companyProfiles: [] });
+          reset(defaultQuote, { keepDirty: false });
         }
       } else {
          reset(defaultQuote, { keepDirty: false });
@@ -95,7 +77,7 @@ export default function QuotePage() {
       setDbLoading(false);
       setIsClient(true);
     }
-  }, [reset, toast, handleSaveAll]);
+  }, [reset, toast]);
 
   useEffect(() => {
     loadInitialData();
@@ -109,86 +91,6 @@ export default function QuotePage() {
       setSavedQuotes(newQuotesList);
       return newQuotesList;
   }, [savedQuotes]);
-
-
-  useEffect(() => {
-    if (dbLoading) return;
-    
-    const debouncedSave = setTimeout(() => {
-      if (isDirty) {
-         handleSubmit(async (data) => {
-            const newQuotesList = saveCurrentQuote(data);
-            await handleSaveAll({
-                quotes: newQuotesList,
-                customers: customers,
-                companyProfiles: companyProfiles,
-            });
-         })();
-      }
-    }, 1500);
-
-    return () => clearTimeout(debouncedSave);
-  }, [isDirty, dbLoading, handleSubmit, saveCurrentQuote, handleSaveAll, getFullDbData, customers, companyProfiles, watch()]);
-  
-  
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
-    if (modifier && event.key === 's') {
-      event.preventDefault();
-      handleSubmit(async (data) => {
-        const newQuotesList = saveCurrentQuote(data);
-        await handleSaveAll({
-            quotes: newQuotesList,
-            customers: customers,
-            companyProfiles: companyProfiles,
-        });
-        toast({
-            title: "Teklif Kaydedildi",
-            description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
-        });
-      })();
-    }
-    if (modifier && event.key === 'p') {
-      event.preventDefault();
-      setIsPreview(true);
-      setTimeout(() => {
-          window.print();
-          setIsPreview(false);
-      }, 100);
-    }
-    if (modifier && event.key === 'n') {
-      event.preventDefault();
-      // handleNewQuote is defined below and needs the latest state
-    }
-  }, [handleSubmit, saveCurrentQuote, handleSaveAll, toast, isPreview, customers, companyProfiles]);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
-  
-
-  const watchedItems = watch('items') || [];
-  const watchedDiscountType = watch('discountType');
-  const watchedDiscountValue = watch('discountValue') || 0;
-
-  const subtotal = watchedItems.reduce((acc, item) => (acc + (Number(item.quantity) || 0) * (Number(item.price) || 0)), 0);
-  const taxTotal = watchedItems.reduce((acc, item) => (acc + ((Number(item.quantity) || 0) * (Number(item.price) || 0)) * (Number(item.tax) / 100)), 0);
-  const totalWithTax = subtotal + taxTotal;
-
-  let discountAmount = 0;
-  if (watchedDiscountType === 'percentage') {
-    discountAmount = totalWithTax * ((Math.min(100, Number(watchedDiscountValue) || 0)) / 100);
-  } else {
-    discountAmount = Number(watchedDiscountValue) || 0;
-  }
-  discountAmount = Math.min(discountAmount, totalWithTax);
-
-  const grandTotal = totalWithTax - discountAmount;
-  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
-
   
   const handleNewQuote = useCallback(async () => {
     const currentCompanyInfo = {
@@ -223,7 +125,65 @@ export default function QuotePage() {
       description: "Yeni, boş bir teklif oluşturuldu ve kaydedildi.",
     });
   }, [getValues, reset, toast, savedQuotes, customers, companyProfiles, handleSaveAll]);
+  
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
+    if (modifier && event.key === 's') {
+      event.preventDefault();
+      handleSubmit(async (data) => {
+        const newQuotesList = saveCurrentQuote(data);
+        await handleSaveAll({
+            quotes: newQuotesList,
+            customers: customers,
+            companyProfiles: companyProfiles,
+        });
+        toast({
+            title: "Teklif Kaydedildi",
+            description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
+        });
+      })();
+    }
+    if (modifier && event.key === 'p') {
+      event.preventDefault();
+      setIsPreview(true);
+      setTimeout(() => {
+          window.print();
+          setIsPreview(false);
+      }, 100);
+    }
+    if (modifier && event.key === 'n') {
+      event.preventDefault();
+      handleNewQuote();
+    }
+  }, [handleSubmit, saveCurrentQuote, handleSaveAll, toast, customers, companyProfiles, handleNewQuote]);
 
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+  
+
+  const watchedItems = watch('items') || [];
+  const watchedDiscountType = watch('discountType');
+  const watchedDiscountValue = watch('discountValue') || 0;
+
+  const subtotal = watchedItems.reduce((acc, item) => (acc + (Number(item.quantity) || 0) * (Number(item.price) || 0)), 0);
+  const taxTotal = watchedItems.reduce((acc, item) => (acc + ((Number(item.quantity) || 0) * (Number(item.price) || 0)) * (Number(item.tax) / 100)), 0);
+  const totalWithTax = subtotal + taxTotal;
+
+  let discountAmount = 0;
+  if (watchedDiscountType === 'percentage') {
+    discountAmount = totalWithTax * ((Math.min(100, Number(watchedDiscountValue) || 0)) / 100);
+  } else {
+    discountAmount = Number(watchedDiscountValue) || 0;
+  }
+  discountAmount = Math.min(discountAmount, totalWithTax);
+
+  const grandTotal = totalWithTax - discountAmount;
+  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
+  
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
     document.title = getValues('quoteNumber') || 'teklif';
@@ -256,7 +216,6 @@ export default function QuotePage() {
       if (latestQuote) {
         reset(latestQuote);
       } else {
-        // No quotes left, just reset to a new blank form without saving it automatically
         const newBlankQuote: Quote = {
             ...defaultQuote,
             id: `QT-${Date.now()}`,
@@ -265,7 +224,7 @@ export default function QuotePage() {
             validUntil: addDays(new Date(), 30),
             updatedAt: new Date(),
         };
-        reset(newBlankQuote);
+        reset(newBlankQuote, { keepDirty: false });
       }
     }
     toast({ title: "Teklif Silindi", variant: 'destructive' });

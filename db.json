@@ -1,66 +1,51 @@
 {
   "quotes": [
     {
-      "id": "QT-1759102818146",
+      "id": "QT-1759102681109",
       "companyName": "ABC Teknoloji Hizmetleri A.Ş.",
       "companyLogo": "",
       "companyAddress": "Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul",
       "companyPhone": "0212 555 1234",
       "companyEmail": "info@abcteknoloji.com",
-      "customerName": "",
-      "customerContact": "",
-      "customerAddress": "",
-      "customerEmail": "",
-      "customerPhone": "",
-      "quoteNumber": "QT-20250929-0002",
-      "quoteDate": "2025-09-28T23:40:18.146Z",
-      "validUntil": "2025-10-28T23:40:18.146Z",
-      "updatedAt": "2025-09-28T23:40:18.146Z",
-      "currency": "USD",
+      "customerName": "XYZ Holding",
+      "customerContact": "Sn. Ahmet Yılmaz",
+      "customerAddress": "Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul",
+      "customerEmail": "ahmet.yilmaz@xyzholding.com",
+      "customerPhone": "0212 999 5678",
+      "quoteNumber": "QT-20250929-0001",
+      "quoteDate": "2025-09-28T23:38:01.109Z",
+      "validUntil": "2025-10-28T23:38:01.109Z",
+      "updatedAt": "2025-09-28T23:41:42.469Z",
+      "currency": "TRY",
       "items": [
         {
-          "id": "default-item-1",
-          "description": "",
+          "id": "item-1",
+          "description": "Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)",
+          "quantity": 1,
+          "unit": "proje",
+          "price": 75000,
+          "tax": 20
+        },
+        {
+          "id": "item-2",
+          "description": "SEO ve Dijital Pazarlama Danışmanlığı",
+          "quantity": 6,
+          "unit": "ay",
+          "price": 15000,
+          "tax": 20
+        },
+        {
+          "id": "item-3",
+          "description": "Sunucu Barındırma ve Bakım Hizmeti (Yıllık)",
           "quantity": 1,
           "unit": "adet",
-          "price": 0,
+          "price": 20000,
           "tax": 20
         }
       ],
-      "notes": "",
-      "discountType": "percentage",
-      "discountValue": 0
-    },
-    {
-      "id": "QT-1759102829579",
-      "companyName": "ABC Teknoloji Hizmetleri A.Ş.",
-      "companyLogo": "",
-      "companyAddress": "Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul",
-      "companyPhone": "0212 555 1234",
-      "companyEmail": "info@abcteknoloji.com",
-      "customerName": "",
-      "customerContact": "",
-      "customerAddress": "",
-      "customerEmail": "",
-      "customerPhone": "",
-      "quoteNumber": "QT-20250929-0002",
-      "quoteDate": "2025-09-28T23:40:29.579Z",
-      "validUntil": "2025-10-28T23:40:29.579Z",
-      "updatedAt": "2025-09-28T23:40:29.579Z",
-      "currency": "USD",
-      "items": [
-        {
-          "id": "default-item-1",
-          "description": "",
-          "quantity": 1,
-          "unit": "adet",
-          "price": 0,
-          "tax": 20
-        }
-      ],
-      "notes": "",
-      "discountType": "percentage",
-      "discountValue": 0
+      "notes": "Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.",
+      "discountType": "fixed",
+      "discountValue": 5000
     }
   ],
   "customers": [],
