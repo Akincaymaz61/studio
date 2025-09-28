@@ -15,7 +15,7 @@ import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, doc, getDocs, writeBatch, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -74,12 +74,19 @@ export default function QuotePage() {
 
     const unsubscribes = [
       onSnapshot(collection(db, 'quotes'), (snapshot) => {
-        const quotes = snapshot.docs.map(doc => quoteSchema.parse({
-          ...doc.data(),
-          quoteDate: doc.data().quoteDate.toDate(),
-          validUntil: doc.data().validUntil.toDate(),
-        }));
-        setSavedQuotes(quotes);
+        try {
+          const quotes = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return quoteSchema.parse({
+              ...data,
+              quoteDate: data.quoteDate?.toDate(),
+              validUntil: data.validUntil?.toDate(),
+            });
+          });
+          setSavedQuotes(quotes);
+        } catch(error) {
+            console.error("Error parsing quotes: ", error);
+        }
       }),
       onSnapshot(collection(db, 'customers'), (snapshot) => {
         const customers = snapshot.docs.map(doc => doc.data() as Customer);
@@ -213,12 +220,21 @@ export default function QuotePage() {
   };
 
   const handleSaveQuote = handleSubmit(async (data) => {
-    const quoteRef = doc(db, 'quotes', data.id);
-    await setDoc(quoteRef, data);
-    toast({
-      title: "Teklif Kaydedildi",
-      description: "Teklifiniz buluta başarıyla kaydedildi.",
-    });
+    try {
+      const quoteRef = doc(db, 'quotes', data.id);
+      await setDoc(quoteRef, data);
+      toast({
+        title: "Teklif Kaydedildi",
+        description: "Teklifiniz buluta başarıyla kaydedildi.",
+      });
+    } catch (error) {
+      console.error("Error saving quote: ", error);
+      toast({
+        title: "Kaydetme Hatası",
+        description: "Teklif kaydedilirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
   });
   
   const handlePdfExport = useCallback(() => {
@@ -247,17 +263,31 @@ export default function QuotePage() {
   };
   
   const handleDeleteQuote = async (quoteId: string) => {
-    await deleteDoc(doc(db, 'quotes', quoteId));
-    toast({
-      title: "Teklif Silindi",
-      variant: 'destructive',
-      description: `Teklif başarıyla silindi.`,
-    });
+    try {
+      await deleteDoc(doc(db, 'quotes', quoteId));
+      toast({
+        title: "Teklif Silindi",
+        variant: 'destructive',
+        description: `Teklif başarıyla silindi.`,
+      });
+    } catch(error) {
+      console.error("Error deleting quote: ", error);
+       toast({
+        title: "Silme Hatası",
+        description: "Teklif silinirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
-    await setDoc(doc(db, 'companyProfiles', profile.id), profile);
-    toast({ title: 'Firma Profili Kaydedildi' });
+    try {
+      await setDoc(doc(db, 'companyProfiles', profile.id), profile);
+      toast({ title: 'Firma Profili Kaydedildi' });
+    } catch(error) {
+      console.error("Error saving company profile: ", error);
+      toast({ title: 'Profil Kaydedilemedi', variant: 'destructive' });
+    }
   };
 
   const handleSetCompanyProfile = (profile: CompanyProfile, showToast = true) => {
@@ -273,13 +303,23 @@ export default function QuotePage() {
   };
   
   const handleDeleteCompanyProfile = async (profileId: string) => {
-    await deleteDoc(doc(db, 'companyProfiles', profileId));
-    toast({ title: 'Profil Silindi', variant: 'destructive' });
+    try {
+      await deleteDoc(doc(db, 'companyProfiles', profileId));
+      toast({ title: 'Profil Silindi', variant: 'destructive' });
+    } catch(error) {
+      console.error("Error deleting company profile: ", error);
+      toast({ title: 'Profil Silinemedi', variant: 'destructive' });
+    }
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
-    await setDoc(doc(db, 'customers', customer.id), customer);
-    toast({ title: 'Müşteri Kaydedildi' });
+    try {
+      await setDoc(doc(db, 'customers', customer.id), customer);
+      toast({ title: 'Müşteri Kaydedildi' });
+    } catch(error) {
+       console.error("Error saving customer: ", error);
+       toast({ title: 'Müşteri Kaydedilemedi', variant: 'destructive' });
+    }
   };
   
   const handleSetCustomer = (customer: Customer) => {
@@ -292,8 +332,13 @@ export default function QuotePage() {
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    await deleteDoc(doc(db, 'customers', customerId));
-    toast({ title: 'Müşteri Silindi', variant: 'destructive' });
+    try {
+      await deleteDoc(doc(db, 'customers', customerId));
+      toast({ title: 'Müşteri Silindi', variant: 'destructive' });
+    } catch(error) {
+      console.error("Error deleting customer: ", error);
+      toast({ title: 'Müşteri Silinemedi', variant: 'destructive' });
+    }
   };
 
   if (loading || !isClient || !user || dbLoading) {
