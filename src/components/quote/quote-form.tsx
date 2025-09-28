@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormContext, Controller, useFieldArray, useWatch } from 'react-hook-form';
+import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -236,7 +236,16 @@ export function QuoteForm({ calculations }: { calculations: any }) {
                     <FormField name="discountValue" control={control} render={({ field }) => (
                         <FormItem>
                         <FormControl>
-                            <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-24 h-8" />
+                           <Input
+                              type="number"
+                              {...field}
+                              onChange={e => {
+                                const value = parseFloat(e.target.value);
+                                field.onChange(isNaN(value) ? 0 : value);
+                              }}
+                              onFocus={e => e.target.select()}
+                              className="w-24 h-8"
+                            />
                         </FormControl>
                         </FormItem>
                     )} />
