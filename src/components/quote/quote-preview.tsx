@@ -38,7 +38,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
 
       <Card id="print-area" className="print-container">
         <CardContent className="p-8 md:p-12 text-sm">
-          <header className="flex justify-between items-start mb-10">
+          <header className="flex justify-between items-start">
               <div className="w-1/2">
                 {quote.companyLogo && (
                   <div className="mb-4 relative w-56 h-28">
@@ -56,7 +56,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </div>
           </header>
           
-          <section className="grid grid-cols-2 gap-12 mb-10">
+          <section className="grid grid-cols-2 gap-12 mt-10 mb-10">
              <div>
                 <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                 <p className="font-bold">{quote.customerName}</p>
@@ -65,7 +65,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                 <p>Tel: {quote.customerPhone}</p>
                 <p>E-posta: {quote.customerEmail}</p>
               </div>
-              <div>
+              <div className="text-right">
                 <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Teklifi Veren:</h3>
                 <p className="font-bold">{quote.companyName}</p>
                 <p>{quote.companyAddress}</p>
@@ -110,7 +110,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 )}
              </div>
-             <div className="w-1/2 space-y-4">
+             <div className="w-auto space-y-4">
                 <div className="p-4 bg-muted rounded-lg space-y-3">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
