@@ -15,9 +15,9 @@ const getInitialState = (): Quote => {
   if (typeof window === 'undefined') {
     return defaultQuote;
   }
-  const savedQuote = localStorage.getItem('currentQuote');
-  if (savedQuote) {
-    try {
+  try {
+    const savedQuote = localStorage.getItem('currentQuote');
+    if (savedQuote) {
       const parsed = JSON.parse(savedQuote);
       
       if (parsed.quoteDate) parsed.quoteDate = new Date(parsed.quoteDate);
@@ -27,9 +27,9 @@ const getInitialState = (): Quote => {
       if (result.success) {
         return result.data;
       }
-    } catch (error) {
-      // Silently fall back
     }
+  } catch (error) {
+    // Silently fall back
   }
   return defaultQuote;
 };
@@ -45,12 +45,55 @@ export default function QuotePage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
+  const [calculations, setCalculations] = useState({ subtotal: 0, taxTotal: 0, discountAmount: 0, grandTotal: 0 });
+
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
     defaultValues: getInitialState(),
   });
 
   const { handleSubmit, reset, watch, getValues, setValue } = form;
+  
+  const watchedItems = watch('items');
+  const watchedDiscountType = watch('discountType');
+  const watchedDiscountValue = watch('discountValue');
+
+  useEffect(() => {
+    const items = watchedItems || [];
+    const discountType = watchedDiscountType;
+    const discountValue = watchedDiscountValue || 0;
+    
+    const subtotal = items.reduce((acc, item) => {
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        return acc + quantity * price;
+    }, 0);
+
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+        discountAmount = subtotal * (discountValue / 100);
+    } else {
+        discountAmount = discountValue;
+    }
+
+    let taxTotal = 0;
+    items.forEach(item => {
+        const itemTotal = (Number(item.quantity) || 0) * (Number(item.price) || 0);
+        const itemTax = Number(item.tax) || 0;
+        
+        let itemDiscountShare = 0;
+        if (subtotal > 0) {
+            itemDiscountShare = (itemTotal / subtotal) * discountAmount;
+        }
+
+        const taxableAmount = itemTotal - itemDiscountShare;
+        taxTotal += taxableAmount * (itemTax / 100);
+    });
+
+    const grandTotal = subtotal - discountAmount + taxTotal;
+
+    setCalculations({ subtotal, taxTotal, discountAmount, grandTotal });
+  }, [watchedItems, watchedDiscountType, watchedDiscountValue]);
 
   useEffect(() => {
     setIsClient(true);
@@ -86,48 +129,6 @@ export default function QuotePage() {
   
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
   
-  const watchedItems = watch('items');
-  const watchedDiscountType = watch('discountType');
-  const watchedDiscountValue = watch('discountValue');
-
-  const calculations = useMemo(() => {
-    const items = watchedItems || [];
-    const discountType = watchedDiscountType;
-    const discountValue = watchedDiscountValue || 0;
-    
-    const subtotal = items.reduce((acc, item) => {
-        const quantity = item.quantity || 0;
-        const price = item.price || 0;
-        return acc + quantity * price;
-    }, 0);
-
-    let discountAmount = 0;
-    if (discountType === 'percentage') {
-        discountAmount = subtotal * (discountValue / 100);
-    } else {
-        discountAmount = discountValue;
-    }
-
-    let taxTotal = 0;
-    items.forEach(item => {
-        const itemTotal = (item.quantity || 0) * (item.price || 0);
-        const itemTax = item.tax || 0;
-        
-        let itemDiscountShare = 0;
-        if (subtotal > 0) {
-            itemDiscountShare = (itemTotal / subtotal) * discountAmount;
-        }
-
-        const taxableAmount = itemTotal - itemDiscountShare;
-        taxTotal += taxableAmount * (itemTax / 100);
-    });
-
-    const grandTotal = subtotal - discountAmount + taxTotal;
-
-    return { subtotal, taxTotal, discountAmount, grandTotal };
-}, [watchedItems, watchedDiscountType, watchedDiscountValue]);
-
-
   const handleNewQuote = () => {
     const newQuoteNumber = `TEK-${new Date().getFullYear()}-${(savedQuotes.length + 1).toString().padStart(3, '0')}`;
     const currentCompanyInfo = {
