@@ -53,7 +53,7 @@ type ToolbarProps = {
 const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: CompanyProfile, onSave: (data: CompanyProfile) => void, closeDialog: () => void }) => {
   const form = useForm<CompanyProfile>({
     resolver: zodResolver(companyProfileSchema),
-    defaultValues: profile || { id: `CP-${Date.now()}`, companyName: '', companyLogo: '' },
+    defaultValues: profile || { id: `CP-${Date.now()}`, companyName: '', companyLogo: '', companyAddress: '', companyPhone: '', companyEmail: '' },
   });
 
   const onSubmit = (data: CompanyProfile) => {

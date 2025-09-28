@@ -31,7 +31,6 @@ export default function QuotePage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
-  const isInitialLoad = useRef(true);
 
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
@@ -48,9 +47,9 @@ export default function QuotePage() {
       return;
     }
 
-    // Function to load the most recently updated quote from Firestore
-    const loadMostRecentQuote = async () => {
+    const loadInitialData = async () => {
       try {
+        // Load most recent quote first
         const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
         const querySnapshot = await getDocs(q);
 
@@ -77,32 +76,27 @@ export default function QuotePage() {
           });
         }
       } catch (error) {
-        console.error("Error loading most recent quote:", error);
+        console.error("Error loading initial quote:", error);
         reset(defaultQuote); // Fallback to default
       } finally {
         setDbLoading(false);
-        isInitialLoad.current = false;
       }
     };
     
-    if (isInitialLoad.current) {
-        loadMostRecentQuote();
-    }
-
+    loadInitialData();
 
     const unsubscribes = [
       onSnapshot(collection(db, 'quotes'), (snapshot) => {
         try {
           const quotes = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Convert Firestore Timestamps to JS Date objects
             return quoteSchema.parse({
               ...data,
               quoteDate: data.quoteDate?.toDate(),
               validUntil: data.validUntil?.toDate(),
               updatedAt: data.updatedAt?.toDate(),
             });
-          }).sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)); // Sort by date descending
+          }).sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
           setSavedQuotes(quotes);
         } catch(error) {
             console.error("Error parsing quotes: ", error);
@@ -145,17 +139,14 @@ export default function QuotePage() {
 
   // --- Autosave Effect ---
   useEffect(() => {
-    if (isInitialLoad.current) return;
+    if (dbLoading) return; // Don't autosave while initial data is loading
 
     const subscription = watch((values, { name, type }) => {
-        // Don't autosave if form is not dirty
-        if (!isDirty) return;
-        
-        // This function will be called on every form change
+        if (!isDirty) return; // Don't autosave if form is not dirty
         handleSaveQuote();
     });
     return () => subscription.unsubscribe();
-  }, [watch, isDirty, isInitialLoad.current]);
+  }, [watch, isDirty, dbLoading]);
 
 
   useEffect(() => {
@@ -260,10 +251,11 @@ export default function QuotePage() {
 
       await setDoc(quoteRef, dataToSave, { merge: true });
       
-      toast({
-        title: "Teklif Kaydedildi",
-        description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
-      });
+      // Do not show toast on autosave to prevent spam
+      // toast({
+      //   title: "Teklif Kaydedildi",
+      //   description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
+      // });
     } catch (error) {
       console.error("Error saving quote: ", error);
       toast({
@@ -287,7 +279,14 @@ export default function QuotePage() {
   }, [getValues]);
 
   const handleLoadQuote = (quote: Quote) => {
-    reset(quote);
+    const quoteData = {
+        ...quote,
+        quoteDate: quote.quoteDate instanceof Timestamp ? quote.quoteDate.toDate() : quote.quoteDate,
+        validUntil: quote.validUntil instanceof Timestamp ? quote.validUntil.toDate() : quote.validUntil,
+        updatedAt: quote.updatedAt instanceof Timestamp ? quote.updatedAt.toDate() : quote.updatedAt,
+    }
+    const parsedQuote = quoteSchema.parse(quoteData)
+    reset(parsedQuote);
     toast({
       title: "Teklif Yüklendi",
       description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
@@ -304,7 +303,14 @@ export default function QuotePage() {
         const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
-          handleLoadQuote(querySnapshot.docs[0].data() as Quote);
+          const docData = querySnapshot.docs[0].data();
+           const quoteData = {
+                ...docData,
+                quoteDate: docData.quoteDate.toDate(),
+                validUntil: docData.validUntil.toDate(),
+                updatedAt: docData.updatedAt.toDate(),
+            } as Quote
+          handleLoadQuote(quoteData);
         } else {
           handleNewQuote();
         }
@@ -439,7 +445,13 @@ export default function QuotePage() {
         
         <Toolbar
           onNewQuote={handleNewQuote}
-          onSaveQuote={handleSaveQuote}
+          onSaveQuote={() => {
+            handleSaveQuote();
+            toast({
+              title: "Teklif Kaydedildi",
+              description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
+            });
+          }}
           onPreviewToggle={() => setIsPreview(!isPreview)}
           onPdfExport={handlePdfExport}
           isPreviewing={isPreview}
@@ -482,5 +494,3 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
-
-    
