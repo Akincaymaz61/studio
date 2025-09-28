@@ -12,7 +12,7 @@ import { QuotePreview } from '@/components/quote/quote-preview';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
-import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs, getDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,29 @@ export default function QuotePage() {
 
   const { handleSubmit, reset, watch, getValues, setValue, formState: {isDirty} } = form;
   
-  // --- Data Loading Effect ---
+  const handleSaveQuote = useCallback(async (data: Quote) => {
+    try {
+      const quoteRef = doc(db, 'quotes', data.id);
+      
+      const dataToSave = {
+        ...data,
+        quoteDate: Timestamp.fromDate(data.quoteDate),
+        validUntil: Timestamp.fromDate(data.validUntil),
+        updatedAt: Timestamp.now(),
+      };
+
+      await setDoc(quoteRef, dataToSave, { merge: true });
+      
+    } catch (error) {
+      console.error("Error saving quote: ", error);
+      toast({
+        title: "Kaydetme Hatası",
+        description: "Teklif kaydedilirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
+  
   useEffect(() => {
     setIsClient(true);
     
@@ -138,37 +160,12 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [reset]);
-
-  const handleSaveQuote = useCallback(async (data: Quote) => {
-    try {
-      const quoteRef = doc(db, 'quotes', data.id);
-      
-      const dataToSave = {
-        ...data,
-        quoteDate: Timestamp.fromDate(data.quoteDate),
-        validUntil: Timestamp.fromDate(data.validUntil),
-        updatedAt: Timestamp.now(),
-      };
-
-      await setDoc(quoteRef, dataToSave, { merge: true });
-      
-    } catch (error) {
-      console.error("Error saving quote: ", error);
-      toast({
-        title: "Kaydetme Hatası",
-        description: "Teklif kaydedilirken bir hata oluştu.",
-        variant: "destructive"
-      });
-    }
-  }, [toast]);
-
+  }, [reset, handleSubmit, toast]); // Removed handleSaveQuote, handleNewQuote, handlePdfExport from dependencies
 
   // --- Autosave Effect ---
   const isInitialLoad = useRef(true);
   useEffect(() => {
     const subscription = watch((values, { name, type }) => {
-        // Don't autosave on initial load or if the form is not dirty
         if (!isDirty || isInitialLoad.current) return;
         
         const debouncedSave = setTimeout(() => {
@@ -178,7 +175,6 @@ export default function QuotePage() {
         return () => clearTimeout(debouncedSave);
     });
 
-    // Mark initial load as false after the first render
     if (isInitialLoad.current && !dbLoading) {
         isInitialLoad.current = false;
     }
@@ -224,7 +220,7 @@ export default function QuotePage() {
 
   // --- Handlers ---
   
-  const handleNewQuote = async () => {
+  const handleNewQuote = useCallback(async () => {
     const date = new Date();
     const datePart = format(date, 'yyyyMMdd');
     
@@ -270,7 +266,7 @@ export default function QuotePage() {
             variant: "destructive"
         });
     }
-  };
+  }, [savedQuotes, getValues, reset, handleSaveQuote, toast]);
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
@@ -306,7 +302,6 @@ export default function QuotePage() {
       await deleteDoc(doc(db, 'quotes', quoteId));
       
       if(currentQuoteId === quoteId) {
-        // If the deleted quote was the active one, load the most recent one
         const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
@@ -502,3 +497,5 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
+
+    
