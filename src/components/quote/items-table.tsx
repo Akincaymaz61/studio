@@ -59,7 +59,7 @@ export function ItemsTable() {
               const total = (currentItem.quantity || 0) * (currentItem.price || 0);
 
               return (
-                <TableRow key={item.id}>
+                <TableRow key={item.id} className="items-table-row">
                   <TableCell>
                     <Controller
                       name={`items.${index}.description`}

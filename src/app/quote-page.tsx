@@ -9,7 +9,10 @@ import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer } from '@/li
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
-import AiSuggester from '@/components/quote/ai-suggester';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Keyboard, HelpCircle } from 'lucide-react';
+import { isMacOS } from '@/lib/utils';
 
 const getInitialState = (): Quote => {
   if (typeof window === 'undefined') {
@@ -40,7 +43,6 @@ export default function QuotePage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
-  const [isAiSuggesterOpen, setIsAiSuggesterOpen] = useState(false);
   
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -111,6 +113,29 @@ export default function QuotePage() {
          handleSetCompanyProfile(activeProfile, false); // don't show toast on initial load
        }
     }
+
+    // Keyboard shortcuts
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
+      if (modifier && event.key === 's') {
+        event.preventDefault();
+        handleSaveQuote();
+      }
+      if (modifier && event.key === 'p') {
+        event.preventDefault();
+        handlePdfExport();
+      }
+      if (modifier && event.key === 'n') {
+        event.preventDefault();
+        handleNewQuote();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+
   }, [setValue, reset]);
 
   useEffect(() => {
@@ -273,12 +298,48 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
     return null; // or a loading skeleton
   }
 
+  const KBD = ({ children }: { children: React.ReactNode }) => (
+    <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+      {children}
+    </kbd>
+  );
+
   return (
     <FormProvider {...form}>
       <div className="container mx-auto p-4 sm:p-6 md:p-8 print:p-0">
-        <header className="mb-8 no-print">
-          <h1 className="text-4xl font-bold text-primary text-center font-headline">TeklifAI</h1>
-          <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
+        <header className="mb-8 no-print flex justify-between items-center">
+          <div/>
+          <div>
+            <h1 className="text-4xl font-bold text-primary text-center font-headline">TeklifAI</h1>
+            <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
+          </div>
+           <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Keyboard className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Kısayollar</h4>
+                <p className="text-sm text-muted-foreground">Hızlı işlemler için klavye kısayolları.</p>
+                <div className="grid gap-2 text-sm">
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                    <span className="text-muted-foreground">Teklifi Kaydet</span>
+                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>S</KBD></span>
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                     <span className="text-muted-foreground">Yeni Teklif</span>
+                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>N</KBD></span>
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                     <span className="text-muted-foreground">PDF İndir</span>
+                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>P</KBD></span>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </header>
         
         <Toolbar
@@ -286,7 +347,6 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           onSaveQuote={handleSaveQuote}
           onPreviewToggle={() => setIsPreview(!isPreview)}
           onPdfExport={handlePdfExport}
-          onAiSuggest={() => setIsAiSuggesterOpen(true)}
           isPreviewing={isPreview}
           savedQuotes={savedQuotes}
           onLoadQuote={handleLoadQuote}
@@ -310,7 +370,11 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
               onBackToEdit={() => setIsPreview(false)}
             />
           ) : (
-            <form onSubmit={(e) => e.preventDefault()}>
+             <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
+                if(e.key === 'Enter' && e.target instanceof HTMLInputElement && e.target.closest('.items-table-row')) {
+                    e.preventDefault();
+                }
+             }}>
               <QuoteForm 
                 calculations={calculations} 
               />
@@ -318,12 +382,6 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           )}
         </main>
       </div>
-
-      <AiSuggester
-        isOpen={isAiSuggesterOpen}
-        onOpenChange={setIsAiSuggesterOpen}
-        quote={getValues()}
-      />
     </FormProvider>
   );
 }

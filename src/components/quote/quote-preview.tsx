@@ -38,7 +38,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
 
       <Card id="print-area" className="print-container shadow-lg">
         <CardContent className="p-8 md:p-12 text-sm">
-          <header className="flex justify-between items-start">
+          <header className="flex justify-between items-start mb-8">
               <div className="w-1/2">
                 {quote.companyLogo && (
                   <div className="mb-4 relative w-56 h-28">

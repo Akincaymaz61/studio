@@ -13,3 +13,8 @@ export function formatCurrency(amount: number, currency: string) {
     maximumFractionDigits: 2,
   }).format(amount);
 }
+
+export function isMacOS() {
+  if (typeof window === 'undefined') return false;
+  return window.navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+}

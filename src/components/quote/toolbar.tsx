@@ -12,7 +12,6 @@ import {
   Save,
   Eye,
   FileDown,
-  Sparkles,
   FolderOpen,
   Trash2,
   List,
@@ -34,7 +33,6 @@ type ToolbarProps = {
   onSaveQuote: () => void;
   onPreviewToggle: () => void;
   onPdfExport: () => void;
-  onAiSuggest: () => void;
   isPreviewing: boolean;
   savedQuotes: Quote[];
   onLoadQuote: (quote: Quote) => void;
@@ -131,7 +129,6 @@ export function Toolbar({
   onSaveQuote,
   onPreviewToggle,
   onPdfExport,
-  onAiSuggest,
   isPreviewing,
   savedQuotes,
   onLoadQuote,
@@ -287,9 +284,6 @@ export function Toolbar({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        
-        <Button variant="outline" onClick={onAiSuggest}><Sparkles /> AI Önerileri</Button>
-
       </div>
       <div className="flex flex-wrap gap-2">
         <Button onClick={onSaveQuote}><Save /> Teklifi Kaydet</Button>
