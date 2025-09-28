@@ -40,9 +40,9 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
       <Card id="print-area" className="print-container">
         <CardContent className="p-8 md:p-12">
           <header className="grid grid-cols-2 gap-8 mb-10">
-            <div>
+            <div className="bg-muted/30 p-4 rounded-lg">
               {quote.companyLogo && (
-                <div className="mb-4 relative w-36 h-16">
+                <div className="mb-4 relative w-48 h-24">
                   <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
                 </div>
               )}

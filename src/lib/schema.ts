@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 
 export const companyProfileSchema = z.object({
   id: z.string(),
@@ -60,11 +60,16 @@ export const quoteSchema = z.object({
 export type Quote = z.infer<typeof quoteSchema>;
 export type QuoteItem = z.infer<typeof quoteItemSchema>;
 
+const today = new Date();
+const datePart = format(today, 'yyyyMMdd');
+const sequencePart = '0001';
+const defaultQuoteNumber = `QT-${datePart}-${sequencePart}`;
+
 export const defaultQuote: Quote = {
-  id: `TEK-${Date.now()}`,
+  id: `QT-${Date.now()}`,
   companyName: '',
   customerName: '',
-  quoteNumber: `TEK-${new Date().getFullYear()}-001`,
+  quoteNumber: defaultQuoteNumber,
   quoteDate: new Date(),
   validUntil: addDays(new Date(), 30),
   currency: 'USD',

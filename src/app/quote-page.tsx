@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
@@ -123,7 +123,11 @@ export default function QuotePage() {
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
   
   const handleNewQuote = () => {
-    const newQuoteNumber = `TEK-${new Date().getFullYear()}-${(savedQuotes.length + 1).toString().padStart(3, '0')}`;
+    const date = new Date();
+    const datePart = format(date, 'yyyyMMdd');
+    const sequencePart = (savedQuotes.length + 1).toString().padStart(4, '0');
+    const newQuoteNumber = `QT-${datePart}-${sequencePart}`;
+    
     const currentCompanyInfo = {
       companyName: getValues('companyName'),
       companyAddress: getValues('companyAddress'),
@@ -134,7 +138,7 @@ export default function QuotePage() {
     const newQuote = {
       ...defaultQuote,
       ...currentCompanyInfo,
-      id: `TEK-${Date.now()}`,
+      id: `QT-${Date.now()}`,
       quoteNumber: newQuoteNumber,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
@@ -255,8 +259,8 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
 
   return (
     <FormProvider {...form}>
-      <div className="container mx-auto p-4 sm:p-6 md:p-8">
-        <header className="mb-8">
+      <div className="container mx-auto p-4 sm:p-6 md:p-8 print:p-0">
+        <header className="mb-8 no-print">
           <h1 className="text-4xl font-bold text-primary text-center font-headline">TeklifAI</h1>
           <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
         </header>
