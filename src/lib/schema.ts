@@ -24,7 +24,7 @@ export type Customer = z.infer<typeof customerSchema>;
 
 export const quoteItemSchema = z.object({
   id: z.string(),
-  description: z.string().min(1, 'Açıklama gereklidir'),
+  description: z.string(),
   quantity: z.coerce.number().min(0, 'Miktar pozitif olmalıdır').default(1),
   unit: z.string().min(1, 'Birim gereklidir').default('adet'),
   price: z.coerce.number().min(0, 'Fiyat pozitif olmalıdır').default(0),
@@ -33,13 +33,13 @@ export const quoteItemSchema = z.object({
 
 export const quoteSchema = z.object({
   id: z.string(),
-  companyName: z.string().min(1, 'Firma adı gereklidir'),
+  companyName: z.string(),
   companyLogo: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
   companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
   
-  customerName: z.string().min(1, 'Müşteri adı gereklidir'),
+  customerName: z.string(),
   customerContact: z.string().optional(),
   customerAddress: z.string().optional(),
   customerEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
@@ -51,7 +51,7 @@ export const quoteSchema = z.object({
   updatedAt: z.coerce.date().optional(),
   
   currency: z.string().default('USD'),
-  items: z.array(quoteItemSchema).min(1, 'En az bir kalem eklenmelidir'),
+  items: z.array(quoteItemSchema),
   notes: z.string().optional(),
   
   discountType: z.enum(['percentage', 'fixed']).default('percentage'),
