@@ -90,17 +90,34 @@ export default function QuotePage() {
     const watchedItems = watch('items') || [];
     const watchedDiscountType = watch('discountType');
     const watchedDiscountValue = watch('discountValue') || 0;
-
+  
     const subtotal = watchedItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.price || 0)), 0);
-    const taxTotal = watchedItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.price || 0) * ((item.tax || 0) / 100)), 0);
+  
     let discountAmount = 0;
     if (watchedDiscountType === 'percentage') {
       discountAmount = subtotal * (watchedDiscountValue / 100);
     } else {
       discountAmount = watchedDiscountValue;
     }
-    const grandTotal = subtotal + taxTotal - discountAmount;
-
+  
+    const subtotalAfterDiscount = subtotal - discountAmount;
+  
+    const taxTotal = watchedItems.reduce((acc, item) => {
+      const itemTotal = (item.quantity || 0) * (item.price || 0);
+      let itemDiscount = 0;
+      if (watchedDiscountType === 'percentage') {
+        // Distribute discount proportionally
+        itemDiscount = (itemTotal / subtotal) * discountAmount;
+      } else {
+        // Distribute fixed discount proportionally
+        itemDiscount = subtotal > 0 ? (itemTotal / subtotal) * discountAmount : 0;
+      }
+      const itemBase = itemTotal - itemDiscount;
+      return acc + (itemBase * ((item.tax || 0) / 100));
+    }, 0);
+  
+    const grandTotal = subtotalAfterDiscount + taxTotal;
+  
     return { subtotal, taxTotal, discountAmount, grandTotal };
   }, [watch]);
 
