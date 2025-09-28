@@ -72,35 +72,17 @@ export default function QuotePage() {
         if (latestQuote) {
           reset(latestQuote, { keepDirty: false });
         } else {
-          const sampleQuote: Quote = {
+          const newQuote: Quote = {
+            ...defaultQuote,
             id: `QT-${Date.now()}`,
-            companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
-            companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
-            companyPhone: '0212 555 1234',
-            companyEmail: 'info@abcteknoloji.com',
-            companyLogo: '',
-            customerName: 'XYZ Holding',
-            customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
-            customerContact: 'Sn. Ahmet Yılmaz',
-            customerEmail: 'ahmet.yilmaz@xyzholding.com',
-            customerPhone: '0212 999 5678',
             quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
             quoteDate: new Date(),
             validUntil: addDays(new Date(), 30),
-            currency: 'TRY',
-            items: [
-                { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
-                { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
-                { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
-            ],
-            discountType: 'fixed',
-            discountValue: 5000,
-            notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
             updatedAt: new Date(),
           };
-          reset(sampleQuote, { keepDirty: false });
-          setSavedQuotes([sampleQuote]);
-          await handleSaveAll({ quotes: [sampleQuote], customers: [], companyProfiles: [] });
+          reset(newQuote, { keepDirty: false });
+          setSavedQuotes([newQuote]);
+          await handleSaveAll({ quotes: [newQuote], customers: [], companyProfiles: [] });
         }
       } else {
          reset(defaultQuote, { keepDirty: false });
