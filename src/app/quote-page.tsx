@@ -180,11 +180,18 @@ export default function QuotePage() {
   };
   
   const handlePdfExport = useCallback(() => {
+    const originalTitle = document.title;
+    const quoteNumber = getValues('quoteNumber');
+    if (quoteNumber) {
+      document.title = quoteNumber;
+    }
+    
     setIsPreview(true);
     setTimeout(() => {
       window.print();
+      document.title = originalTitle;
     }, 100);
-  }, []);
+  }, [getValues]);
 
   const handleLoadQuote = (quote: Quote) => {
     const parsedQuote = quoteSchema.parse({

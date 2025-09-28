@@ -38,7 +38,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
 
       <Card id="print-area" className="print-container shadow-lg">
         <CardContent className="p-8 md:p-12 text-sm">
-          <header className="flex justify-between items-start">
+          <header className="flex justify-between items-start mb-10">
               <div className="w-1/2">
                 {quote.companyLogo && (
                   <div className="mb-4 relative w-56 h-28">
@@ -78,22 +78,22 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-primary text-primary-foreground">
-                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg border-r border-primary-foreground/20">Ürün/Hizmet</th>
-                  <th className="p-3 font-semibold text-sm text-center border-r border-primary-foreground/20">Miktar</th>
-                  <th className="p-3 font-semibold text-sm text-center border-r border-primary-foreground/20">Birim</th>
-                  <th className="p-3 font-semibold text-sm text-right border-r border-primary-foreground/20">Birim Fiyat</th>
-                  <th className="p-3 font-semibold text-sm text-center border-r border-primary-foreground/20">KDV</th>
+                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg">Ürün/Hizmet</th>
+                  <th className="p-3 font-semibold text-sm text-center">Miktar</th>
+                  <th className="p-3 font-semibold text-sm text-center">Birim</th>
+                  <th className="p-3 font-semibold text-sm text-right">Birim Fiyat</th>
+                  <th className="p-3 font-semibold text-sm text-center">KDV</th>
                   <th className="p-3 font-semibold text-sm text-right rounded-r-lg">Toplam</th>
                 </tr>
               </thead>
               <tbody>
-                {quote.items.map((item) => (
-                  <tr key={item.id} className="border-b">
-                    <td className="p-3 border-r">{item.description}</td>
-                    <td className="p-3 text-center border-r">{item.quantity}</td>
-                    <td className="p-3 text-center border-r">{item.unit}</td>
-                    <td className="p-3 text-right border-r">{formatCurrency(item.price, quote.currency)}</td>
-                    <td className="p-3 text-center border-r">{item.tax}%</td>
+                {quote.items.map((item, index) => (
+                  <tr key={item.id} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}`}>
+                    <td className="p-3">{item.description}</td>
+                    <td className="p-3 text-center">{item.quantity}</td>
+                    <td className="p-3 text-center">{item.unit}</td>
+                    <td className="p-3 text-right">{formatCurrency(item.price, quote.currency)}</td>
+                    <td className="p-3 text-center">{item.tax}%</td>
                     <td className="p-3 text-right font-medium">{formatCurrency(item.price * item.quantity, quote.currency)}</td>
                   </tr>
                 ))}
@@ -110,7 +110,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 )}
              </div>
-             <div className="w-full max-w-xs space-y-2">
+             <div className="w-1/2 max-w-xs space-y-2">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
