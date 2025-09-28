@@ -9,20 +9,16 @@ import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer } from '@/li
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function QuotePage() {
   const { toast } = useToast();
-  const { user, loading } = useAuth();
-  const router = useRouter();
 
   const [isClient, setIsClient] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
@@ -39,14 +35,10 @@ export default function QuotePage() {
 
   const { handleSubmit, reset, watch, getValues, setValue, formState: {isDirty} } = form;
   
-  // --- Auth & Data Loading Effect ---
+  // --- Data Loading Effect ---
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
+    setIsClient(true);
+    
     const loadInitialData = async () => {
       try {
         // Load most recent quote first
@@ -63,11 +55,11 @@ export default function QuotePage() {
             updatedAt: data.updatedAt?.toDate(),
           };
           const parsedQuote = quoteSchema.parse(quoteData);
-          reset(parsedQuote);
+          reset(parsedQuote, { keepDirty: false });
         } else {
           // No quotes found, start with a new one and save it.
           const newQuote = { ...defaultQuote, updatedAt: new Date() };
-          reset(newQuote);
+          reset(newQuote, { keepDirty: false });
           await setDoc(doc(db, 'quotes', newQuote.id), {
             ...newQuote,
             quoteDate: Timestamp.fromDate(newQuote.quoteDate),
@@ -90,14 +82,19 @@ export default function QuotePage() {
         try {
           const quotes = snapshot.docs.map(doc => {
             const data = doc.data();
-            return quoteSchema.parse({
+            const parsed = quoteSchema.safeParse({
               ...data,
               quoteDate: data.quoteDate?.toDate(),
               validUntil: data.validUntil?.toDate(),
               updatedAt: data.updatedAt?.toDate(),
             });
-          }).sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
-          setSavedQuotes(quotes);
+            if (parsed.success) {
+                return parsed.data;
+            }
+            console.warn("Failed to parse quote from DB:", parsed.error);
+            return null;
+          }).filter((q): q is Quote => q !== null);
+          setSavedQuotes(quotes.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)));
         } catch(error) {
             console.error("Error parsing quotes: ", error);
         }
@@ -116,7 +113,13 @@ export default function QuotePage() {
       const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
       if (modifier && event.key === 's') {
         event.preventDefault();
-        handleSaveQuote();
+        handleSubmit(async (data) => {
+            await handleSaveQuote(data);
+            toast({
+              title: "Teklif Kaydedildi",
+              description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
+            });
+        })();
       }
       if (modifier && event.key === 'p') {
         event.preventDefault();
@@ -135,23 +138,54 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [user, loading, router, reset]);
+  }, [reset]);
+
+  const handleSaveQuote = useCallback(async (data: Quote) => {
+    try {
+      const quoteRef = doc(db, 'quotes', data.id);
+      
+      const dataToSave = {
+        ...data,
+        quoteDate: Timestamp.fromDate(data.quoteDate),
+        validUntil: Timestamp.fromDate(data.validUntil),
+        updatedAt: Timestamp.now(),
+      };
+
+      await setDoc(quoteRef, dataToSave, { merge: true });
+      
+    } catch (error) {
+      console.error("Error saving quote: ", error);
+      toast({
+        title: "Kaydetme Hatası",
+        description: "Teklif kaydedilirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
+
 
   // --- Autosave Effect ---
+  const isInitialLoad = useRef(true);
   useEffect(() => {
-    if (dbLoading) return; // Don't autosave while initial data is loading
-
     const subscription = watch((values, { name, type }) => {
-        if (!isDirty) return; // Don't autosave if form is not dirty
-        handleSaveQuote();
+        // Don't autosave on initial load or if the form is not dirty
+        if (!isDirty || isInitialLoad.current) return;
+        
+        const debouncedSave = setTimeout(() => {
+          handleSubmit(handleSaveQuote)();
+        }, 1500); // 1.5 second debounce
+
+        return () => clearTimeout(debouncedSave);
     });
+
+    // Mark initial load as false after the first render
+    if (isInitialLoad.current && !dbLoading) {
+        isInitialLoad.current = false;
+    }
+
     return () => subscription.unsubscribe();
-  }, [watch, isDirty, dbLoading]);
-
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  }, [watch, isDirty, dbLoading, handleSubmit, handleSaveQuote]);
+  
   
   // --- Calculation Logic ---
   const watchedItems = watch('items') || [];
@@ -237,34 +271,6 @@ export default function QuotePage() {
         });
     }
   };
-
-  const handleSaveQuote = useCallback(handleSubmit(async (data) => {
-    try {
-      const quoteRef = doc(db, 'quotes', data.id);
-      
-      const dataToSave: any = {
-        ...data,
-        quoteDate: Timestamp.fromDate(data.quoteDate),
-        validUntil: Timestamp.fromDate(data.validUntil),
-        updatedAt: Timestamp.now(), // Always update timestamp on save
-      };
-
-      await setDoc(quoteRef, dataToSave, { merge: true });
-      
-      // Do not show toast on autosave to prevent spam
-      // toast({
-      //   title: "Teklif Kaydedildi",
-      //   description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
-      // });
-    } catch (error) {
-      console.error("Error saving quote: ", error);
-      toast({
-        title: "Kaydetme Hatası",
-        description: "Teklif kaydedilirken bir hata oluştu.",
-        variant: "destructive"
-      });
-    }
-  }), [toast, handleSubmit]);
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
@@ -274,6 +280,7 @@ export default function QuotePage() {
     setIsPreview(true);
     setTimeout(() => {
       window.print();
+      setIsPreview(false);
       document.title = originalTitle;
     }, 100);
   }, [getValues]);
@@ -312,7 +319,7 @@ export default function QuotePage() {
             } as Quote
           handleLoadQuote(quoteData);
         } else {
-          handleNewQuote();
+          await handleNewQuote();
         }
       }
 
@@ -391,7 +398,7 @@ export default function QuotePage() {
     }
   };
 
-  if (loading || !isClient || !user || dbLoading) {
+  if (!isClient || dbLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -446,10 +453,11 @@ export default function QuotePage() {
         <Toolbar
           onNewQuote={handleNewQuote}
           onSaveQuote={() => {
-            handleSaveQuote();
-            toast({
-              title: "Teklif Kaydedildi",
-              description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
+            handleSubmit(handleSaveQuote)().then(() => {
+                toast({
+                  title: "Teklif Kaydedildi",
+                  description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
+                });
             });
           }}
           onPreviewToggle={() => setIsPreview(!isPreview)}

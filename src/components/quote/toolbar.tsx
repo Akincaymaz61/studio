@@ -19,7 +19,6 @@ import {
   Users,
   PlusCircle,
   Edit,
-  LogOut,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
@@ -28,7 +27,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { useAuth } from '@/hooks/use-auth';
 
 type ToolbarProps = {
   onNewQuote: () => void;
@@ -153,7 +151,6 @@ export function Toolbar({
   getValues,
 }: ToolbarProps) {
   const { toast } = useToast();
-  const { user, logout } = useAuth();
   const [isCompanyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [isCustomerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<CompanyProfile | undefined>(undefined);
@@ -299,7 +296,6 @@ export function Toolbar({
         <Button onClick={onSaveQuote}><Save /> Teklifi Kaydet</Button>
         <Button variant="secondary" onClick={onPreviewToggle}><Eye /> {isPreviewing ? 'Düzenle' : 'Önizle'}</Button>
         <Button variant="default" onClick={onPdfExport}><FileDown /> PDF İndir</Button>
-        {user && <Button variant="destructive" onClick={logout}><LogOut/>Çıkış Yap</Button>}
       </div>
 
       {/* Profile Form Dialog */}
