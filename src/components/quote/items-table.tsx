@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormContext, Controller, useWatch } from 'react-hook-form';
+import { useFormContext, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,8 +10,15 @@ import { currencySymbols, taxOptions, unitOptions, Quote } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
-export function ItemsTable({ fields, append, remove, currency }: { fields: any[], append: any, remove: any, currency: string }) {
+export function ItemsTable() {
   const { control, getValues } = useFormContext<Quote>();
+
+  const currency = useWatch({ control, name: 'currency' });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'items',
+  });
 
   const watchedItems = useWatch({ control, name: 'items' });
 
@@ -59,7 +66,7 @@ export function ItemsTable({ fields, append, remove, currency }: { fields: any[]
                     <Controller
                       name={`items.${index}.quantity`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} className="w-20" />}
+                      render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-20" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -67,7 +74,7 @@ export function ItemsTable({ fields, append, remove, currency }: { fields: any[]
                       name={`items.${index}.unit`}
                       control={control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger className="w-28">
                             <SelectValue />
                           </SelectTrigger>
@@ -82,7 +89,7 @@ export function ItemsTable({ fields, append, remove, currency }: { fields: any[]
                     <Controller
                       name={`items.${index}.price`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} className="w-28" />}
+                      render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-28" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -90,7 +97,7 @@ export function ItemsTable({ fields, append, remove, currency }: { fields: any[]
                       name={`items.${index}.tax`}
                       control={control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                        <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
                           <SelectTrigger className="w-24">
                             <SelectValue />
                           </SelectTrigger>

@@ -1,6 +1,27 @@
 import { z } from 'zod';
 import { addDays } from 'date-fns';
 
+export const companyProfileSchema = z.object({
+  id: z.string(),
+  companyName: z.string().min(1, 'Firma adı gereklidir'),
+  companyLogo: z.string().optional(),
+  companyAddress: z.string().optional(),
+  companyPhone: z.string().optional(),
+  companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
+});
+export type CompanyProfile = z.infer<typeof companyProfileSchema>;
+
+export const customerSchema = z.object({
+  id: z.string(),
+  customerName: z.string().min(1, 'Müşteri adı gereklidir'),
+  customerContact: z.string().optional(),
+  customerAddress: z.string().optional(),
+  customerEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
+  customerPhone: z.string().optional(),
+});
+export type Customer = z.infer<typeof customerSchema>;
+
+
 export const quoteItemSchema = z.object({
   id: z.string(),
   description: z.string().min(1, 'Açıklama gereklidir'),
@@ -79,5 +100,5 @@ export const currencySymbols: { [key: string]: string } = {
   CNY: '¥',
 };
 
-export const unitOptions = ["adet", "saat", "gün", "ay", "kg", "lt", "m", "m2", "m3", "paket"];
+export const unitOptions = ["adet", "saat", "gün", "ay", "kg", "lt", "m", "m2", "m3", "paket", "proje"];
 export const taxOptions = [0, 1, 8, 10, 18, 20];

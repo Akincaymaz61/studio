@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
-import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Image as ImageIcon, Upload } from 'lucide-react';
+import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Upload } from 'lucide-react';
 import { ItemsTable } from './items-table';
-import type { Quote, QuoteItem } from '@/lib/schema';
-import { currencySymbols, unitOptions, taxOptions } from '@/lib/schema';
+import type { Quote } from '@/lib/schema';
+import { currencySymbols } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
 import React from 'react';
@@ -66,12 +66,15 @@ const LogoUploader = () => {
           </div>
         )}
       </div>
+      <div className="flex justify-end mt-2">
+        <Button type="button" size="sm" variant="ghost" onClick={() => setValue('companyLogo', '')} disabled={!logo}>Logoyu Kaldır</Button>
+      </div>
     </div>
   );
 };
 
 
-export function QuoteForm({ fields, append, remove, calculations }: { fields: any[], append: any, remove: any, calculations: any }) {
+export function QuoteForm({ calculations }: { calculations: any }) {
   const { control } = useFormContext<Quote>();
   const currency = useWatch({ control, name: 'currency' });
 
@@ -175,7 +178,7 @@ export function QuoteForm({ fields, append, remove, calculations }: { fields: an
           <FormField name="currency" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>Para Birimi</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger><SelectValue placeholder="Para birimi seçin" /></SelectTrigger>
                 </FormControl>
@@ -191,7 +194,7 @@ export function QuoteForm({ fields, append, remove, calculations }: { fields: an
       </FormSection>
 
       <FormSection title="Ürün/Hizmet Kalemleri" icon={<ShoppingCart />}>
-        <ItemsTable fields={fields} append={append} remove={remove} currency={currency} />
+        <ItemsTable />
       </FormSection>
       
       <FormSection title="Notlar" icon={<StickyNote />}>
@@ -218,7 +221,7 @@ export function QuoteForm({ fields, append, remove, calculations }: { fields: an
                     <Label htmlFor="discountType" className="text-muted-foreground">İndirim:</Label>
                     <FormField name="discountType" control={control} render={({ field }) => (
                         <FormItem>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                                 <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
                             </FormControl>
@@ -232,7 +235,7 @@ export function QuoteForm({ fields, append, remove, calculations }: { fields: an
                     <FormField name="discountValue" control={control} render={({ field }) => (
                         <FormItem>
                         <FormControl>
-                            <Input type="number" {...field} className="w-24 h-8" />
+                            <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-24 h-8" />
                         </FormControl>
                         </FormItem>
                     )} />
