@@ -40,17 +40,19 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
       <Card id="print-area" className="print-container">
         <CardContent className="p-12">
           <header className="grid grid-cols-2 gap-12 mb-10 items-start">
-            <div className="bg-slate-100 p-6 rounded-lg">
+            <div>
               {quote.companyLogo && (
                 <div className="mb-4 relative w-56 h-28">
                   <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
                 </div>
               )}
-              <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Teklifi Veren</h2>
-              <h1 className="text-xl font-bold text-primary">{quote.companyName}</h1>
-              <p className="text-sm text-muted-foreground mt-1">{quote.companyAddress}</p>
-              <p className="text-sm text-muted-foreground">{quote.companyPhone}</p>
-              <p className="text-sm text-muted-foreground">{quote.companyEmail}</p>
+              <div className="bg-slate-100 p-6 rounded-lg">
+                <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Teklifi Veren</h2>
+                <h1 className="text-xl font-bold text-primary">{quote.companyName}</h1>
+                <p className="text-sm text-muted-foreground mt-1">{quote.companyAddress}</p>
+                <p className="text-sm text-muted-foreground">{quote.companyPhone}</p>
+                <p className="text-sm text-muted-foreground">{quote.companyEmail}</p>
+              </div>
             </div>
             <div className="text-right">
               <h2 className="text-4xl font-bold text-gray-800 uppercase tracking-wider">FİYAT TEKLİFİ</h2>
@@ -113,7 +115,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
                 </div>
                 <Separator className="my-2 bg-gradient-to-r from-transparent via-primary/50 to-transparent"/>
-                <div className="flex justify-between font-bold text-lg p-3 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white">
+                <div className="flex justify-between font-bold text-base p-3 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white">
                     <span>Genel Toplam:</span>
                     <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                 </div>

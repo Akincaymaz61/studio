@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
@@ -57,34 +57,35 @@ export default function QuotePage() {
   const watchedDiscountValue = watch('discountValue') || 0;
 
   // --- START OF CALCULATION LOGIC ---
-  const subtotal = watchedItems.reduce((acc, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    return acc + quantity * price;
-  }, 0);
+  const calculations = useMemo(() => {
+    const subtotal = watchedItems.reduce((acc, item) => {
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        return acc + quantity * price;
+    }, 0);
 
-  const taxTotal = watchedItems.reduce((acc, item) => {
-      const quantity = Number(item.quantity) || 0;
-      const price = Number(item.price) || 0;
-      const taxRate = Number(item.tax) || 0;
-      const itemTotal = quantity * price;
-      return acc + (itemTotal * (taxRate / 100));
-  }, 0);
+    const taxTotal = watchedItems.reduce((acc, item) => {
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        const taxRate = Number(item.tax) || 0;
+        const itemTotal = quantity * price;
+        return acc + (itemTotal * (taxRate / 100));
+    }, 0);
+    
+    const totalWithTax = subtotal + taxTotal;
 
-  const totalWithTax = subtotal + taxTotal;
+    let discountAmount = 0;
+    if (watchedDiscountType === 'percentage') {
+        discountAmount = totalWithTax * ((Number(watchedDiscountValue) || 0) / 100);
+    } else {
+        discountAmount = Number(watchedDiscountValue) || 0;
+    }
+    discountAmount = Math.min(discountAmount, totalWithTax);
 
-  let discountAmount = 0;
-  if (watchedDiscountType === 'percentage') {
-      discountAmount = totalWithTax * (watchedDiscountValue / 100);
-  } else {
-      discountAmount = watchedDiscountValue;
-  }
-  // Ensure discount doesn't exceed total with tax
-  discountAmount = Math.min(discountAmount, totalWithTax);
+    const grandTotal = totalWithTax - discountAmount;
 
-  const grandTotal = totalWithTax - discountAmount;
-
-  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
+    return { subtotal, taxTotal, discountAmount, grandTotal };
+  }, [watchedItems, watchedDiscountType, watchedDiscountValue]);
   // --- END OF CALCULATION LOGIC ---
 
 
@@ -124,7 +125,7 @@ export default function QuotePage() {
   
   const handleNewQuote = () => {
     const date = new Date();
-    const datePart = format(date, 'yyyy-MM-dd');
+    const datePart = format(date, 'yyyyMMdd');
     const sequence = (savedQuotes.length + 1).toString().padStart(4, '0');
     const newQuoteNumber = `QT-${datePart}-${sequence}`;
     
