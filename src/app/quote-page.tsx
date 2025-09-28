@@ -112,19 +112,14 @@ export default function QuotePage() {
     };
     reset(newQuote);
     
-    const newQuotesList = [...savedQuotes, newQuote];
-    setSavedQuotes(newQuotesList);
-    await handleSaveAll({
-        quotes: newQuotesList,
-        customers: customers,
-        companyProfiles: companyProfiles,
-    });
-
+    // Do not save the new quote automatically. Let the user save it.
+    // The new quote will be added to the list on save.
+    
     toast({
-      title: "Yeni Teklif Oluşturuldu",
-      description: "Yeni, boş bir teklif oluşturuldu ve kaydedildi.",
+      title: "Yeni Teklif Formu Hazır",
+      description: "Yeni, boş bir teklif formu oluşturuldu. Kaydetmeyi unutmayın.",
     });
-  }, [getValues, reset, toast, savedQuotes, customers, companyProfiles, handleSaveAll]);
+  }, [getValues, reset, toast, savedQuotes.length]);
   
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
@@ -151,7 +146,7 @@ export default function QuotePage() {
           setIsPreview(false);
       }, 100);
     }
-    if (modifier && event.key === 'n') {
+     if (modifier && event.key === 'n') {
       event.preventDefault();
       handleNewQuote();
     }
@@ -216,15 +211,8 @@ export default function QuotePage() {
       if (latestQuote) {
         reset(latestQuote);
       } else {
-        const newBlankQuote: Quote = {
-            ...defaultQuote,
-            id: `QT-${Date.now()}`,
-            quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
-            quoteDate: new Date(),
-            validUntil: addDays(new Date(), 30),
-            updatedAt: new Date(),
-        };
-        reset(newBlankQuote, { keepDirty: false });
+        // Just reset to a blank default form, don't create a new one automatically
+        reset(defaultQuote);
       }
     }
     toast({ title: "Teklif Silindi", variant: 'destructive' });
