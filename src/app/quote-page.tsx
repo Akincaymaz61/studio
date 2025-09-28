@@ -25,7 +25,8 @@ const getInitialState = (): Quote => {
       
       const result = quoteSchema.safeParse(parsed);
       if (result.success) {
-        return result.data;
+        // Ensure all fields have a default value to avoid uncontrolled to controlled error
+        return { ...defaultQuote, ...result.data };
       }
     }
   } catch (error) {
@@ -124,7 +125,16 @@ export default function QuotePage() {
   const handleNewQuote = () => {
     const date = new Date();
     const datePart = format(date, 'yyyyMMdd');
-    const sequence = (savedQuotes.length + 1).toString().padStart(4, '0');
+    
+    // Find the highest sequence for the current day
+    const todayQuotes = savedQuotes.filter(q => q.quoteNumber?.startsWith(`QT-${datePart}`));
+    const lastSequence = todayQuotes.reduce((max, q) => {
+        const parts = q.quoteNumber?.split('-') || [];
+        const seq = parseInt(parts[2] || '0');
+        return Math.max(max, seq);
+    }, 0);
+
+    const sequence = (lastSequence + 1).toString().padStart(4, '0');
     const newQuoteNumber = `QT-${datePart}-${sequence}`;
     
     const currentCompanyInfo = {

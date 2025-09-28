@@ -162,7 +162,7 @@ export function Toolbar({
       companyAddress: currentValues.companyAddress,
       companyPhone: currentValues.companyPhone,
       companyEmail: currentValues.companyEmail,
-      companyLogo: currentValues.companyLogo,
+      companyLogo: currentValues.companyLogo || '',
     };
     onSaveCompanyProfile(newProfile);
     setEditingProfile(newProfile); 
