@@ -78,6 +78,10 @@ const LogoUploader = () => {
 export function QuoteForm({ calculations }: { calculations: any }) {
   const { control } = useFormContext<Quote>();
   const currency = useWatch({ control, name: 'currency' });
+  const handleNumericChange = (field: any, value: string) => {
+    const parsedValue = parseFloat(value);
+    field.onChange(isNaN(parsedValue) ? '' : parsedValue);
+  };
 
   return (
     <div className="space-y-8">
@@ -239,10 +243,7 @@ export function QuoteForm({ calculations }: { calculations: any }) {
                            <Input
                               type="number"
                               {...field}
-                              onChange={e => {
-                                const value = parseFloat(e.target.value);
-                                field.onChange(isNaN(value) ? 0 : value);
-                              }}
+                              onChange={e => handleNumericChange(field, e.target.value)}
                               onFocus={e => e.target.select()}
                               className="w-24 h-8"
                             />
