@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
@@ -57,35 +57,33 @@ export default function QuotePage() {
   const watchedDiscountValue = watch('discountValue') || 0;
 
   // --- START OF CALCULATION LOGIC ---
-  const calculations = useMemo(() => {
-    const subtotal = watchedItems.reduce((acc, item) => {
-        const quantity = Number(item.quantity) || 0;
-        const price = Number(item.price) || 0;
-        return acc + quantity * price;
-    }, 0);
+  const subtotal = watchedItems.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    return acc + quantity * price;
+  }, 0);
 
-    const taxTotal = watchedItems.reduce((acc, item) => {
-        const quantity = Number(item.quantity) || 0;
-        const price = Number(item.price) || 0;
-        const taxRate = Number(item.tax) || 0;
-        const itemTotal = quantity * price;
-        return acc + (itemTotal * (taxRate / 100));
-    }, 0);
-    
-    const totalWithTax = subtotal + taxTotal;
+  const taxTotal = watchedItems.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    const taxRate = Number(item.tax) || 0;
+    const itemTotal = quantity * price;
+    return acc + (itemTotal * (taxRate / 100));
+  }, 0);
+  
+  const totalWithTax = subtotal + taxTotal;
 
-    let discountAmount = 0;
-    if (watchedDiscountType === 'percentage') {
-        discountAmount = totalWithTax * ((Number(watchedDiscountValue) || 0) / 100);
-    } else {
-        discountAmount = Number(watchedDiscountValue) || 0;
-    }
-    discountAmount = Math.min(discountAmount, totalWithTax);
+  let discountAmount = 0;
+  if (watchedDiscountType === 'percentage') {
+      discountAmount = totalWithTax * ((Number(watchedDiscountValue) || 0) / 100);
+  } else {
+      discountAmount = Number(watchedDiscountValue) || 0;
+  }
+  discountAmount = Math.min(discountAmount, totalWithTax);
 
-    const grandTotal = totalWithTax - discountAmount;
-
-    return { subtotal, taxTotal, discountAmount, grandTotal };
-  }, [watchedItems, watchedDiscountType, watchedDiscountValue]);
+  const grandTotal = totalWithTax - discountAmount;
+  
+  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
   // --- END OF CALCULATION LOGIC ---
 
 
