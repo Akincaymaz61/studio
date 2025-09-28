@@ -20,6 +20,7 @@ const getInitialState = (): Quote => {
   if (savedQuote) {
     try {
       const parsed = JSON.parse(savedQuote);
+      
       // Ensure dates are converted from strings
       if (parsed.quoteDate) parsed.quoteDate = new Date(parsed.quoteDate);
       if (parsed.validUntil) parsed.validUntil = new Date(parsed.validUntil);
@@ -28,11 +29,11 @@ const getInitialState = (): Quote => {
       if (result.success) {
         return result.data;
       } else {
-        console.error("Failed to parse saved quote:", result.error);
+        console.error("Failed to parse saved quote, falling back to default. Error:", result.error);
         return defaultQuote;
       }
     } catch (error) {
-      console.error("Failed to parse saved quote:", error);
+      console.error("Failed to parse saved quote, falling back to default. Error:", error);
       return defaultQuote;
     }
   }
