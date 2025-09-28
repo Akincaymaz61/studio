@@ -29,11 +29,11 @@ const getInitialState = (): Quote => {
       if (result.success) {
         return result.data;
       } else {
-        console.error("Failed to parse saved quote, falling back to default. Error:", result.error);
+        // Silently fall back to default quote if parsing fails
         return defaultQuote;
       }
     } catch (error) {
-      console.error("Failed to parse saved quote, falling back to default. Error:", error);
+      // Silently fall back to default quote if JSON parsing fails
       return defaultQuote;
     }
   }
