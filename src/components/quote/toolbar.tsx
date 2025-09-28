@@ -60,7 +60,7 @@ export function Toolbar({
             <AlertDialogHeader>
               <AlertDialogTitle>Yeni Teklif Oluştur</AlertDialogTitle>
               <AlertDialogDescription>
-                Mevcut teklifteki kaydedilmemiş değişiklikler kaybolacak. Devam etmek istediğinize emin misiniz?
+                Mevcut teklifteki kaydedilmemiş değişiklikler kaybolacak. Firma bilgileriniz korunacak. Devam etmek istediğinize emin misiniz?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

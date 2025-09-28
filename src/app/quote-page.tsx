@@ -96,8 +96,16 @@ export default function QuotePage() {
 
   const handleNewQuote = () => {
     const newQuoteNumber = `TEK-${new Date().getFullYear()}-${(savedQuotes.length + 1).toString().padStart(3, '0')}`;
+    const currentCompanyInfo = {
+      companyName: getValues('companyName'),
+      companyAddress: getValues('companyAddress'),
+      companyPhone: getValues('companyPhone'),
+      companyEmail: getValues('companyEmail'),
+      companyLogo: getValues('companyLogo'),
+    };
     const newQuote = {
       ...defaultQuote,
+      ...currentCompanyInfo,
       id: `TEK-${Date.now()}`,
       quoteNumber: newQuoteNumber,
       quoteDate: new Date(),
