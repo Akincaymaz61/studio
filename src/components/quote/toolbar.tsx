@@ -53,7 +53,7 @@ type ToolbarProps = {
 const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: CompanyProfile, onSave: (data: CompanyProfile) => void, closeDialog: () => void }) => {
   const form = useForm<CompanyProfile>({
     resolver: zodResolver(companyProfileSchema),
-    defaultValues: profile || { id: `CP-${Date.now()}`, companyName: '' },
+    defaultValues: profile || { id: `CP-${Date.now()}`, companyName: '', companyLogo: '' },
   });
 
   const onSubmit = (data: CompanyProfile) => {
@@ -77,6 +77,7 @@ const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: Compan
           <FormField control={form.control} name="companyEmail" render={({ field }) => (
             <FormItem><FormLabel>E-posta</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
           )} />
+          {/* Logo uploader could be added here if needed in the future */}
           <DialogFooter>
             <Button type="submit">Kaydet</Button>
           </DialogFooter>
@@ -143,6 +144,7 @@ export function Toolbar({
   onSaveCustomer,
   onSetCustomer,
   onDeleteCustomer,
+  getValues,
 }: ToolbarProps) {
   const { toast } = useToast();
   const [isCompanyDialogOpen, setCompanyDialogOpen] = useState(false);
@@ -151,6 +153,22 @@ export function Toolbar({
   const [isProfileFormOpen, setProfileFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
   const [isCustomerFormOpen, setCustomerFormOpen] = useState(false);
+
+  const handleCreateNewProfile = () => {
+    const currentValues = getValues();
+    const newProfile: CompanyProfile = {
+      id: `CP-${Date.now()}`,
+      companyName: currentValues.companyName || 'Yeni Profil',
+      companyAddress: currentValues.companyAddress,
+      companyPhone: currentValues.companyPhone,
+      companyEmail: currentValues.companyEmail,
+      companyLogo: currentValues.companyLogo,
+    };
+    onSaveCompanyProfile(newProfile);
+    setEditingProfile(newProfile); 
+    setProfileFormOpen(true);
+  };
+
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-2 shadow-sm no-print">
@@ -232,7 +250,7 @@ export function Toolbar({
               </Table>
             </div>
             <DialogFooter>
-              <Button onClick={() => { setEditingProfile(undefined); setProfileFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Yeni Profil</Button>
+              <Button onClick={handleCreateNewProfile}><PlusCircle className="mr-2 h-4 w-4" /> Mevcut Bilgilerle Profil Oluştur</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -276,13 +294,13 @@ export function Toolbar({
       <div className="flex flex-wrap gap-2">
         <Button onClick={onSaveQuote}><Save /> Teklifi Kaydet</Button>
         <Button variant="secondary" onClick={onPreviewToggle}><Eye /> {isPreviewing ? 'Düzenle' : 'Önizle'}</Button>
-        <Button variant="destructive" onClick={onPdfExport}><FileDown /> PDF İndir</Button>
+        <Button variant="default" onClick={onPdfExport}><FileDown /> PDF İndir</Button>
       </div>
 
       {/* Profile Form Dialog */}
       <Dialog open={isProfileFormOpen} onOpenChange={setProfileFormOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editingProfile ? 'Profili Düzenle' : 'Yeni Profil Ekle'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingProfile?.companyName !== 'Yeni Profil' ? 'Profili Düzenle' : 'Yeni Profil Ekle'}</DialogTitle></DialogHeader>
           <CompanyProfileForm profile={editingProfile} onSave={onSaveCompanyProfile} closeDialog={() => setProfileFormOpen(false)} />
         </DialogContent>
       </Dialog>

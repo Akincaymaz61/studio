@@ -32,6 +32,16 @@ export function ItemsTable() {
       tax: 20,
     });
   };
+  
+  const handleNumericChange = (field: any, value: string) => {
+    const parsedValue = parseFloat(value);
+    if (isNaN(parsedValue)) {
+      field.onChange(0);
+    } else {
+      field.onChange(parsedValue);
+    }
+  };
+
 
   return (
     <div>
@@ -66,7 +76,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.quantity`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-20" />}
+                      render={({ field }) => <Input type="number" {...field} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-20" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -89,7 +99,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.price`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="w-28" />}
+                      render={({ field }) => <Input type="number" {...field} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-28" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -102,7 +112,7 @@ export function ItemsTable() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {taxOptions.map(t => <SelectItem key={t} value={String(t)}>{t}%</SelectItem>)}
+                            {taxOptions.map(t => <SelectItem key={t} value={String(t)}>{`%${t}`}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       )}

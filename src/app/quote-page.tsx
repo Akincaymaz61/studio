@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer, companyProfileSchema, customerSchema } from '@/lib/schema';
+import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
@@ -41,7 +41,6 @@ export default function QuotePage() {
   const [isPreview, setIsPreview] = useState(false);
   const [isAiSuggesterOpen, setIsAiSuggesterOpen] = useState(false);
   
-  // New states for profiles and customers
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
@@ -55,7 +54,6 @@ export default function QuotePage() {
 
   useEffect(() => {
     setIsClient(true);
-    // Load everything from local storage
     const storedQuotes = localStorage.getItem('savedQuotes');
     if (storedQuotes) setSavedQuotes(JSON.parse(storedQuotes));
 
@@ -66,18 +64,18 @@ export default function QuotePage() {
     if (storedCustomers) setCustomers(JSON.parse(storedCustomers));
 
     const storedActiveProfileId = localStorage.getItem('activeCompanyProfile');
-    if (storedActiveProfileId) {
-      setActiveProfileId(JSON.parse(storedActiveProfileId));
-      const activeProfile = JSON.parse(storedProfiles || '[]').find((p: CompanyProfile) => p.id === JSON.parse(storedActiveProfileId));
-      if (activeProfile) {
-        setValue('companyName', activeProfile.companyName);
-        setValue('companyAddress', activeProfile.companyAddress);
-        setValue('companyPhone', activeProfile.companyPhone);
-        setValue('companyEmail', activeProfile.companyEmail);
-        setValue('companyLogo', activeProfile.companyLogo);
-      }
+    const activeId = storedActiveProfileId ? JSON.parse(storedActiveProfileId) : null;
+    
+    const currentQuote = getInitialState();
+    reset(currentQuote);
+
+    if (activeId) {
+       const activeProfile = (storedProfiles ? JSON.parse(storedProfiles) : []).find((p: CompanyProfile) => p.id === activeId);
+       if (activeProfile) {
+         handleSetCompanyProfile(activeProfile, false); // don't show toast on initial load
+       }
     }
-  }, [setValue]);
+  }, [setValue, reset]);
 
   useEffect(() => {
     const subscription = watch((value) => {
@@ -91,13 +89,13 @@ export default function QuotePage() {
   const calculations = useMemo(() => {
     const watchedItems = watch('items') || [];
     const watchedDiscountType = watch('discountType');
-    const watchedDiscountValue = watch('discountValue');
+    const watchedDiscountValue = watch('discountValue') || 0;
 
-    const subtotal = watchedItems.reduce((acc, item) => acc + (item.quantity * item.price), 0);
-    const taxTotal = watchedItems.reduce((acc, item) => acc + (item.quantity * item.price * (item.tax / 100)), 0);
+    const subtotal = watchedItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.price || 0)), 0);
+    const taxTotal = watchedItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.price || 0) * ((item.tax || 0) / 100)), 0);
     let discountAmount = 0;
     if (watchedDiscountType === 'percentage') {
-      discountAmount = (subtotal + taxTotal) * (watchedDiscountValue / 100);
+      discountAmount = subtotal * (watchedDiscountValue / 100);
     } else {
       discountAmount = watchedDiscountValue;
     }
@@ -153,10 +151,9 @@ export default function QuotePage() {
   
   const handlePdfExport = useCallback(() => {
     setIsPreview(true);
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       window.print();
     }, 100);
-    return () => clearTimeout(timer);
   }, []);
 
   const handleLoadQuote = (quote: Quote) => {
@@ -191,7 +188,7 @@ export default function QuotePage() {
     toast({ title: 'Firma Profili Kaydedildi' });
   };
 
-  const handleSetCompanyProfile = (profile: CompanyProfile) => {
+  const handleSetCompanyProfile = (profile: CompanyProfile, showToast = true) => {
     setValue('companyName', profile.companyName);
     setValue('companyAddress', profile.companyAddress || '');
     setValue('companyPhone', profile.companyPhone || '');
@@ -199,7 +196,9 @@ export default function QuotePage() {
     setValue('companyLogo', profile.companyLogo || '');
     setActiveProfileId(profile.id);
     localStorage.setItem('activeCompanyProfile', JSON.stringify(profile.id));
-    toast({ title: `${profile.companyName} profili yüklendi.` });
+    if (showToast) {
+        toast({ title: `${profile.companyName} profili yüklendi.` });
+    }
   };
   
   const handleDeleteCompanyProfile = (profileId: string) => {
@@ -258,6 +257,7 @@ export default function QuotePage() {
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
+  
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}
@@ -274,7 +274,7 @@ export default function QuotePage() {
               onBackToEdit={() => setIsPreview(false)}
             />
           ) : (
-            <form>
+            <form onSubmit={(e) => e.preventDefault()}>
               <QuoteForm 
                 calculations={calculations} 
               />
