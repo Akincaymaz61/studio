@@ -38,96 +38,99 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
       </div>
 
       <Card id="print-area" className="print-container">
-        <CardContent className="p-12">
-          <header className="grid grid-cols-2 gap-12 mb-10 items-start">
-            <div>
-              {quote.companyLogo && (
-                <div className="mb-4 relative w-56 h-28">
-                  <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
+        <CardContent className="p-8 md:p-12 text-sm">
+          <header className="flex justify-between items-start mb-10">
+              <div className="w-1/2">
+                {quote.companyLogo && (
+                  <div className="mb-4 relative w-56 h-28">
+                    <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
+                  </div>
+                )}
+              </div>
+              <div className="w-1/2 text-right">
+                <h1 className="text-3xl font-bold text-primary uppercase tracking-wider">FİYAT TEKLİFİ</h1>
+                <div className="mt-4 space-y-1 text-sm">
+                  <p><span className="text-muted-foreground">Teklif No:</span> <span className="font-semibold">{quote.quoteNumber}</span></p>
+                  <p><span className="text-muted-foreground">Teklif Tarihi:</span> <span className="font-semibold">{format(new Date(quote.quoteDate), "dd.MM.yyyy")}</span></p>
+                  <p><span className="text-muted-foreground">Geçerlilik:</span> <span className="font-semibold">{format(new Date(quote.validUntil), "dd.MM.yyyy")}</span></p>
                 </div>
-              )}
-              <div className="p-4 rounded-lg">
-                <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Teklifi Veren</h2>
-                <h1 className="text-xl font-bold text-primary">{quote.companyName}</h1>
-                <p className="text-sm text-muted-foreground mt-1">{quote.companyAddress}</p>
-                <p className="text-sm text-muted-foreground">{quote.companyPhone}</p>
-                <p className="text-sm text-muted-foreground">{quote.companyEmail}</p>
               </div>
-            </div>
-            <div className="text-right">
-              <h2 className="text-4xl font-bold text-gray-800 uppercase tracking-wider">FİYAT TEKLİFİ</h2>
-              <div className="mt-4 space-y-1 text-sm">
-                <p><span className="text-muted-foreground">Teklif No:</span> <span className="font-semibold">{quote.quoteNumber}</span></p>
-                <p><span className="text-muted-foreground">Teklif Tarihi:</span> <span className="font-semibold">{format(new Date(quote.quoteDate), "dd.MM.yyyy")}</span></p>
-                <p><span className="text-muted-foreground">Geçerlilik:</span> <span className="font-semibold">{format(new Date(quote.validUntil), "dd.MM.yyyy")}</span></p>
-              </div>
-            </div>
           </header>
-
-          <section className="mb-10 p-4 rounded-lg">
-              <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Müşteri</h3>
-              <p className="font-bold text-primary">{quote.customerName}</p>
-              {quote.customerContact && <p className="text-sm">{quote.customerContact}</p>}
-              <p className="text-sm text-muted-foreground mt-1">{quote.customerAddress}</p>
-              <p className="text-sm text-muted-foreground">{quote.customerEmail}</p>
-              <p className="text-sm text-muted-foreground">{quote.customerPhone}</p>
+          
+          <section className="grid grid-cols-2 gap-12 mb-10">
+             <div>
+                <h3 className="text-primary font-semibold mb-2">Müşteri Bilgileri:</h3>
+                <p className="font-bold">{quote.customerName}</p>
+                {quote.customerContact && <p>{quote.customerContact}</p>}
+                <p>{quote.customerAddress}</p>
+                <p>Tel: {quote.customerPhone}</p>
+                <p>E-posta: {quote.customerEmail}</p>
+              </div>
+              <div className="text-right">
+                <h3 className="text-primary font-semibold mb-2">{quote.companyName}</h3>
+                <p>{quote.companyAddress}</p>
+                <p>Tel: {quote.companyPhone}</p>
+                <p>E-posta: {quote.companyEmail}</p>
+              </div>
           </section>
 
           <section className="mb-10">
             <table className="w-full text-left">
-              <thead className="border-b-2 border-primary">
+              <thead className="bg-primary text-primary-foreground">
                 <tr>
-                  <th className="p-3 font-semibold text-sm w-2/5">Açıklama</th>
+                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg">Ürün/Hizmet</th>
                   <th className="p-3 font-semibold text-sm text-center">Miktar</th>
-                  <th className="p-3 font-semibold text-sm text-center">KDV</th>
+                  <th className="p-3 font-semibold text-sm text-center">Birim</th>
                   <th className="p-3 font-semibold text-sm text-right">Birim Fiyat</th>
-                  <th className="p-3 font-semibold text-sm text-right">Toplam</th>
+                  <th className="p-3 font-semibold text-sm text-center">KDV</th>
+                  <th className="p-3 font-semibold text-sm text-right rounded-r-lg">Toplam</th>
                 </tr>
               </thead>
               <tbody>
                 {quote.items.map((item) => (
                   <tr key={item.id} className="border-b">
-                    <td className="p-3 text-sm">{item.description}</td>
-                    <td className="p-3 text-sm text-center">{item.quantity} {item.unit}</td>
-                    <td className="p-3 text-sm text-center">{item.tax}%</td>
-                    <td className="p-3 text-sm text-right">{formatCurrency(item.price, quote.currency)}</td>
-                    <td className="p-3 text-sm text-right font-medium">{formatCurrency(item.price * item.quantity, quote.currency)}</td>
+                    <td className="p-3">{item.description}</td>
+                    <td className="p-3 text-center">{item.quantity}</td>
+                    <td className="p-3 text-center">{item.unit}</td>
+                    <td className="p-3 text-right">{formatCurrency(item.price, quote.currency)}</td>
+                    <td className="p-3 text-center">{item.tax}%</td>
+                    <td className="p-3 text-right font-medium">{formatCurrency(item.price * item.quantity, quote.currency)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </section>
 
-          <section className="flex justify-end mb-10">
-             <div className="w-full max-w-sm space-y-3 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ara Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
+          <section className="grid grid-cols-2 gap-10 items-start">
+             {quote.notes && (
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                 </div>
-                {calculations.discountAmount > 0 && (
-                    <div className="flex justify-between">
-                    <span className="text-muted-foreground">İndirim:</span>
-                    <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
-                    </div>
-                )}
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">KDV Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+            )}
+             <div className="space-y-4 col-start-2">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                  <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ara Toplam:</span>
+                      <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
+                  </div>
+                   {calculations.discountAmount > 0 && (
+                      <div className="flex justify-between">
+                      <span className="text-muted-foreground">İndirim:</span>
+                      <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                      </div>
+                  )}
+                  <div className="flex justify-between">
+                      <span className="text-muted-foreground">KDV Toplam:</span>
+                      <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+                  </div>
                 </div>
-                <Separator className="my-2"/>
-                <div className="flex justify-between font-bold text-base p-3 rounded-lg text-primary">
+                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
                     <span>Genel Toplam:</span>
                     <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                 </div>
              </div>
           </section>
-
-          {quote.notes && (
-            <footer className="pt-6 border-t mt-10">
-              <h3 className="font-semibold mb-2 text-sm">Notlar ve Koşullar</h3>
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-            </footer>
-          )}
         </CardContent>
       </Card>
     </div>
