@@ -85,27 +85,31 @@ export default function QuotePage() {
   }, [watch]);
   
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
+  
+  const watchedItems = watch('items');
+  const watchedDiscountType = watch('discountType');
+  const watchedDiscountValue = watch('discountValue');
 
   const calculations = useMemo(() => {
-    const watchedItems = watch('items') || [];
-    const watchedDiscountType = watch('discountType');
-    const watchedDiscountValue = watch('discountValue') || 0;
-
-    const subtotal = watchedItems.reduce((acc, item) => {
+    const items = watchedItems || [];
+    const discountType = watchedDiscountType;
+    const discountValue = watchedDiscountValue || 0;
+    
+    const subtotal = items.reduce((acc, item) => {
         const quantity = item.quantity || 0;
         const price = item.price || 0;
         return acc + quantity * price;
     }, 0);
 
     let discountAmount = 0;
-    if (watchedDiscountType === 'percentage') {
-        discountAmount = subtotal * (watchedDiscountValue / 100);
+    if (discountType === 'percentage') {
+        discountAmount = subtotal * (discountValue / 100);
     } else {
-        discountAmount = watchedDiscountValue;
+        discountAmount = discountValue;
     }
 
     let taxTotal = 0;
-    watchedItems.forEach(item => {
+    items.forEach(item => {
         const itemTotal = (item.quantity || 0) * (item.price || 0);
         const itemTax = item.tax || 0;
         
@@ -121,7 +125,7 @@ export default function QuotePage() {
     const grandTotal = subtotal - discountAmount + taxTotal;
 
     return { subtotal, taxTotal, discountAmount, grandTotal };
-}, [watch]);
+}, [watchedItems, watchedDiscountType, watchedDiscountValue]);
 
 
   const handleNewQuote = () => {
