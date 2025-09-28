@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormContext, Controller, useFieldArray } from 'react-hook-form';
+import { useFormContext, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
