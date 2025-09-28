@@ -90,37 +90,38 @@ export default function QuotePage() {
     const watchedItems = watch('items') || [];
     const watchedDiscountType = watch('discountType');
     const watchedDiscountValue = watch('discountValue') || 0;
-  
-    const subtotal = watchedItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.price || 0)), 0);
-  
+
+    const subtotal = watchedItems.reduce((acc, item) => {
+        const quantity = item.quantity || 0;
+        const price = item.price || 0;
+        return acc + quantity * price;
+    }, 0);
+
     let discountAmount = 0;
     if (watchedDiscountType === 'percentage') {
-      discountAmount = subtotal * (watchedDiscountValue / 100);
+        discountAmount = subtotal * (watchedDiscountValue / 100);
     } else {
-      discountAmount = watchedDiscountValue;
+        discountAmount = watchedDiscountValue;
     }
-  
-    const subtotalAfterDiscount = subtotal - discountAmount;
-  
-    const taxTotal = watchedItems.reduce((acc, item) => {
-      const itemTotal = (item.quantity || 0) * (item.price || 0);
-      let itemDiscount = 0;
-      if (subtotal > 0) { // Prevent division by zero
-        if (watchedDiscountType === 'percentage') {
-          itemDiscount = itemTotal * (watchedDiscountValue / 100);
-        } else {
-          itemDiscount = (itemTotal / subtotal) * discountAmount;
+
+    let taxTotal = 0;
+    watchedItems.forEach(item => {
+        const itemTotal = (item.quantity || 0) * (item.price || 0);
+        const itemTax = item.tax || 0;
+        
+        let itemDiscountShare = 0;
+        if (subtotal > 0) {
+            itemDiscountShare = (itemTotal / subtotal) * discountAmount;
         }
-      }
-      
-      const itemBaseForTax = itemTotal - itemDiscount;
-      return acc + (itemBaseForTax * ((item.tax || 0) / 100));
-    }, 0);
-  
-    const grandTotal = subtotalAfterDiscount + taxTotal;
-  
+
+        const taxableAmount = itemTotal - itemDiscountShare;
+        taxTotal += taxableAmount * (itemTax / 100);
+    });
+
+    const grandTotal = subtotal - discountAmount + taxTotal;
+
     return { subtotal, taxTotal, discountAmount, grandTotal };
-  }, [watch]);
+}, [watch]);
 
 
   const handleNewQuote = () => {

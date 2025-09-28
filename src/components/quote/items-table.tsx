@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus } from 'lucide-react';
-import { currencySymbols, taxOptions, unitOptions, Quote } from '@/lib/schema';
+import { taxOptions, unitOptions, Quote } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
-import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
 export function ItemsTable() {
-  const { control, getValues } = useFormContext<Quote>();
+  const { control } = useFormContext<Quote>();
 
   const currency = useWatch({ control, name: 'currency' });
 
@@ -35,11 +34,7 @@ export function ItemsTable() {
   
   const handleNumericChange = (field: any, value: string) => {
     const parsedValue = parseFloat(value);
-    if (isNaN(parsedValue)) {
-      field.onChange(0);
-    } else {
-      field.onChange(parsedValue);
-    }
+    field.onChange(isNaN(parsedValue) ? '' : parsedValue);
   };
 
 

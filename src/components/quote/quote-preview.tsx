@@ -102,16 +102,16 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                 <span className="text-muted-foreground">Ara Toplam:</span>
                 <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">KDV Toplam:</span>
-                <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
-              </div>
               {calculations.discountAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">İndirim:</span>
                   <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
                 </div>
               )}
+               <div className="flex justify-between">
+                <span className="text-muted-foreground">KDV Toplam:</span>
+                <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+              </div>
               <Separator className="my-2"/>
               <div className="flex justify-between font-bold text-xl">
                 <span className="text-primary">Genel Toplam:</span>

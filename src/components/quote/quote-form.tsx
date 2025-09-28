@@ -217,10 +217,6 @@ export function QuoteForm({ calculations }: { calculations: any }) {
               <span className="text-muted-foreground">Ara Toplam:</span>
               <span className="font-medium">{formatCurrency(calculations.subtotal, currency)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">KDV Toplam:</span>
-              <span className="font-medium">{formatCurrency(calculations.taxTotal, currency)}</span>
-            </div>
              <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <Label htmlFor="discountType" className="text-muted-foreground">İndirim:</Label>
@@ -252,6 +248,10 @@ export function QuoteForm({ calculations }: { calculations: any }) {
                     )} />
                 </div>
                 <span className="font-medium text-red-500">-{formatCurrency(calculations.discountAmount, currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">KDV Toplam:</span>
+              <span className="font-medium">{formatCurrency(calculations.taxTotal, currency)}</span>
             </div>
             <div className="border-t my-2"></div>
             <div className="flex justify-between text-xl font-bold">
