@@ -48,7 +48,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </div>
               <div className="w-1/2 text-right">
                 <h1 className="text-3xl font-bold text-primary uppercase tracking-wider">FİYAT TEKLİFİ</h1>
-                <div className="mt-4 space-y-1 text-sm">
+                <div className="mt-2 space-y-1 text-xs">
                   <p><span className="text-muted-foreground">Teklif No:</span> <span className="font-semibold">{quote.quoteNumber}</span></p>
                   <p><span className="text-muted-foreground">Teklif Tarihi:</span> <span className="font-semibold">{format(new Date(quote.quoteDate), "dd.MM.yyyy")}</span></p>
                   <p><span className="text-muted-foreground">Geçerlilik:</span> <span className="font-semibold">{format(new Date(quote.validUntil), "dd.MM.yyyy")}</span></p>
@@ -101,7 +101,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex items-start justify-between gap-8">
+          <section className="mt-8 flex items-start justify-between gap-8" style={{ breakInside: 'avoid' }}>
             {quote.notes && (
                 <div className="w-1/2">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
@@ -138,5 +138,3 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
     </div>
   );
 }
-
-    
