@@ -36,7 +36,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
         </Button>
       </div>
 
-      <Card id="print-area" className="print-container">
+      <Card id="print-area" className="print-container shadow-lg">
         <CardContent className="p-8 md:p-12 text-sm">
           <header className="flex justify-between items-start">
               <div className="w-1/2">
@@ -104,14 +104,14 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           <section className="flex justify-between items-start gap-10">
              <div className="w-1/2">
                 {quote.notes && (
-                    <div className="bg-muted p-4 rounded-lg">
+                    <div className="bg-muted/50 p-4 rounded-lg">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                     </div>
                 )}
              </div>
              <div className="w-full max-w-sm space-y-2">
-                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
                       <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
@@ -122,12 +122,12 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                       <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
                       </div>
                   )}
-                  <div className="flex justify-between border-t border-border pt-3 mt-2">
+                  <div className="flex justify-between">
                       <span className="text-muted-foreground">KDV Toplam:</span>
                       <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
                   </div>
                 </div>
-                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
+                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md">
                     <span>Genel Toplam:</span>
                     <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                 </div>
