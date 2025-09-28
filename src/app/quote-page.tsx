@@ -72,7 +72,7 @@ export default function QuotePage() {
         if (latestQuote) {
           reset(latestQuote, { keepDirty: false });
         } else {
-          const newQuote: Quote = {
+           const newQuote: Quote = {
             ...defaultQuote,
             id: `QT-${Date.now()}`,
             quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
@@ -256,7 +256,16 @@ export default function QuotePage() {
       if (latestQuote) {
         reset(latestQuote);
       } else {
-        handleNewQuote();
+        // No quotes left, just reset to a new blank form without saving it automatically
+        const newBlankQuote: Quote = {
+            ...defaultQuote,
+            id: `QT-${Date.now()}`,
+            quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
+            quoteDate: new Date(),
+            validUntil: addDays(new Date(), 30),
+            updatedAt: new Date(),
+        };
+        reset(newBlankQuote);
       }
     }
     toast({ title: "Teklif Silindi", variant: 'destructive' });
@@ -393,7 +402,7 @@ export default function QuotePage() {
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
-          onDeleteCompanyProfile={handleDeleteCompanyProfile}
+  onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}
           onSetCustomer={handleSetCustomer}
