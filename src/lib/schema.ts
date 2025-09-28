@@ -89,7 +89,7 @@ export const defaultQuote: Quote = {
   quoteDate: new Date(),
   validUntil: addDays(new Date(), 30),
   updatedAt: new Date(),
-  currency: 'USD',
+  currency: 'TRY',
   items: [
     {
       id: 'default-item-1',
