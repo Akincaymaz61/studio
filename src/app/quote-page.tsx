@@ -62,8 +62,8 @@ export default function QuotePage() {
     setIsClient(true);
     
     const loadInitialData = async () => {
+      setDbLoading(true);
       try {
-        // Load most recent quote first
         const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
         const querySnapshot = await getDocs(q);
 
@@ -79,7 +79,6 @@ export default function QuotePage() {
           const parsedQuote = quoteSchema.parse(quoteData);
           reset(parsedQuote, { keepDirty: false });
         } else {
-          // No quotes found, start with a new one and save it.
           const newQuote = { ...defaultQuote, updatedAt: new Date() };
           reset(newQuote, { keepDirty: false });
           await setDoc(doc(db, 'quotes', newQuote.id), {
@@ -91,7 +90,7 @@ export default function QuotePage() {
         }
       } catch (error) {
         console.error("Error loading initial quote:", error);
-        reset(defaultQuote); // Fallback to default
+        reset(defaultQuote);
       } finally {
         setDbLoading(false);
       }
@@ -101,8 +100,7 @@ export default function QuotePage() {
 
     const unsubscribes = [
       onSnapshot(collection(db, 'quotes'), (snapshot) => {
-        try {
-          const quotes = snapshot.docs.map(doc => {
+        const quotes = snapshot.docs.map(doc => {
             const data = doc.data();
             const parsed = quoteSchema.safeParse({
               ...data,
@@ -117,9 +115,6 @@ export default function QuotePage() {
             return null;
           }).filter((q): q is Quote => q !== null);
           setSavedQuotes(quotes.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)));
-        } catch(error) {
-            console.error("Error parsing quotes: ", error);
-        }
       }),
       onSnapshot(collection(db, 'customers'), (snapshot) => {
         const customers = snapshot.docs.map(doc => doc.data() as Customer);
@@ -160,7 +155,7 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [reset, handleSubmit, toast]); // Removed handleSaveQuote, handleNewQuote, handlePdfExport from dependencies
+  }, []); // Dependencies are intentionally left empty to run only once on mount. Functions are defined with useCallback.
 
   // --- Autosave Effect ---
   const isInitialLoad = useRef(true);
@@ -281,7 +276,7 @@ export default function QuotePage() {
     }, 100);
   }, [getValues]);
 
-  const handleLoadQuote = (quote: Quote) => {
+  const handleLoadQuote = useCallback((quote: Quote) => {
     const quoteData = {
         ...quote,
         quoteDate: quote.quoteDate instanceof Timestamp ? quote.quoteDate.toDate() : quote.quoteDate,
@@ -294,7 +289,7 @@ export default function QuotePage() {
       title: "Teklif Yüklendi",
       description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
     });
-  };
+  }, [reset, toast]);
   
   const handleDeleteQuote = async (quoteId: string) => {
     const currentQuoteId = getValues('id');
@@ -389,7 +384,7 @@ export default function QuotePage() {
       toast({ title: 'Müşteri Silindi', variant: 'destructive' });
     } catch(error) {
       console.error("Error deleting customer: ", error);
-      toast({ title: 'Müşteri Silinemedi', variant: 'destructive' });
+      toast({ title: 'Müşteri Kaydedilemedi', variant: 'destructive' });
     }
   };
 
