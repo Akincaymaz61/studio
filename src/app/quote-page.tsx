@@ -41,8 +41,8 @@ export default function QuotePage() {
       
       const dataToSave = {
         ...data,
-        quoteDate: Timestamp.fromDate(data.quoteDate),
-        validUntil: Timestamp.fromDate(data.validUntil),
+        quoteDate: Timestamp.fromDate(new Date(data.quoteDate)),
+        validUntil: Timestamp.fromDate(new Date(data.validUntil)),
         updatedAt: Timestamp.now(),
       };
 
@@ -57,6 +57,7 @@ export default function QuotePage() {
       });
     }
   }, [toast]);
+  
   
   useEffect(() => {
     const loadInitialData = async () => {
@@ -109,6 +110,7 @@ export default function QuotePage() {
         }
       } catch (error) {
         console.error("Error loading initial quote:", error);
+        toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
         reset(defaultQuote);
       } finally {
         setDbLoading(false);
@@ -175,13 +177,14 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [reset, toast, handleSubmit, handleSaveQuote]); // handleSaveQuote is memoized, safe to include
+  }, [reset, toast, handleSubmit, handleSaveQuote]);
 
   // --- Autosave Effect ---
-  const isInitialLoad = useRef(true);
+  const isInitialMount = useRef(true);
   useEffect(() => {
-     if (isInitialLoad.current && !dbLoading) {
-        isInitialLoad.current = false;
+     if (dbLoading) return;
+     if (isInitialMount.current) {
+        isInitialMount.current = false;
         return;
     }
     
@@ -194,7 +197,6 @@ export default function QuotePage() {
 
         return () => clearTimeout(debouncedSave);
     });
-
 
     return () => subscription.unsubscribe();
   }, [watch, isDirty, dbLoading, handleSubmit, handleSaveQuote]);
@@ -301,9 +303,9 @@ export default function QuotePage() {
   const handleLoadQuote = useCallback((quote: Quote) => {
     const quoteData = {
         ...quote,
-        quoteDate: quote.quoteDate instanceof Timestamp ? quote.quoteDate.toDate() : quote.quoteDate,
-        validUntil: quote.validUntil instanceof Timestamp ? quote.validUntil.toDate() : quote.validUntil,
-        updatedAt: quote.updatedAt instanceof Timestamp ? quote.updatedAt.toDate() : quote.updatedAt,
+        quoteDate: quote.quoteDate instanceof Timestamp ? quote.quoteDate.toDate() : new Date(quote.quoteDate),
+        validUntil: quote.validUntil instanceof Timestamp ? quote.validUntil.toDate() : new Date(quote.validUntil),
+        updatedAt: quote.updatedAt instanceof Timestamp ? quote.updatedAt.toDate() : new Date(quote.updatedAt),
     }
     const parsedQuote = quoteSchema.parse(quoteData)
     reset(parsedQuote);
