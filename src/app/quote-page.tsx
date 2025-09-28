@@ -272,7 +272,7 @@ export default function QuotePage() {
         variant: "destructive"
       });
     }
-  }), [toast]);
+  }), [toast, handleSubmit]);
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;

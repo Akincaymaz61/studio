@@ -85,7 +85,7 @@ export const defaultQuote: Quote = {
   currency: 'USD',
   items: [
     {
-      id: crypto.randomUUID(),
+      id: 'default-item-1', // Use a stable ID for the default item
       description: '',
       quantity: 1,
       unit: 'adet',
