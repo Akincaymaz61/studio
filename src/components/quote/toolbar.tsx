@@ -90,7 +90,14 @@ const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: Compan
 const CustomerForm = ({ customer, onSave, closeDialog }: { customer?: Customer, onSave: (data: Customer) => void, closeDialog: () => void }) => {
   const form = useForm<Customer>({
     resolver: zodResolver(customerSchema),
-    defaultValues: customer || { id: `CUS-${Date.now()}`, customerName: '' },
+    defaultValues: {
+      id: customer?.id || `CUS-${Date.now()}`,
+      customerName: customer?.customerName || '',
+      customerContact: customer?.customerContact || '',
+      customerAddress: customer?.customerAddress || '',
+      customerEmail: customer?.customerEmail || '',
+      customerPhone: customer?.customerPhone || '',
+    },
   });
 
   const onSubmit = (data: Customer) => {
