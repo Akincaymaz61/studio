@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
 import React from 'react';
 import Image from 'next/image';
+import { Button } from '../ui/button';
 
 const FormSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
   <Card className="overflow-hidden">
