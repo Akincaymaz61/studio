@@ -77,11 +77,17 @@ export default function QuotePage() {
   const totalWithTax = subtotal + taxTotal;
 
   let discountAmount = 0;
+  // Ensure discount value is not negative
+  const safeDiscountValue = Math.max(0, watchedDiscountValue);
+  
   if (watchedDiscountType === 'percentage') {
-      discountAmount = totalWithTax * ((Number(watchedDiscountValue) || 0) / 100);
+      // For percentage, cap it at 100%
+      const percentage = Math.min(100, safeDiscountValue);
+      discountAmount = totalWithTax * (percentage / 100);
   } else {
-      discountAmount = Number(watchedDiscountValue) || 0;
+      discountAmount = safeDiscountValue;
   }
+  // Ensure the final discount amount isn't more than the total
   discountAmount = Math.min(discountAmount, totalWithTax);
 
   const grandTotal = totalWithTax - discountAmount;
@@ -353,7 +359,7 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
-          onSetCompanyProfile={handleSetCompanyProfile}
+  onSetCompanyProfile={handleSetCompanyProfile}
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}
@@ -371,8 +377,11 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
             />
           ) : (
              <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
-                if(e.key === 'Enter' && e.target instanceof HTMLInputElement && e.target.closest('.items-table-row')) {
-                    e.preventDefault();
+                if(e.key === 'Enter' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+                    // Prevent form submission on Enter, but allow new lines in textarea
+                    if (!(e.target instanceof HTMLTextAreaElement)) {
+                        e.preventDefault();
+                    }
                 }
              }}>
               <QuoteForm 
@@ -385,3 +394,5 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
     </FormProvider>
   );
 }
+
+    

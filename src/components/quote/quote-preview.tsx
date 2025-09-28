@@ -101,7 +101,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex justify-between items-start gap-8">
+          <section className="mt-8 flex items-start justify-between gap-8">
             {quote.notes && (
                 <div className="w-1/2">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
@@ -110,7 +110,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs space-y-2">
+             <div className="w-full max-w-xs ml-auto space-y-2">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
@@ -138,3 +138,5 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
     </div>
   );
 }
+
+    
