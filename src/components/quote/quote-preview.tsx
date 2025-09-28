@@ -89,11 +89,11 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               <tbody>
                 {quote.items.map((item, index) => (
                   <tr key={item.id} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}`}>
-                    <td className="p-3">{item.description}</td>
-                    <td className="p-3 text-center">{item.quantity}</td>
-                    <td className="p-3 text-center">{item.unit}</td>
-                    <td className="p-3 text-right">{formatCurrency(item.price, quote.currency)}</td>
-                    <td className="p-3 text-center">{item.tax}%</td>
+                    <td className="p-3 border-r">{item.description}</td>
+                    <td className="p-3 text-center border-r">{item.quantity}</td>
+                    <td className="p-3 text-center border-r">{item.unit}</td>
+                    <td className="p-3 text-right border-r">{formatCurrency(item.price, quote.currency)}</td>
+                    <td className="p-3 text-center border-r">{item.tax}%</td>
                     <td className="p-3 text-right font-medium">{formatCurrency(item.price * item.quantity, quote.currency)}</td>
                   </tr>
                 ))}
@@ -104,13 +104,13 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           <section className="flex justify-between items-start gap-10">
              <div className="w-1/2">
                 {quote.notes && (
-                    <div className="bg-muted/50 p-4 rounded-lg">
+                    <div className="bg-muted/50 p-4 rounded-lg h-full">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                     </div>
                 )}
              </div>
-             <div className="w-1/2 max-w-xs space-y-2">
+             <div className="w-full max-w-xs space-y-2">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
