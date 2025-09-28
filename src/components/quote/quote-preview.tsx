@@ -7,7 +7,6 @@ import type { Quote } from "@/lib/schema";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
-import { Separator } from "../ui/separator";
 
 type QuotePreviewProps = {
   quote: Quote;
@@ -59,15 +58,16 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           
           <section className="grid grid-cols-2 gap-12 mb-10">
              <div>
-                <h3 className="text-primary font-semibold mb-2">Müşteri Bilgileri:</h3>
+                <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                 <p className="font-bold">{quote.customerName}</p>
                 {quote.customerContact && <p>{quote.customerContact}</p>}
                 <p>{quote.customerAddress}</p>
                 <p>Tel: {quote.customerPhone}</p>
                 <p>E-posta: {quote.customerEmail}</p>
               </div>
-              <div className="text-right">
-                <h3 className="text-primary font-semibold mb-2">{quote.companyName}</h3>
+              <div>
+                <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Teklifi Veren:</h3>
+                <p className="font-bold">{quote.companyName}</p>
                 <p>{quote.companyAddress}</p>
                 <p>Tel: {quote.companyPhone}</p>
                 <p>E-posta: {quote.companyEmail}</p>
@@ -76,19 +76,19 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
 
           <section className="mb-10">
             <table className="w-full text-left">
-              <thead className="bg-primary text-primary-foreground">
+              <thead className="text-primary-foreground">
                 <tr>
-                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg">Ürün/Hizmet</th>
-                  <th className="p-3 font-semibold text-sm text-center">Miktar</th>
-                  <th className="p-3 font-semibold text-sm text-center">Birim</th>
-                  <th className="p-3 font-semibold text-sm text-right">Birim Fiyat</th>
-                  <th className="p-3 font-semibold text-sm text-center">KDV</th>
-                  <th className="p-3 font-semibold text-sm text-right rounded-r-lg">Toplam</th>
+                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg bg-gradient-to-r from-primary to-accent">Ürün/Hizmet</th>
+                  <th className="p-3 font-semibold text-sm text-center bg-gradient-to-r from-primary to-accent">Miktar</th>
+                  <th className="p-3 font-semibold text-sm text-center bg-gradient-to-r from-primary to-accent">Birim</th>
+                  <th className="p-3 font-semibold text-sm text-right bg-gradient-to-r from-primary to-accent">Birim Fiyat</th>
+                  <th className="p-3 font-semibold text-sm text-center bg-gradient-to-r from-primary to-accent">KDV</th>
+                  <th className="p-3 font-semibold text-sm text-right rounded-r-lg bg-gradient-to-r from-primary to-accent">Toplam</th>
                 </tr>
               </thead>
               <tbody>
-                {quote.items.map((item) => (
-                  <tr key={item.id} className="border-b">
+                {quote.items.map((item, index) => (
+                  <tr key={item.id} className={index % 2 === 0 ? "bg-card" : "bg-background"}>
                     <td className="p-3">{item.description}</td>
                     <td className="p-3 text-center">{item.quantity}</td>
                     <td className="p-3 text-center">{item.unit}</td>
@@ -101,15 +101,17 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
 
-          <section className="grid grid-cols-2 gap-10 items-start">
-             {quote.notes && (
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-                </div>
-            )}
-             <div className="space-y-4 col-start-2">
-                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+          <section className="flex justify-between items-start gap-10">
+             <div className="w-1/2">
+                {quote.notes && (
+                    <div className="bg-muted p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                    </div>
+                )}
+             </div>
+             <div className="w-1/2 space-y-4">
+                <div className="p-4 bg-muted rounded-lg space-y-3">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
                       <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
@@ -125,7 +127,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                       <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
                   </div>
                 </div>
-                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
+                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
                     <span>Genel Toplam:</span>
                     <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                 </div>
