@@ -5,17 +5,16 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer } from '@/lib/schema';
+import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer, DbData, dbDataSchema } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
-import { collection, doc, onSnapshot, deleteDoc, setDoc, Timestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getDbData, saveDbData } from '@/lib/db-actions';
 
 export default function QuotePage() {
   const { toast } = useToast();
@@ -33,234 +32,183 @@ export default function QuotePage() {
     defaultValues: defaultQuote,
   });
 
-  const { handleSubmit, reset, watch, getValues, setValue, formState: {isDirty} } = form;
-  
-  const handleSaveQuote = useCallback(async (data: Quote) => {
-    try {
-      const quoteRef = doc(db, 'quotes', data.id);
-      
-      const dataToSave = {
-        ...data,
-        quoteDate: Timestamp.fromDate(new Date(data.quoteDate)),
-        validUntil: Timestamp.fromDate(new Date(data.validUntil)),
-        updatedAt: Timestamp.now(),
-      };
+  const { handleSubmit, reset, watch, getValues, setValue, formState: { isDirty } } = form;
 
-      await setDoc(quoteRef, dataToSave, { merge: true });
-      
+  const getFullDbData = useCallback((): DbData => {
+    return {
+      quotes: savedQuotes,
+      customers: customers,
+      companyProfiles: companyProfiles,
+    };
+  }, [savedQuotes, customers, companyProfiles]);
+
+  const handleSaveAll = useCallback(async (data: DbData) => {
+    try {
+      await saveDbData(data);
     } catch (error) {
-      console.error("Error saving quote: ", error);
+      console.error("Error saving to db.json: ", error);
       toast({
         title: "Kaydetme Hatası",
-        description: "Teklif kaydedilirken bir hata oluştu.",
+        description: "Veriler dosyaya kaydedilirken bir hata oluştu.",
         variant: "destructive"
       });
     }
   }, [toast]);
   
-  
-  useEffect(() => {
-    const loadInitialData = async () => {
-        setDbLoading(true);
-        try {
-            const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
-            const querySnapshot = await getDocs(q);
+  const loadInitialData = useCallback(async () => {
+    setDbLoading(true);
+    try {
+      const data = await getDbData();
+      const parsedData = dbDataSchema.safeParse(data);
 
-            let initialQuote: Quote;
-
-            if (!querySnapshot.empty) {
-                const docSnap = querySnapshot.docs[0];
-                const data = docSnap.data();
-                initialQuote = {
-                    ...data,
-                    quoteDate: data.quoteDate?.toDate(),
-                    validUntil: data.validUntil?.toDate(),
-                    updatedAt: data.updatedAt?.toDate(),
-                } as Quote;
-            } else {
-                // Create a sample quote if the database is empty
-                initialQuote = {
-                    id: `QT-${Date.now()}`,
-                    companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
-                    companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
-                    companyPhone: '0212 555 1234',
-                    companyEmail: 'info@abcteknoloji.com',
-                    companyLogo: '',
-                    customerName: 'XYZ Holding',
-                    customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
-                    customerContact: 'Sn. Ahmet Yılmaz',
-                    customerEmail: 'ahmet.yilmaz@xyzholding.com',
-                    customerPhone: '0212 999 5678',
-                    quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
-                    quoteDate: new Date(),
-                    validUntil: addDays(new Date(), 30),
-                    currency: 'TRY',
-                    items: [
-                        { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
-                        { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
-                        { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
-                    ],
-                    discountType: 'fixed',
-                    discountValue: 5000,
-                    notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
-                    updatedAt: new Date(),
-                };
-                await handleSaveQuote(initialQuote);
-            }
-            
-            const parsedQuote = quoteSchema.safeParse(initialQuote);
-            if (parsedQuote.success) {
-                 reset(parsedQuote.data, { keepDirty: false });
-            } else {
-                console.error("Failed to parse initial quote, resetting to default.", parsedQuote.error);
-                reset(defaultQuote);
-            }
-
-        } catch (error) {
-            console.error("Error loading initial quote:", error);
-            toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
-            reset(defaultQuote);
-        } finally {
-            setDbLoading(false);
-        }
-    };
-    
-    loadInitialData();
-    setIsClient(true);
-    
-    const unsubscribes = [
-      onSnapshot(collection(db, 'quotes'), (snapshot) => {
-        const quotes = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const parsed = quoteSchema.safeParse({
-              ...data,
-              quoteDate: data.quoteDate?.toDate(),
-              validUntil: data.validUntil?.toDate(),
-              updatedAt: data.updatedAt?.toDate(),
-            });
-            if (parsed.success) {
-                return parsed.data;
-            }
-            console.warn("Failed to parse quote from DB:", parsed.error);
-            return null;
-          }).filter((q): q is Quote => q !== null);
-          setSavedQuotes(quotes.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)));
-      }),
-      onSnapshot(collection(db, 'customers'), (snapshot) => {
-        const customers = snapshot.docs.map(doc => doc.data() as Customer);
+      if (parsedData.success) {
+        const { quotes, customers, companyProfiles } = parsedData.data;
+        setSavedQuotes(quotes);
         setCustomers(customers);
-      }),
-      onSnapshot(collection(db, 'companyProfiles'), (snapshot) => {
-        const profiles = snapshot.docs.map(doc => doc.data() as CompanyProfile);
-        setCompanyProfiles(profiles);
-      })
-    ];
-    
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
-      if (modifier && event.key === 's') {
-        event.preventDefault();
-        handleSubmit(async (data) => {
-            await handleSaveQuote(data);
-            toast({
-              title: "Teklif Kaydedildi",
-              description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
-            });
-        })();
-      }
-      if (modifier && event.key === 'p') {
-        event.preventDefault();
-        handlePdfExport();
-      }
-      if (modifier && event.key === 'n') {
-        event.preventDefault();
-        handleNewQuote();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
+        setCompanyProfiles(companyProfiles);
 
+        const latestQuote = quotes.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
+        
+        if (latestQuote) {
+          reset(latestQuote, { keepDirty: false });
+        } else {
+          const sampleQuote: Quote = {
+            id: `QT-${Date.now()}`,
+            companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
+            companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
+            companyPhone: '0212 555 1234',
+            companyEmail: 'info@abcteknoloji.com',
+            companyLogo: '',
+            customerName: 'XYZ Holding',
+            customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
+            customerContact: 'Sn. Ahmet Yılmaz',
+            customerEmail: 'ahmet.yilmaz@xyzholding.com',
+            customerPhone: '0212 999 5678',
+            quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
+            quoteDate: new Date(),
+            validUntil: addDays(new Date(), 30),
+            currency: 'TRY',
+            items: [
+                { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
+                { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
+                { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
+            ],
+            discountType: 'fixed',
+            discountValue: 5000,
+            notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
+            updatedAt: new Date(),
+          };
+          reset(sampleQuote, { keepDirty: false });
+          setSavedQuotes([sampleQuote]);
+          await handleSaveAll({ quotes: [sampleQuote], customers: [], companyProfiles: [] });
+        }
+      } else {
+         reset(defaultQuote, { keepDirty: false });
+      }
+    } catch (error) {
+      console.error("Error loading initial data:", error);
+      toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
+      reset(defaultQuote);
+    } finally {
+      setDbLoading(false);
+      setIsClient(true);
+    }
+  }, [reset, toast, handleSaveAll]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+
+  const saveCurrentQuote = useCallback((currentData: Quote) => {
+      const updatedQuote = { ...currentData, updatedAt: new Date() };
+      const otherQuotes = savedQuotes.filter(q => q.id !== updatedQuote.id);
+      const newQuotesList = [...otherQuotes, updatedQuote];
+      setSavedQuotes(newQuotesList);
+      return newQuotesList;
+  }, [savedQuotes]);
+
+
+  useEffect(() => {
+    if (dbLoading) return;
+    
+    const debouncedSave = setTimeout(() => {
+      if (isDirty) {
+         handleSubmit(async (data) => {
+            const newQuotesList = saveCurrentQuote(data);
+            await handleSaveAll({
+                quotes: newQuotesList,
+                customers: customers,
+                companyProfiles: companyProfiles,
+            });
+         })();
+      }
+    }, 1500);
+
+    return () => clearTimeout(debouncedSave);
+  }, [isDirty, dbLoading, handleSubmit, saveCurrentQuote, handleSaveAll, getFullDbData, customers, companyProfiles, watch()]);
+  
+  
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
+    if (modifier && event.key === 's') {
+      event.preventDefault();
+      handleSubmit(async (data) => {
+        const newQuotesList = saveCurrentQuote(data);
+        await handleSaveAll({
+            quotes: newQuotesList,
+            customers: customers,
+            companyProfiles: companyProfiles,
+        });
+        toast({
+            title: "Teklif Kaydedildi",
+            description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
+        });
+      })();
+    }
+    if (modifier && event.key === 'p') {
+      event.preventDefault();
+      setIsPreview(true);
+      setTimeout(() => {
+          window.print();
+          setIsPreview(false);
+      }, 100);
+    }
+    if (modifier && event.key === 'n') {
+      event.preventDefault();
+      // handleNewQuote is defined below and needs the latest state
+    }
+  }, [handleSubmit, saveCurrentQuote, handleSaveAll, toast, isPreview, customers, companyProfiles]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      unsubscribes.forEach(unsub => unsub());
     };
-
-  }, [reset, toast, handleSubmit, handleSaveQuote]);
-
-  // --- Autosave Effect ---
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-     if (dbLoading) return;
-     if (isInitialMount.current) {
-        isInitialMount.current = false;
-        return;
-    }
-    
-    const subscription = watch((values, { name, type }) => {
-        if (!isDirty) return;
-        
-        const debouncedSave = setTimeout(() => {
-          handleSubmit(handleSaveQuote)();
-        }, 1500); // 1.5 second debounce
-
-        return () => clearTimeout(debouncedSave);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, isDirty, dbLoading, handleSubmit, handleSaveQuote]);
+  }, [handleKeyDown]);
   
-  
-  // --- Calculation Logic ---
+
   const watchedItems = watch('items') || [];
   const watchedDiscountType = watch('discountType');
   const watchedDiscountValue = watch('discountValue') || 0;
 
-  const subtotal = watchedItems.reduce((acc, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    return acc + quantity * price;
-  }, 0);
-
-  const taxTotal = watchedItems.reduce((acc, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    const taxRate = Number(item.tax) || 0;
-    const itemTotal = quantity * price;
-    return acc + (itemTotal * (taxRate / 100));
-  }, 0);
-  
+  const subtotal = watchedItems.reduce((acc, item) => (acc + (Number(item.quantity) || 0) * (Number(item.price) || 0)), 0);
+  const taxTotal = watchedItems.reduce((acc, item) => (acc + ((Number(item.quantity) || 0) * (Number(item.price) || 0)) * (Number(item.tax) / 100)), 0);
   const totalWithTax = subtotal + taxTotal;
 
   let discountAmount = 0;
-  const safeDiscountValue = Math.max(0, watchedDiscountValue);
-  
   if (watchedDiscountType === 'percentage') {
-      const percentage = Math.min(100, safeDiscountValue);
-      discountAmount = totalWithTax * (percentage / 100);
+    discountAmount = totalWithTax * ((Math.min(100, Number(watchedDiscountValue) || 0)) / 100);
   } else {
-      discountAmount = safeDiscountValue;
+    discountAmount = Number(watchedDiscountValue) || 0;
   }
   discountAmount = Math.min(discountAmount, totalWithTax);
 
   const grandTotal = totalWithTax - discountAmount;
   const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
 
-  // --- Handlers ---
   
   const handleNewQuote = useCallback(async () => {
-    const date = new Date();
-    const datePart = format(date, 'yyyyMMdd');
-    
-    const todayQuotes = savedQuotes.filter(q => q.quoteNumber?.startsWith(`QT-${datePart}`));
-    const lastSequence = todayQuotes.reduce((max, q) => {
-        const parts = q.quoteNumber?.split('-') || [];
-        const seq = parseInt(parts[2] || '0');
-        return Math.max(max, seq);
-    }, 0);
-
-    const sequence = (lastSequence + 1).toString().padStart(4, '0');
-    const newQuoteNumber = `QT-${datePart}-${sequence}`;
-    
     const currentCompanyInfo = {
       companyName: getValues('companyName'),
       companyAddress: getValues('companyAddress'),
@@ -273,33 +221,30 @@ export default function QuotePage() {
       ...defaultQuote,
       ...currentCompanyInfo,
       id: `QT-${Date.now()}`,
-      quoteNumber: newQuoteNumber,
+      quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-${(savedQuotes.length + 1).toString().padStart(4, '0')}`,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
       updatedAt: new Date(),
     };
     reset(newQuote);
+    
+    const newQuotesList = [...savedQuotes, newQuote];
+    setSavedQuotes(newQuotesList);
+    await handleSaveAll({
+        quotes: newQuotesList,
+        customers: customers,
+        companyProfiles: companyProfiles,
+    });
 
-    try {
-        await handleSaveQuote(newQuote);
-        toast({
-          title: "Yeni Teklif Oluşturuldu",
-          description: "Yeni, boş bir teklif oluşturuldu ve kaydedildi.",
-        });
-    } catch (error) {
-        toast({
-            title: "Yeni Teklif Kaydedilemedi",
-            description: "Yeni teklif oluşturulurken bir hata meydana geldi.",
-            variant: "destructive"
-        });
-    }
-  }, [savedQuotes, getValues, reset, handleSaveQuote, toast]);
-  
+    toast({
+      title: "Yeni Teklif Oluşturuldu",
+      description: "Yeni, boş bir teklif oluşturuldu ve kaydedildi.",
+    });
+  }, [getValues, reset, toast, savedQuotes, customers, companyProfiles, handleSaveAll]);
+
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
-    const quoteNumber = getValues('quoteNumber');
-    document.title = quoteNumber || 'teklif';
-    
+    document.title = getValues('quoteNumber') || 'teklif';
     setIsPreview(true);
     setTimeout(() => {
       window.print();
@@ -308,124 +253,85 @@ export default function QuotePage() {
     }, 100);
   }, [getValues]);
 
-  const handleLoadQuote = useCallback((quote: Quote) => {
-    const quoteData = {
-        ...quote,
-        quoteDate: quote.quoteDate instanceof Timestamp ? quote.quoteDate.toDate() : new Date(quote.quoteDate),
-        validUntil: quote.validUntil instanceof Timestamp ? quote.validUntil.toDate() : new Date(quote.validUntil),
-        updatedAt: quote.updatedAt instanceof Timestamp ? quote.updatedAt.toDate() : new Date(quote.updatedAt),
+  const handleLoadQuote = useCallback((quoteId: string) => {
+    const quoteToLoad = savedQuotes.find(q => q.id === quoteId);
+    if (quoteToLoad) {
+      reset(quoteToLoad);
+      toast({
+        title: "Teklif Yüklendi",
+        description: `${quoteToLoad.quoteNumber} numaralı teklif yüklendi.`,
+      });
     }
-    const parsedQuote = quoteSchema.safeParse(quoteData)
-    if (parsedQuote.success) {
-        reset(parsedQuote.data);
-        toast({
-          title: "Teklif Yüklendi",
-          description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
-        });
-    } else {
-        toast({
-          title: "Yükleme Hatası",
-          description: "Teklif verisi bozuk, yüklenemedi.",
-          variant: "destructive"
-        });
-    }
-  }, [reset, toast]);
+  }, [savedQuotes, reset, toast]);
   
   const handleDeleteQuote = async (quoteId: string) => {
-    const currentQuoteId = getValues('id');
-    try {
-      await deleteDoc(doc(db, 'quotes', quoteId));
-      
-      if(currentQuoteId === quoteId) {
-        const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const docData = querySnapshot.docs[0].data();
-           const quoteData = {
-                ...docData,
-                quoteDate: docData.quoteDate.toDate(),
-                validUntil: docData.validUntil.toDate(),
-                updatedAt: docData.updatedAt.toDate(),
-            } as Quote
-          handleLoadQuote(quoteData);
-        } else {
-          await handleNewQuote();
-        }
-      }
+    const newQuotes = savedQuotes.filter(q => q.id !== quoteId);
+    setSavedQuotes(newQuotes);
+    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
 
-      toast({
-        title: "Teklif Silindi",
-        variant: 'destructive',
-        description: `Teklif başarıyla silindi.`,
-      });
-    } catch(error) {
-      console.error("Error deleting quote: ", error);
-       toast({
-        title: "Silme Hatası",
-        description: "Teklif silinirken bir hata oluştu.",
-        variant: "destructive"
-      });
+    if (getValues('id') === quoteId) {
+      const latestQuote = newQuotes.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
+      if (latestQuote) {
+        reset(latestQuote);
+      } else {
+        handleNewQuote();
+      }
     }
+    toast({ title: "Teklif Silindi", variant: 'destructive' });
   };
 
   const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
-    try {
-      await setDoc(doc(db, 'companyProfiles', profile.id), profile);
-      toast({ title: 'Firma Profili Kaydedildi' });
-    } catch(error) {
-      console.error("Error saving company profile: ", error);
-      toast({ title: 'Profil Kaydedilemedi', variant: 'destructive' });
-    }
+    const otherProfiles = companyProfiles.filter(p => p.id !== profile.id);
+    const newProfiles = [...otherProfiles, profile];
+    setCompanyProfiles(newProfiles);
+    await handleSaveAll({ quotes: savedQuotes, customers, companyProfiles: newProfiles });
+    toast({ title: 'Firma Profili Kaydedildi' });
   };
 
-  const handleSetCompanyProfile = (profile: CompanyProfile, showToast = true) => {
-    setValue('companyName', profile.companyName);
-    setValue('companyAddress', profile.companyAddress || '');
-    setValue('companyPhone', profile.companyPhone || '');
-    setValue('companyEmail', profile.companyEmail || '');
-    setValue('companyLogo', profile.companyLogo || '');
-    if (showToast) {
-        toast({ title: `${profile.companyName} profili yüklendi.` });
+  const handleSetCompanyProfile = (profileId: string) => {
+    const profile = companyProfiles.find(p => p.id === profileId);
+    if(profile) {
+      setValue('companyName', profile.companyName);
+      setValue('companyAddress', profile.companyAddress || '');
+      setValue('companyPhone', profile.companyPhone || '');
+      setValue('companyEmail', profile.companyEmail || '');
+      setValue('companyLogo', profile.companyLogo || '');
+      toast({ title: `${profile.companyName} profili yüklendi.` });
     }
   };
   
   const handleDeleteCompanyProfile = async (profileId: string) => {
-    try {
-      await deleteDoc(doc(db, 'companyProfiles', profileId));
-      toast({ title: 'Profil Silindi', variant: 'destructive' });
-    } catch(error) {
-      console.error("Error deleting company profile: ", error);
-      toast({ title: 'Profil Silinemedi', variant: 'destructive' });
-    }
+    const newProfiles = companyProfiles.filter(p => p.id !== profileId);
+    setCompanyProfiles(newProfiles);
+    await handleSaveAll({ quotes: savedQuotes, customers, companyProfiles: newProfiles });
+    toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
-    try {
-      await setDoc(doc(db, 'customers', customer.id), customer);
-      toast({ title: 'Müşteri Kaydedildi' });
-    } catch(error) {
-       console.error("Error saving customer: ", error);
-       toast({ title: 'Müşteri Kaydedilemedi', variant: 'destructive' });
-    }
+    const otherCustomers = customers.filter(c => c.id !== customer.id);
+    const newCustomers = [...otherCustomers, customer];
+    setCustomers(newCustomers);
+    await handleSaveAll({ quotes: savedQuotes, customers: newCustomers, companyProfiles });
+    toast({ title: 'Müşteri Kaydedildi' });
   };
   
-  const handleSetCustomer = (customer: Customer) => {
-    setValue('customerName', customer.customerName);
-    setValue('customerAddress', customer.customerAddress || '');
-    setValue('customerContact', customer.customerContact || '');
-    setValue('customerEmail', customer.customerEmail || '');
-    setValue('customerPhone', customer.customerPhone || '');
-    toast({ title: `${customer.customerName} müşterisi yüklendi.` });
+  const handleSetCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setValue('customerName', customer.customerName);
+      setValue('customerAddress', customer.customerAddress || '');
+      setValue('customerContact', customer.customerContact || '');
+      setValue('customerEmail', customer.customerEmail || '');
+      setValue('customerPhone', customer.customerPhone || '');
+      toast({ title: `${customer.customerName} müşterisi yüklendi.` });
+    }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    try {
-      await deleteDoc(doc(db, 'customers', customerId));
-      toast({ title: 'Müşteri Silindi', variant: 'destructive' });
-    } catch(error) {
-      console.error("Error deleting customer: ", error);
-      toast({ title: 'Müşteri Kaydedilemedi', variant: 'destructive' });
-    }
+    const newCustomers = customers.filter(c => c.id !== customerId);
+    setCustomers(newCustomers);
+    await handleSaveAll({ quotes: savedQuotes, customers: newCustomers, companyProfiles });
+    toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
   if (!isClient || dbLoading) {
@@ -483,24 +389,28 @@ export default function QuotePage() {
         <Toolbar
           onNewQuote={handleNewQuote}
           onSaveQuote={() => {
-            handleSubmit(handleSaveQuote)().then(() => {
-                toast({
+            handleSubmit(async (data) => {
+              const newQuotesList = saveCurrentQuote(data);
+              await handleSaveAll({
+                  quotes: newQuotesList,
+                  customers: customers,
+                  companyProfiles: companyProfiles,
+              });
+              toast({
                   title: "Teklif Kaydedildi",
-                  description: "Değişiklikleriniz buluta başarıyla kaydedildi.",
-                });
-            });
+                  description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
+              });
+            })();
           }}
           onPreviewToggle={() => setIsPreview(!isPreview)}
           onPdfExport={handlePdfExport}
           isPreviewing={isPreview}
           savedQuotes={savedQuotes}
           onLoadQuote={handleLoadQuote}
-  
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
-  
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}

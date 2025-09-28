@@ -61,6 +61,13 @@ export const quoteSchema = z.object({
 export type Quote = z.infer<typeof quoteSchema>;
 export type QuoteItem = z.infer<typeof quoteItemSchema>;
 
+export const dbDataSchema = z.object({
+    quotes: z.array(quoteSchema),
+    customers: z.array(customerSchema),
+    companyProfiles: z.array(companyProfileSchema),
+});
+export type DbData = z.infer<typeof dbDataSchema>;
+
 const today = new Date();
 const datePart = format(today, 'yyyyMMdd');
 const sequencePart = '0001';

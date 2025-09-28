@@ -35,15 +35,15 @@ type ToolbarProps = {
   onPdfExport: () => void;
   isPreviewing: boolean;
   savedQuotes: Quote[];
-  onLoadQuote: (quote: Quote) => void;
+  onLoadQuote: (quoteId: string) => void;
   onDeleteQuote: (quoteId: string) => void;
   companyProfiles: CompanyProfile[];
   onSaveCompanyProfile: (profile: CompanyProfile) => void;
-  onSetCompanyProfile: (profile: CompanyProfile) => void;
+  onSetCompanyProfile: (profileId: string) => void;
   onDeleteCompanyProfile: (profileId: string) => void;
   customers: Customer[];
   onSaveCustomer: (customer: Customer) => void;
-  onSetCustomer: (customer: Customer) => void;
+  onSetCustomer: (customerId: string) => void;
   onDeleteCustomer: (customerId: string) => void;
   getValues: any;
 };
@@ -151,6 +151,7 @@ export function Toolbar({
   getValues,
 }: ToolbarProps) {
   const { toast } = useToast();
+  const [isQuotesDialogOpen, setQuotesDialogOpen] = useState(false);
   const [isCompanyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [isCustomerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<CompanyProfile | undefined>(undefined);
@@ -188,7 +189,7 @@ export function Toolbar({
             <AlertDialogHeader>
               <AlertDialogTitle>Yeni Teklif Oluştur</AlertDialogTitle>
               <AlertDialogDescription>
-                Mevcut teklifteki kaydedilmemiş değişiklikler kaybolacak. Firma bilgileriniz korunacak. Devam etmek istediğinize emin misiniz?
+                Mevcut teklifteki kaydedilmemiş değişiklikler kaybolabilir. Firma bilgileriniz korunacak. Devam etmek istediğinize emin misiniz?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -198,7 +199,7 @@ export function Toolbar({
           </AlertDialogContent>
         </AlertDialog>
 
-        <Dialog>
+        <Dialog open={isQuotesDialogOpen} onOpenChange={setQuotesDialogOpen}>
           <DialogTrigger asChild><Button variant="outline"><List /> Kayıtlı Teklifler</Button></DialogTrigger>
           <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Kaydedilmiş Teklifler</DialogTitle></DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
@@ -209,7 +210,7 @@ export function Toolbar({
                     <TableRow key={quote.id}>
                       <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell><TableCell>{format(new Date(quote.quoteDate), "dd/MM/yyyy")}</TableCell><TableCell>{formatCurrency(quote.items.reduce((acc, item) => acc + item.quantity * item.price, 0), quote.currency)}</TableCell>
                       <TableCell className="text-right">
-                        <DialogClose asChild><Button variant="ghost" size="sm" onClick={() => onLoadQuote(quote)}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button></DialogClose>
+                        <Button variant="ghost" size="sm" onClick={() => { onLoadQuote(quote.id); setQuotesDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
                           <AlertDialogContent>
@@ -239,7 +240,7 @@ export function Toolbar({
                     <TableRow key={p.id}>
                       <TableCell>{p.companyName}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => { onSetCompanyProfile(p); setCompanyDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { onSetCompanyProfile(p.id); setCompanyDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
                         <Button variant="ghost" size="sm" onClick={() => { setEditingProfile(p); setProfileFormOpen(true); }}><Edit className="h-4 w-4 mr-2" /> Düzenle</Button>
                         <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
                           <AlertDialogContent>
@@ -272,7 +273,7 @@ export function Toolbar({
                     <TableRow key={c.id}>
                       <TableCell>{c.customerName}</TableCell><TableCell>{c.customerContact}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => { onSetCustomer(c); setCustomerDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { onSetCustomer(c.id); setCustomerDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
                         <Button variant="ghost" size="sm" onClick={() => { setEditingCustomer(c); setCustomerFormOpen(true); }}><Edit className="h-4 w-4 mr-2" /> Düzenle</Button>
                         <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
                           <AlertDialogContent>
