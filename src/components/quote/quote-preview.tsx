@@ -56,7 +56,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </div>
           </header>
           
-          <section className="grid grid-cols-2 gap-12 mt-10 mb-10">
+          <section className="grid grid-cols-2 gap-12 mt-8 mb-8">
              <div>
                 <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                 <p className="font-bold">{quote.customerName}</p>
@@ -74,7 +74,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </div>
           </section>
 
-          <section className="mb-10">
+          <section className="mb-8">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-primary text-primary-foreground">
@@ -101,16 +101,15 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          {quote.notes && (
-            <section className="mb-8">
-                <div className="bg-muted/50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+          <section className="mt-8 flex justify-between items-start gap-8">
+            {quote.notes && (
+                <div className="w-1/2">
+                    <div className="bg-muted/50 p-4 rounded-lg h-full">
+                    <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                    </div>
                 </div>
-            </section>
-          )}
-
-          <section className="flex justify-end">
+            )}
              <div className="w-full max-w-xs space-y-2">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
