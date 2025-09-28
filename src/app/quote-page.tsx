@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Keyboard, HelpCircle } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
+import { suggestImprovements } from '@/ai/flows/suggest-improvements';
 
 const getInitialState = (): Quote => {
   if (typeof window === 'undefined') {
@@ -316,7 +317,7 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
         <header className="mb-8 no-print flex justify-between items-center">
           <div/>
           <div>
-            <h1 className="text-4xl font-bold text-primary text-center font-headline">TeklifAI</h1>
+            <h1 className="text-4xl font-bold text-primary text-center font-headline">Fiyat Teklifi Oluşturucu</h1>
             <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
           </div>
            <Popover>

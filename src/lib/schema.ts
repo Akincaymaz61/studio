@@ -105,5 +105,5 @@ export const currencySymbols: { [key: string]: string } = {
   CNY: '¥',
 };
 
-export const unitOptions = ["adet", "saat", "gün", "ay", "kg", "lt", "mt", "m2", "m3", "paket", "proje"];
+export const unitOptions = ["adet", "gün", "ay", "mt", "m2", "paket", "proje"];
 export const taxOptions = [0, 1, 8, 10, 18, 20];
