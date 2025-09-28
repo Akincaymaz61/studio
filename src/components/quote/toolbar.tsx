@@ -11,7 +11,7 @@ import {
   FilePlus2,
   Save,
   Eye,
-  FilePdf,
+  FileDown,
   Sparkles,
   FolderOpen,
   Trash2,
@@ -141,7 +141,7 @@ export function Toolbar({
       <div className="flex flex-wrap gap-2">
         <Button onClick={onSaveQuote}><Save /> Kaydet</Button>
         <Button variant="secondary" onClick={onPreviewToggle}><Eye /> {isPreviewing ? 'Düzenle' : 'Önizle'}</Button>
-        <Button variant="destructive" onClick={onPdfExport}><FilePdf /> PDF Olarak Dışa Aktar</Button>
+        <Button variant="destructive" onClick={onPdfExport}><FileDown /> PDF Olarak Dışa Aktar</Button>
       </div>
     </div>
   );
