@@ -3,7 +3,7 @@ import { addDays, format } from 'date-fns';
 
 export const companyProfileSchema = z.object({
   id: z.string(),
-  companyName: z.string().min(1, 'Firma adı gereklidir'),
+  companyName: z.string(),
   companyLogo: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
@@ -13,7 +13,7 @@ export type CompanyProfile = z.infer<typeof companyProfileSchema>;
 
 export const customerSchema = z.object({
   id: z.string(),
-  customerName: z.string().min(1, 'Müşteri adı gereklidir'),
+  customerName: z.string(),
   customerContact: z.string().optional(),
   customerAddress: z.string().optional(),
   customerEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
@@ -26,7 +26,7 @@ export const quoteItemSchema = z.object({
   id: z.string(),
   description: z.string(),
   quantity: z.coerce.number().min(0, 'Miktar pozitif olmalıdır').default(1),
-  unit: z.string().min(1, 'Birim gereklidir').default('adet'),
+  unit: z.string().default('adet'),
   price: z.coerce.number().min(0, 'Fiyat pozitif olmalıdır').default(0),
   tax: z.coerce.number().min(0).max(100).default(20),
 });
@@ -85,7 +85,7 @@ export const defaultQuote: Quote = {
   currency: 'USD',
   items: [
     {
-      id: 'default-item-1', // Use a stable ID for the default item
+      id: 'default-item-1',
       description: '',
       quantity: 1,
       unit: 'adet',

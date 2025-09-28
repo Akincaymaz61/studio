@@ -61,60 +61,68 @@ export default function QuotePage() {
   
   useEffect(() => {
     const loadInitialData = async () => {
-      setDbLoading(true);
-      try {
-        const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
-        const querySnapshot = await getDocs(q);
+        setDbLoading(true);
+        try {
+            const q = query(collection(db, 'quotes'), orderBy('updatedAt', 'desc'), limit(1));
+            const querySnapshot = await getDocs(q);
 
-        if (!querySnapshot.empty) {
-          const docSnap = querySnapshot.docs[0];
-          const data = docSnap.data();
-          const quoteData = {
-            ...data,
-            quoteDate: data.quoteDate?.toDate(),
-            validUntil: data.validUntil?.toDate(),
-            updatedAt: data.updatedAt?.toDate(),
-          };
-          const parsedQuote = quoteSchema.parse(quoteData);
-          reset(parsedQuote, { keepDirty: false });
-        } else {
-            // Create a sample quote if the database is empty
-            const sampleQuote: Quote = {
-                id: `QT-${Date.now()}`,
-                companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
-                companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
-                companyPhone: '0212 555 1234',
-                companyEmail: 'info@abcteknoloji.com',
-                companyLogo: '',
-                customerName: 'XYZ Holding',
-                customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
-                customerContact: 'Sn. Ahmet Yılmaz',
-                customerEmail: 'ahmet.yilmaz@xyzholding.com',
-                customerPhone: '0212 999 5678',
-                quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
-                quoteDate: new Date(),
-                validUntil: addDays(new Date(), 30),
-                currency: 'TRY',
-                items: [
-                    { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
-                    { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
-                    { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
-                ],
-                discountType: 'fixed',
-                discountValue: 5000,
-                notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
-                updatedAt: new Date(),
-            };
-            reset(sampleQuote, { keepDirty: false });
-            await handleSaveQuote(sampleQuote);
+            let initialQuote: Quote;
+
+            if (!querySnapshot.empty) {
+                const docSnap = querySnapshot.docs[0];
+                const data = docSnap.data();
+                initialQuote = {
+                    ...data,
+                    quoteDate: data.quoteDate?.toDate(),
+                    validUntil: data.validUntil?.toDate(),
+                    updatedAt: data.updatedAt?.toDate(),
+                } as Quote;
+            } else {
+                // Create a sample quote if the database is empty
+                initialQuote = {
+                    id: `QT-${Date.now()}`,
+                    companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
+                    companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
+                    companyPhone: '0212 555 1234',
+                    companyEmail: 'info@abcteknoloji.com',
+                    companyLogo: '',
+                    customerName: 'XYZ Holding',
+                    customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
+                    customerContact: 'Sn. Ahmet Yılmaz',
+                    customerEmail: 'ahmet.yilmaz@xyzholding.com',
+                    customerPhone: '0212 999 5678',
+                    quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
+                    quoteDate: new Date(),
+                    validUntil: addDays(new Date(), 30),
+                    currency: 'TRY',
+                    items: [
+                        { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
+                        { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
+                        { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
+                    ],
+                    discountType: 'fixed',
+                    discountValue: 5000,
+                    notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
+                    updatedAt: new Date(),
+                };
+                await handleSaveQuote(initialQuote);
+            }
+            
+            const parsedQuote = quoteSchema.safeParse(initialQuote);
+            if (parsedQuote.success) {
+                 reset(parsedQuote.data, { keepDirty: false });
+            } else {
+                console.error("Failed to parse initial quote, resetting to default.", parsedQuote.error);
+                reset(defaultQuote);
+            }
+
+        } catch (error) {
+            console.error("Error loading initial quote:", error);
+            toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
+            reset(defaultQuote);
+        } finally {
+            setDbLoading(false);
         }
-      } catch (error) {
-        console.error("Error loading initial quote:", error);
-        toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
-        reset(defaultQuote);
-      } finally {
-        setDbLoading(false);
-      }
     };
     
     loadInitialData();
@@ -307,12 +315,20 @@ export default function QuotePage() {
         validUntil: quote.validUntil instanceof Timestamp ? quote.validUntil.toDate() : new Date(quote.validUntil),
         updatedAt: quote.updatedAt instanceof Timestamp ? quote.updatedAt.toDate() : new Date(quote.updatedAt),
     }
-    const parsedQuote = quoteSchema.parse(quoteData)
-    reset(parsedQuote);
-    toast({
-      title: "Teklif Yüklendi",
-      description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
-    });
+    const parsedQuote = quoteSchema.safeParse(quoteData)
+    if (parsedQuote.success) {
+        reset(parsedQuote.data);
+        toast({
+          title: "Teklif Yüklendi",
+          description: `${quote.quoteNumber} numaralı teklif yüklendi.`,
+        });
+    } else {
+        toast({
+          title: "Yükleme Hatası",
+          description: "Teklif verisi bozuk, yüklenemedi.",
+          variant: "destructive"
+        });
+    }
   }, [reset, toast]);
   
   const handleDeleteQuote = async (quoteId: string) => {
@@ -484,6 +500,7 @@ export default function QuotePage() {
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
+  
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}
