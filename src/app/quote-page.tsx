@@ -11,43 +11,49 @@ import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Keyboard, HelpCircle } from 'lucide-react';
+import { Keyboard } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
-import { suggestImprovements } from '@/ai/flows/suggest-improvements';
-
-const getInitialState = (): Quote => {
-  if (typeof window === 'undefined') {
-    return defaultQuote;
-  }
-  try {
-    const savedQuote = localStorage.getItem('currentQuote');
-    if (savedQuote) {
-      const parsed = JSON.parse(savedQuote);
-      
-      if (parsed.quoteDate) parsed.quoteDate = new Date(parsed.quoteDate);
-      if (parsed.validUntil) parsed.validUntil = new Date(parsed.validUntil);
-      
-      const result = quoteSchema.safeParse(parsed);
-      if (result.success) {
-        // Ensure all fields have a default value to avoid uncontrolled to controlled error
-        return { ...defaultQuote, ...result.data };
-      }
-    }
-  } catch (error) {
-    // Silently fall back
-  }
-  return defaultQuote;
-};
-
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { collection, doc, getDocs, writeBatch, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function QuotePage() {
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
   const [isClient, setIsClient] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
+
+  const getInitialState = useCallback((): Quote => {
+    if (typeof window === 'undefined') {
+      return defaultQuote;
+    }
+    try {
+      const savedQuote = localStorage.getItem('currentQuote');
+      if (savedQuote) {
+        const parsed = JSON.parse(savedQuote);
+        
+        if (parsed.quoteDate) parsed.quoteDate = new Date(parsed.quoteDate);
+        if (parsed.validUntil) parsed.validUntil = new Date(parsed.validUntil);
+        
+        const result = quoteSchema.safeParse(parsed);
+        if (result.success) {
+          return { ...defaultQuote, ...result.data };
+        }
+      }
+    } catch (error) {
+      // Silently fall back
+    }
+    return defaultQuote;
+  }, []);
 
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
@@ -56,70 +62,49 @@ export default function QuotePage() {
 
   const { handleSubmit, reset, watch, getValues, setValue } = form;
   
-  const watchedItems = watch('items') || [];
-  const watchedDiscountType = watch('discountType');
-  const watchedDiscountValue = watch('discountValue') || 0;
-
-  // --- START OF CALCULATION LOGIC ---
-  const subtotal = watchedItems.reduce((acc, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    return acc + quantity * price;
-  }, 0);
-
-  const taxTotal = watchedItems.reduce((acc, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    const taxRate = Number(item.tax) || 0;
-    const itemTotal = quantity * price;
-    return acc + (itemTotal * (taxRate / 100));
-  }, 0);
-  
-  const totalWithTax = subtotal + taxTotal;
-
-  let discountAmount = 0;
-  // Ensure discount value is not negative
-  const safeDiscountValue = Math.max(0, watchedDiscountValue);
-  
-  if (watchedDiscountType === 'percentage') {
-      // For percentage, cap it at 100%
-      const percentage = Math.min(100, safeDiscountValue);
-      discountAmount = totalWithTax * (percentage / 100);
-  } else {
-      discountAmount = safeDiscountValue;
-  }
-  // Ensure the final discount amount isn't more than the total
-  discountAmount = Math.min(discountAmount, totalWithTax);
-
-  const grandTotal = totalWithTax - discountAmount;
-  
-  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
-  // --- END OF CALCULATION LOGIC ---
-
-
+  // --- Auth & Data Loading Effect ---
   useEffect(() => {
-    setIsClient(true);
-    const storedQuotes = localStorage.getItem('savedQuotes');
-    if (storedQuotes) setSavedQuotes(JSON.parse(storedQuotes));
+    if (loading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
 
-    const storedProfiles = localStorage.getItem('companyProfiles');
-    if (storedProfiles) setCompanyProfiles(JSON.parse(storedProfiles));
-    
-    const storedCustomers = localStorage.getItem('customers');
-    if (storedCustomers) setCustomers(JSON.parse(storedCustomers));
+    setDbLoading(true);
 
-    const storedActiveProfileId = localStorage.getItem('activeCompanyProfile');
-    const activeId = storedActiveProfileId ? JSON.parse(storedActiveProfileId) : null;
+    const unsubscribes = [
+      onSnapshot(collection(db, 'users', user.uid, 'quotes'), (snapshot) => {
+        const quotes = snapshot.docs.map(doc => quoteSchema.parse({
+          ...doc.data(),
+          quoteDate: doc.data().quoteDate.toDate(),
+          validUntil: doc.data().validUntil.toDate(),
+        }));
+        setSavedQuotes(quotes);
+      }),
+      onSnapshot(collection(db, 'users', user.uid, 'customers'), (snapshot) => {
+        const customers = snapshot.docs.map(doc => doc.data() as Customer);
+        setCustomers(customers);
+      }),
+      onSnapshot(collection(db, 'users', user.uid, 'companyProfiles'), (snapshot) => {
+        const profiles = snapshot.docs.map(doc => doc.data() as CompanyProfile);
+        setCompanyProfiles(profiles);
+        
+        // Load active profile after profiles are loaded
+        const activeProfileId = localStorage.getItem(`activeCompanyProfile_${user.uid}`);
+        if(activeProfileId) {
+          const activeProfile = profiles.find(p => p.id === activeProfileId);
+          if (activeProfile) {
+            handleSetCompanyProfile(activeProfile, false); // don't show toast on initial load
+          }
+        }
+      })
+    ];
+
+    setDbLoading(false);
     
+    // Set initial form state
     const currentQuote = getInitialState();
     reset(currentQuote);
-
-    if (activeId) {
-       const activeProfile = (storedProfiles ? JSON.parse(storedProfiles) : []).find((p: CompanyProfile) => p.id === activeId);
-       if (activeProfile) {
-         handleSetCompanyProfile(activeProfile, false); // don't show toast on initial load
-       }
-    }
 
     // Keyboard shortcuts
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -139,26 +124,65 @@ export default function QuotePage() {
     };
     
     window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      unsubscribes.forEach(unsub => unsub());
     };
 
-  }, [setValue, reset]);
+  }, [user, loading, router, reset, getInitialState]);
 
+
+  // --- LocalStorage sync for current quote ---
   useEffect(() => {
+    setIsClient(true);
     const subscription = watch((value) => {
       localStorage.setItem('currentQuote', JSON.stringify(value));
     });
     return () => subscription.unsubscribe();
   }, [watch]);
   
-  const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
+  // --- Calculation Logic ---
+  const watchedItems = watch('items') || [];
+  const watchedDiscountType = watch('discountType');
+  const watchedDiscountValue = watch('discountValue') || 0;
+
+  const subtotal = watchedItems.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    return acc + quantity * price;
+  }, 0);
+
+  const taxTotal = watchedItems.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    const taxRate = Number(item.tax) || 0;
+    const itemTotal = quantity * price;
+    return acc + (itemTotal * (taxRate / 100));
+  }, 0);
+  
+  const totalWithTax = subtotal + taxTotal;
+
+  let discountAmount = 0;
+  const safeDiscountValue = Math.max(0, watchedDiscountValue);
+  
+  if (watchedDiscountType === 'percentage') {
+      const percentage = Math.min(100, safeDiscountValue);
+      discountAmount = totalWithTax * (percentage / 100);
+  } else {
+      discountAmount = safeDiscountValue;
+  }
+  discountAmount = Math.min(discountAmount, totalWithTax);
+
+  const grandTotal = totalWithTax - discountAmount;
+  const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
+
+  // --- Handlers ---
   
   const handleNewQuote = () => {
     const date = new Date();
     const datePart = format(date, 'yyyyMMdd');
     
-    // Find the highest sequence for the current day
     const todayQuotes = savedQuotes.filter(q => q.quoteNumber?.startsWith(`QT-${datePart}`));
     const lastSequence = todayQuotes.reduce((max, q) => {
         const parts = q.quoteNumber?.split('-') || [];
@@ -183,14 +207,6 @@ export default function QuotePage() {
       quoteNumber: newQuoteNumber,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
-      items: [{
-        id: crypto.randomUUID(),
-        description: '',
-        quantity: 1,
-        unit: 'adet',
-        price: 0,
-        tax: 20,
-      }],
     };
     reset(newQuote);
     toast({
@@ -199,24 +215,20 @@ export default function QuotePage() {
     });
   };
 
-  const handleSaveQuote = () => {
-    handleSubmit((data) => {
-      const newSavedQuotes = [...savedQuotes.filter(q => q.id !== data.id), data];
-      setSavedQuotes(newSavedQuotes);
-      localStorage.setItem('savedQuotes', JSON.stringify(newSavedQuotes));
-      toast({
-        title: "Teklif Kaydedildi",
-        description: "Mevcut teklifiniz başarıyla kaydedildi.",
-      });
-    })();
-  };
+  const handleSaveQuote = handleSubmit(async (data) => {
+    if (!user) return;
+    const quoteRef = doc(db, 'users', user.uid, 'quotes', data.id);
+    await setDoc(quoteRef, data);
+    toast({
+      title: "Teklif Kaydedildi",
+      description: "Teklifiniz buluta başarıyla kaydedildi.",
+    });
+  });
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
     const quoteNumber = getValues('quoteNumber');
-    if (quoteNumber) {
-      document.title = quoteNumber;
-    }
+    document.title = quoteNumber || 'teklif';
     
     setIsPreview(true);
     setTimeout(() => {
@@ -238,10 +250,9 @@ export default function QuotePage() {
     });
   };
   
-  const handleDeleteQuote = (quoteId: string) => {
-    const newSavedQuotes = savedQuotes.filter(q => q.id !== quoteId);
-    setSavedQuotes(newSavedQuotes);
-    localStorage.setItem('savedQuotes', JSON.stringify(newSavedQuotes));
+  const handleDeleteQuote = async (quoteId: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, 'users', user.uid, 'quotes', quoteId));
     toast({
       title: "Teklif Silindi",
       variant: 'destructive',
@@ -249,39 +260,34 @@ export default function QuotePage() {
     });
   };
 
-  // Company Profile Handlers
-  const handleSaveCompanyProfile = (profile: CompanyProfile) => {
-    const newProfiles = [...companyProfiles.filter(p => p.id !== profile.id), profile];
-    setCompanyProfiles(newProfiles);
-    localStorage.setItem('companyProfiles', JSON.stringify(newProfiles));
+  const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
+    if (!user) return;
+    await setDoc(doc(db, 'users', user.uid, 'companyProfiles', profile.id), profile);
     toast({ title: 'Firma Profili Kaydedildi' });
   };
 
   const handleSetCompanyProfile = (profile: CompanyProfile, showToast = true) => {
+    if (!user) return;
     setValue('companyName', profile.companyName);
     setValue('companyAddress', profile.companyAddress || '');
     setValue('companyPhone', profile.companyPhone || '');
     setValue('companyEmail', profile.companyEmail || '');
     setValue('companyLogo', profile.companyLogo || '');
-    setActiveProfileId(profile.id);
-    localStorage.setItem('activeCompanyProfile', JSON.stringify(profile.id));
+    localStorage.setItem(`activeCompanyProfile_${user.uid}`, profile.id);
     if (showToast) {
         toast({ title: `${profile.companyName} profili yüklendi.` });
     }
   };
   
-  const handleDeleteCompanyProfile = (profileId: string) => {
-    const newProfiles = companyProfiles.filter(p => p.id !== profileId);
-    setCompanyProfiles(newProfiles);
-    localStorage.setItem('companyProfiles', JSON.stringify(newProfiles));
+  const handleDeleteCompanyProfile = async (profileId: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, 'users', user.uid, 'companyProfiles', profileId));
     toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
-  // Customer Handlers
-  const handleSaveCustomer = (customer: Customer) => {
-    const newCustomers = [...customers.filter(c => c.id !== customer.id), customer];
-    setCustomers(newCustomers);
-    localStorage.setItem('customers', JSON.stringify(newCustomers));
+  const handleSaveCustomer = async (customer: Customer) => {
+    if (!user) return;
+    await setDoc(doc(db, 'users', user.uid, 'customers', customer.id), customer);
     toast({ title: 'Müşteri Kaydedildi' });
   };
   
@@ -294,15 +300,18 @@ export default function QuotePage() {
     toast({ title: `${customer.customerName} müşterisi yüklendi.` });
   };
 
-  const handleDeleteCustomer = (customerId: string) => {
-    const newCustomers = customers.filter(c => c.id !== customerId);
-    setCustomers(newCustomers);
-localStorage.setItem('customers', JSON.stringify(newCustomers));
+  const handleDeleteCustomer = async (customerId: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, 'users', user.uid, 'customers', customerId));
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
-  if (!isClient) {
-    return null; // or a loading skeleton
+  if (loading || !isClient || !user || dbLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const KBD = ({ children }: { children: React.ReactNode }) => (
@@ -360,9 +369,9 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
-  onSetCompanyProfile={handleSetCompanyProfile}
+          onSetCompanyProfile={handleSetCompanyProfile}
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
-          customers={customers}
+      customers={customers}
           onSaveCustomer={handleSaveCustomer}
           onSetCustomer={handleSetCustomer}
           onDeleteCustomer={handleDeleteCustomer}
@@ -379,7 +388,6 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
           ) : (
              <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
                 if(e.key === 'Enter' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
-                    // Prevent form submission on Enter, but allow new lines in textarea
                     if (!(e.target instanceof HTMLTextAreaElement)) {
                         e.preventDefault();
                     }
@@ -395,5 +403,3 @@ localStorage.setItem('customers', JSON.stringify(newCustomers));
     </FormProvider>
   );
 }
-
-    
