@@ -73,7 +73,7 @@ export default function QuotePage() {
     setDbLoading(true);
 
     const unsubscribes = [
-      onSnapshot(collection(db, 'users', user.uid, 'quotes'), (snapshot) => {
+      onSnapshot(collection(db, 'quotes'), (snapshot) => {
         const quotes = snapshot.docs.map(doc => quoteSchema.parse({
           ...doc.data(),
           quoteDate: doc.data().quoteDate.toDate(),
@@ -81,20 +81,19 @@ export default function QuotePage() {
         }));
         setSavedQuotes(quotes);
       }),
-      onSnapshot(collection(db, 'users', user.uid, 'customers'), (snapshot) => {
+      onSnapshot(collection(db, 'customers'), (snapshot) => {
         const customers = snapshot.docs.map(doc => doc.data() as Customer);
         setCustomers(customers);
       }),
-      onSnapshot(collection(db, 'users', user.uid, 'companyProfiles'), (snapshot) => {
+      onSnapshot(collection(db, 'companyProfiles'), (snapshot) => {
         const profiles = snapshot.docs.map(doc => doc.data() as CompanyProfile);
         setCompanyProfiles(profiles);
         
-        // Load active profile after profiles are loaded
-        const activeProfileId = localStorage.getItem(`activeCompanyProfile_${user.uid}`);
+        const activeProfileId = localStorage.getItem(`activeCompanyProfile`);
         if(activeProfileId) {
           const activeProfile = profiles.find(p => p.id === activeProfileId);
           if (activeProfile) {
-            handleSetCompanyProfile(activeProfile, false); // don't show toast on initial load
+            handleSetCompanyProfile(activeProfile, false);
           }
         }
       })
@@ -102,11 +101,9 @@ export default function QuotePage() {
 
     setDbLoading(false);
     
-    // Set initial form state
     const currentQuote = getInitialState();
     reset(currentQuote);
 
-    // Keyboard shortcuts
     const handleKeyDown = (event: KeyboardEvent) => {
       const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
       if (modifier && event.key === 's') {
@@ -216,8 +213,7 @@ export default function QuotePage() {
   };
 
   const handleSaveQuote = handleSubmit(async (data) => {
-    if (!user) return;
-    const quoteRef = doc(db, 'users', user.uid, 'quotes', data.id);
+    const quoteRef = doc(db, 'quotes', data.id);
     await setDoc(quoteRef, data);
     toast({
       title: "Teklif Kaydedildi",
@@ -251,8 +247,7 @@ export default function QuotePage() {
   };
   
   const handleDeleteQuote = async (quoteId: string) => {
-    if (!user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'quotes', quoteId));
+    await deleteDoc(doc(db, 'quotes', quoteId));
     toast({
       title: "Teklif Silindi",
       variant: 'destructive',
@@ -261,33 +256,29 @@ export default function QuotePage() {
   };
 
   const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
-    if (!user) return;
-    await setDoc(doc(db, 'users', user.uid, 'companyProfiles', profile.id), profile);
+    await setDoc(doc(db, 'companyProfiles', profile.id), profile);
     toast({ title: 'Firma Profili Kaydedildi' });
   };
 
   const handleSetCompanyProfile = (profile: CompanyProfile, showToast = true) => {
-    if (!user) return;
     setValue('companyName', profile.companyName);
     setValue('companyAddress', profile.companyAddress || '');
     setValue('companyPhone', profile.companyPhone || '');
     setValue('companyEmail', profile.companyEmail || '');
     setValue('companyLogo', profile.companyLogo || '');
-    localStorage.setItem(`activeCompanyProfile_${user.uid}`, profile.id);
+    localStorage.setItem(`activeCompanyProfile`, profile.id);
     if (showToast) {
         toast({ title: `${profile.companyName} profili yüklendi.` });
     }
   };
   
   const handleDeleteCompanyProfile = async (profileId: string) => {
-    if (!user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'companyProfiles', profileId));
+    await deleteDoc(doc(db, 'companyProfiles', profileId));
     toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
-    if (!user) return;
-    await setDoc(doc(db, 'users', user.uid, 'customers', customer.id), customer);
+    await setDoc(doc(db, 'customers', customer.id), customer);
     toast({ title: 'Müşteri Kaydedildi' });
   };
   
@@ -301,8 +292,7 @@ export default function QuotePage() {
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'customers', customerId));
+    await deleteDoc(doc(db, 'customers', customerId));
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
@@ -369,7 +359,7 @@ export default function QuotePage() {
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
-          onSetCompanyProfile={handleSetCompanyProfile}
+  onSetCompanyProfile={handleSetCompanyProfile}
           onDeleteCompanyProfile={handleDeleteCompanyProfile}
       customers={customers}
           onSaveCustomer={handleSaveCustomer}
