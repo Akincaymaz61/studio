@@ -105,15 +105,16 @@ export default function QuotePage() {
     const taxTotal = watchedItems.reduce((acc, item) => {
       const itemTotal = (item.quantity || 0) * (item.price || 0);
       let itemDiscount = 0;
-      if (watchedDiscountType === 'percentage') {
-        // Distribute discount proportionally
-        itemDiscount = (itemTotal / subtotal) * discountAmount;
-      } else {
-        // Distribute fixed discount proportionally
-        itemDiscount = subtotal > 0 ? (itemTotal / subtotal) * discountAmount : 0;
+      if (subtotal > 0) { // Prevent division by zero
+        if (watchedDiscountType === 'percentage') {
+          itemDiscount = itemTotal * (watchedDiscountValue / 100);
+        } else {
+          itemDiscount = (itemTotal / subtotal) * discountAmount;
+        }
       }
-      const itemBase = itemTotal - itemDiscount;
-      return acc + (itemBase * ((item.tax || 0) / 100));
+      
+      const itemBaseForTax = itemTotal - itemDiscount;
+      return acc + (itemBaseForTax * ((item.tax || 0) / 100));
     }, 0);
   
     const grandTotal = subtotalAfterDiscount + taxTotal;
@@ -245,7 +246,7 @@ export default function QuotePage() {
   const handleDeleteCustomer = (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
     setCustomers(newCustomers);
-    localStorage.setItem('customers', JSON.stringify(newCustomers));
+localStorage.setItem('customers', JSON.stringify(newCustomers));
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
