@@ -48,8 +48,6 @@ export default function QuotePage() {
       return;
     }
 
-    setDbLoading(true);
-
     // Function to load the most recently updated quote from Firestore
     const loadMostRecentQuote = async () => {
       try {
@@ -147,15 +145,17 @@ export default function QuotePage() {
 
   // --- Autosave Effect ---
   useEffect(() => {
+    if (isInitialLoad.current) return;
+
     const subscription = watch((values, { name, type }) => {
-        // Don't autosave on initial load or if form is not dirty
-        if (isInitialLoad.current || !isDirty) return;
+        // Don't autosave if form is not dirty
+        if (!isDirty) return;
         
         // This function will be called on every form change
         handleSaveQuote();
     });
     return () => subscription.unsubscribe();
-  }, [watch, isDirty]);
+  }, [watch, isDirty, isInitialLoad.current]);
 
 
   useEffect(() => {
@@ -482,3 +482,5 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
+
+    
