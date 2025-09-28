@@ -59,8 +59,6 @@ export default function QuotePage() {
   }, [toast]);
   
   useEffect(() => {
-    setIsClient(true);
-    
     const loadInitialData = async () => {
       setDbLoading(true);
       try {
@@ -79,14 +77,35 @@ export default function QuotePage() {
           const parsedQuote = quoteSchema.parse(quoteData);
           reset(parsedQuote, { keepDirty: false });
         } else {
-          const newQuote = { ...defaultQuote, updatedAt: new Date() };
-          reset(newQuote, { keepDirty: false });
-          await setDoc(doc(db, 'quotes', newQuote.id), {
-            ...newQuote,
-            quoteDate: Timestamp.fromDate(newQuote.quoteDate),
-            validUntil: Timestamp.fromDate(newQuote.validUntil),
-            updatedAt: Timestamp.fromDate(newQuote.updatedAt as Date),
-          });
+            // Create a sample quote if the database is empty
+            const sampleQuote: Quote = {
+                id: `QT-${Date.now()}`,
+                companyName: 'ABC Teknoloji Hizmetleri A.Ş.',
+                companyAddress: 'Teknoloji Mah. İnovasyon Cad. No:12/3, Teknopark, İstanbul',
+                companyPhone: '0212 555 1234',
+                companyEmail: 'info@abcteknoloji.com',
+                companyLogo: '',
+                customerName: 'XYZ Holding',
+                customerAddress: 'Finans Merkezi, Barbaros Bulv. No:1, Beşiktaş, İstanbul',
+                customerContact: 'Sn. Ahmet Yılmaz',
+                customerEmail: 'ahmet.yilmaz@xyzholding.com',
+                customerPhone: '0212 999 5678',
+                quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-0001`,
+                quoteDate: new Date(),
+                validUntil: addDays(new Date(), 30),
+                currency: 'TRY',
+                items: [
+                    { id: 'item-1', description: 'Kurumsal Web Sitesi Geliştirme (CMS Entegrasyonlu)', quantity: 1, unit: 'proje', price: 75000, tax: 20 },
+                    { id: 'item-2', description: 'SEO ve Dijital Pazarlama Danışmanlığı', quantity: 6, unit: 'ay', price: 15000, tax: 20 },
+                    { id: 'item-3', description: 'Sunucu Barındırma ve Bakım Hizmeti (Yıllık)', quantity: 1, unit: 'adet', price: 20000, tax: 20 },
+                ],
+                discountType: 'fixed',
+                discountValue: 5000,
+                notes: 'Belirtilen fiyatlara KDV dahildir. Teklif, onay tarihinden itibaren 30 gün geçerlidir. Ödeme %50 peşin, %50 iş tesliminde yapılacaktır.',
+                updatedAt: new Date(),
+            };
+            reset(sampleQuote, { keepDirty: false });
+            await handleSaveQuote(sampleQuote);
         }
       } catch (error) {
         console.error("Error loading initial quote:", error);
@@ -97,7 +116,8 @@ export default function QuotePage() {
     };
     
     loadInitialData();
-
+    setIsClient(true);
+    
     const unsubscribes = [
       onSnapshot(collection(db, 'quotes'), (snapshot) => {
         const quotes = snapshot.docs.map(doc => {
@@ -155,13 +175,18 @@ export default function QuotePage() {
       unsubscribes.forEach(unsub => unsub());
     };
 
-  }, []); // Dependencies are intentionally left empty to run only once on mount. Functions are defined with useCallback.
+  }, [reset, toast, handleSubmit, handleSaveQuote]); // handleSaveQuote is memoized, safe to include
 
   // --- Autosave Effect ---
   const isInitialLoad = useRef(true);
   useEffect(() => {
+     if (isInitialLoad.current && !dbLoading) {
+        isInitialLoad.current = false;
+        return;
+    }
+    
     const subscription = watch((values, { name, type }) => {
-        if (!isDirty || isInitialLoad.current) return;
+        if (!isDirty) return;
         
         const debouncedSave = setTimeout(() => {
           handleSubmit(handleSaveQuote)();
@@ -170,9 +195,6 @@ export default function QuotePage() {
         return () => clearTimeout(debouncedSave);
     });
 
-    if (isInitialLoad.current && !dbLoading) {
-        isInitialLoad.current = false;
-    }
 
     return () => subscription.unsubscribe();
   }, [watch, isDirty, dbLoading, handleSubmit, handleSaveQuote]);
@@ -455,6 +477,7 @@ export default function QuotePage() {
           isPreviewing={isPreview}
           savedQuotes={savedQuotes}
           onLoadQuote={handleLoadQuote}
+  
           onDeleteQuote={handleDeleteQuote}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
@@ -492,5 +515,3 @@ export default function QuotePage() {
     </FormProvider>
   );
 }
-
-    
