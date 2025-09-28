@@ -58,36 +58,31 @@ export default function QuotePage() {
 
   // --- START OF CALCULATION LOGIC ---
   const subtotal = watchedItems.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    return acc + quantity * price;
+  }, 0);
+
+  const taxTotal = watchedItems.reduce((acc, item) => {
       const quantity = Number(item.quantity) || 0;
       const price = Number(item.price) || 0;
-      return acc + quantity * price;
+      const taxRate = Number(item.tax) || 0;
+      const itemTotal = quantity * price;
+      return acc + (itemTotal * (taxRate / 100));
   }, 0);
+
+  const totalWithTax = subtotal + taxTotal;
 
   let discountAmount = 0;
   if (watchedDiscountType === 'percentage') {
-      discountAmount = subtotal * (watchedDiscountValue / 100);
+      discountAmount = totalWithTax * (watchedDiscountValue / 100);
   } else {
       discountAmount = watchedDiscountValue;
   }
-  // Ensure discount doesn't exceed subtotal
-  discountAmount = Math.min(discountAmount, subtotal);
+  // Ensure discount doesn't exceed total with tax
+  discountAmount = Math.min(discountAmount, totalWithTax);
 
-
-  let taxTotal = 0;
-  watchedItems.forEach(item => {
-      const itemTotal = (Number(item.quantity) || 0) * (Number(item.price) || 0);
-      const itemTax = Number(item.tax) || 0;
-      
-      let itemDiscountShare = 0;
-      if (subtotal > 0) {
-          itemDiscountShare = (itemTotal / subtotal) * discountAmount;
-      }
-
-      const taxableAmount = itemTotal - itemDiscountShare;
-      taxTotal += taxableAmount * (itemTax / 100);
-  });
-  
-  const grandTotal = subtotal - discountAmount + taxTotal;
+  const grandTotal = totalWithTax - discountAmount;
 
   const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
   // --- END OF CALCULATION LOGIC ---
