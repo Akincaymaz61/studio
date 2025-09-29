@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { QuoteLayout } from "@/components/quote/quote-layout";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -29,7 +30,9 @@ export default function RootLayout({
           inter.variable
         )}
       >
-          {children}
+          <QuoteLayout>
+            {children}
+          </QuoteLayout>
           <Toaster />
       </body>
     </html>

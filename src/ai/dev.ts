@@ -1,5 +1,4 @@
-import { config } from 'dotenv';
-config();
+'use server';
 
-import '@/ai/flows/generate-quote-from-prompt.ts';
-import '@/ai/flows/suggest-improvements.ts';
+import {config} from 'dotenv';
+config();
