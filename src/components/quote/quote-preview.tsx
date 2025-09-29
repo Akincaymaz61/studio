@@ -110,26 +110,28 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto space-y-2 print:scale-75 print:origin-top-right print:w-full print:max-w-full">
-                <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
-                  <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ara Toplam:</span>
-                      <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
-                  </div>
-                   {calculations.discountAmount > 0 && (
+             <div className="w-full max-w-xs ml-auto print:block print:w-full">
+                <div className="space-y-2 print:scale-75 print:origin-top-right print:ml-auto print:mr-0">
+                    <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                       <div className="flex justify-between">
-                      <span className="text-muted-foreground">İndirim:</span>
-                      <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                          <span className="text-muted-foreground">Ara Toplam:</span>
+                          <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
                       </div>
-                  )}
-                  <div className="flex justify-between">
-                      <span className="text-muted-foreground">KDV Toplam:</span>
-                      <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
-                  </div>
-                </div>
-                <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground shadow-md">
-                    <span>Genel Toplam:</span>
-                    <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
+                       {calculations.discountAmount > 0 && (
+                          <div className="flex justify-between">
+                          <span className="text-muted-foreground">İndirim:</span>
+                          <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                          </div>
+                      )}
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">KDV Toplam:</span>
+                          <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground shadow-md">
+                        <span>Genel Toplam:</span>
+                        <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
+                    </div>
                 </div>
              </div>
           </section>
