@@ -4,16 +4,26 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { DbData, dbDataSchema } from './schema';
 
-// Veritabanı dosyasının yolu. process.cwd() projenin kök dizinini verir.
-const dbPath = path.join(process.cwd(), 'db.json');
+// Vercel'in yazılabilir tek alanı /tmp klasörüdür.
+// Projenin kök dizini salt okunurdur.
+const isVercel = process.env.VERCEL === '1';
+const dbPath = isVercel ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
+const initialDbPath = path.join(process.cwd(), 'db.json');
 
-// Dosyanın var olup olmadığını kontrol edip, yoksa oluşturan yardımcı fonksiyon
-async function ensureDbFileExists() {
+
+async function ensureDbFile() {
   try {
+    // /tmp klasöründeki dosyanın varlığını kontrol et
     await fs.access(dbPath);
-  } catch {
-    // Dosya yoksa, boş bir veritabanı yapısıyla oluştur.
-    await fs.writeFile(dbPath, JSON.stringify({ quotes: [], customers: [], companyProfiles: [] }, null, 2), 'utf8');
+  } catch (error) {
+    // Eğer /tmp'de dosya yoksa, proje kökündeki orijinal dosyayı oraya kopyala
+    try {
+      const initialData = await fs.readFile(initialDbPath, 'utf8');
+      await fs.writeFile(dbPath, initialData, 'utf8');
+    } catch (copyError) {
+       // Kök dizinde de dosya yoksa (örneğin ilk dağıtım), boş bir tane oluştur.
+       await fs.writeFile(dbPath, JSON.stringify({ quotes: [], customers: [], companyProfiles: [] }, null, 2), 'utf8');
+    }
   }
 }
 
@@ -22,7 +32,7 @@ async function ensureDbFileExists() {
  * @returns {Promise<DbData>} Veritabanı içeriği
  */
 export async function getDbData(): Promise<DbData> {
-  await ensureDbFileExists();
+  await ensureDbFile();
   try {
     const fileContent = await fs.readFile(dbPath, 'utf8');
     const data = JSON.parse(fileContent);
@@ -52,7 +62,7 @@ export async function getDbData(): Promise<DbData> {
  * @param {DbData} data Kaydedilecek tüm veritabanı objesi
  */
 export async function saveDbData(data: DbData): Promise<void> {
-  await ensureDbFileExists();
+  await ensureDbFile();
   try {
     // Veriyi schema'ya göre doğrula
     const validatedData = dbDataSchema.parse(data);
