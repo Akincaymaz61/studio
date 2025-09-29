@@ -23,7 +23,7 @@ export function ItemsTable() {
 
   const addNewItem = () => {
     append({
-      id: crypto.randomUUID(),
+      id: `item-${Date.now()}`,
       description: '',
       quantity: 1,
       unit: 'adet',

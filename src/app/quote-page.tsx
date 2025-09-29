@@ -59,7 +59,7 @@ export default function QuotePage() {
       validUntil: addDays(today, 30),
       updatedAt: today,
       items: [{
-          id: `item-${crypto.randomUUID()}`,
+          id: `item-${Date.now()}`,
           description: '',
           quantity: 1,
           unit: 'adet',

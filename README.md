@@ -2,17 +2,17 @@
 
 Bu proje, [Firebase Studio](https://studio.firebase.google.com/) ortamında geliştirilmiş, Next.js tabanlı modern bir web uygulamasıdır. Tekliflerinizi kolayca oluşturmanıza, yönetmenize ve müşterilerinize göndermenize olanak tanır.
 
-**ÖNEMLİ: Bu uygulamanın verilerini kalıcı olarak saklayabilmesi için ücretsiz bir [JSONBin.io](https://jsonbin.io/) hesabına ihtiyacı vardır.**
+Uygulamanın verileri, projenizi yayınladığınızda **Vercel'in kendi KV (Key-Value) veritabanında** kalıcı olarak saklanır. Harici bir veritabanı servisine ihtiyacınız yoktur.
 
 ## Projeyi İndirme ve Kendi Sitenizde Yayınlama
 
-Bu uygulamayı kendi hosting platformunuzda yayınlayarak `teklif.siteniz.com` gibi bir adres üzerinden kullanabilirsiniz. Süreç oldukça basittir.
+Bu uygulamayı kendi hosting platformunuzda yayınlayarak `teklif.siteniz.com` gibi bir adres üzerinden kullanabilirsiniz. Süreç oldukça basittir ve en kolay yöntem Vercel kullanmaktır.
 
 ### Gereksinimler
 - [Node.js](https://nodejs.org/en) (v20 veya üstü)
 - [Git](https://git-scm.com/)
 - [GitHub Hesabı](https://github.com/) (Ücretsiz)
-- [JSONBin.io Hesabı](https://jsonbin.io/) (Ücretsiz)
+- [Vercel Hesabı](https://vercel.com/) (Ücretsiz, GitHub ile bağlanılır)
 
 ### Adım 1: Proje Dosyalarını İndirin
 
@@ -26,27 +26,7 @@ Proje klasörünü bilgisayarınızda bir terminal veya komut istemi ile açın 
 npm install
 ```
 
-### Adım 3: Veritabanını Ayarlama (JSONBin.io)
-
-Uygulamanın kaydettiği tekliflerin ve müşteri bilgilerinin kalıcı olması için ücretsiz bir bulut veritabanı hizmeti olan JSONBin.io'yu kullanacağız.
-
-1.  **JSONBin.io'ya Kaydolun:** [jsonbin.io](https://jsonbin.io/signup) adresine gidin ve ücretsiz bir hesap oluşturun.
-2.  **API Anahtarı Alın:** Giriş yaptıktan sonra, sol menüden "API Keys" sayfasına gidin. Sağ üstteki "Create Key" butonuna tıklayın. Anahtarınıza bir isim verin (örn. "TeklifAI Anahtarım") ve anahtarı oluşturun. **Size verilen API anahtarını kopyalayıp güvenli bir yere not edin.**
-3.  **Yeni bir "Bin" (Kutu) Oluşturun:** Sol menüden "Bins" sayfasına gidin. Sağ üstteki "Create Bin" butonuna tıklayın. Bin'inize bir isim verin (örn. "TeklifAI-DB") ve "Private" (Özel) olarak işaretlendiğinden emin olun. Ardından "Create Bin" butonuna basın.
-4.  **Bin ID'sini Kopyalayın:** Oluşturulan Bin'in URL'sinden veya ayarlarından Bin ID'sini kopyalayın. ID, genellikle URL'nin sonundaki uzun karakter dizisidir (örneğin: `https://jsonbin.io/b/66fa1b2be402bf3e552...`).
-
-### Adım 4: Proje Ayarlarını Yapılandırma
-
-1.  **`.env` Dosyasını Düzenleyin:** Proje klasörünüzdeki `.env` dosyasını bir metin editörü ile açın. Bir önceki adımda aldığınız bilgileri aşağıdaki gibi doldurun:
-
-    ```
-    JSONBIN_API_KEY=buraya_kopyaladiginiz_api_anahtarini_yapistirin
-    JSONBIN_BIN_ID=buraya_kopyaladiginiz_bin_id_sini_yapistirin
-    ```
-
-2.  **Değişiklikleri Kaydedin.**
-
-### Adım 5: Projeyi GitHub'a Yükleme
+### Adım 3: Projeyi GitHub'a Yükleme
 
 Uygulamanızı Vercel gibi platformlarda yayınlamanın en kolay yolu, projenizi bir GitHub deposuna yüklemektir.
 
@@ -67,18 +47,19 @@ Uygulamanızı Vercel gibi platformlarda yayınlamanın en kolay yolu, projenizi
     git push -u origin main
     ```
 
-### Adım 6: Projeyi Vercel'de Yayınlama
+### Adım 4: Projeyi Vercel'de Yayınlama ve Veritabanını Bağlama
 
 1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve GitHub hesabınızla giriş yapın.
 2.  **Vercel'de Yeni Proje Oluşturun:**
     *   Vercel dashboard'unda "Add New... -> Project" seçeneğine tıklayın.
-    *   Projenizin bulunduğu GitHub deposunu seçin ve "Import" deyin.
-3.  **Ortam Değişkenlerini Ayarlayın:** Bu en önemli adımdır. "Environment Variables" bölümünü açın ve `.env` dosyanıza girdiğiniz bilgileri buraya da ekleyin:
-    *   **İsim:** `JSONBIN_API_KEY`, **Değer:** `buraya_api_anahtarinizi_yapistirin`
-    *   **İsim:** `JSONBIN_BIN_ID`, **Değer:** `buraya_bin_id_nizi_yapistirin`
-4.  **Deploy Edin:** "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve size bir `.vercel.app` adresi verecektir.
+    *   Bir önceki adımda oluşturduğunuz GitHub deposunu seçin ve "Import" deyin.
+3.  **Deploy Edin:** Herhangi bir ayar yapmanıza gerek yok. "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve size bir `.vercel.app` adresi verecektir.
+4.  **Veritabanını Bağlayın (En Önemli Adım):**
+    *   Projeniz Vercel'de yayınlandıktan sonra, proje sayfanızın üst menüsündeki **"Storage"** sekmesine tıklayın.
+    *   Açılan ekranda **"KV (Key-Value)"** seçeneğini bulun ve yanındaki **"Connect"** butonuna basın.
+    *   Projenizi seçip tekrar **"Connect"** dediğinizde, Vercel gerekli tüm bağlantı ayarlarını sizin için otomatik olarak yapacaktır. **Başka hiçbir ayar yapmanıza gerek yoktur.** Veritabanınız artık projenize bağlıdır.
 
-### Adım 7: Kendi Alan Adınızı Bağlama (Opsiyonel)
+### Adım 5: Kendi Alan Adınızı Bağlama (Opsiyonel)
 
 1.  **Vercel Proje Ayarları:** Vercel'deki proje sayfanızda "Settings" sekmesine ve ardından "Domains" menüsüne gidin.
 2.  **Alan Adı Ekleme:** Kullanmak istediğiniz alan adını (örneğin, `teklif.siteniz.com`) girin ve "Add" butonuna tıklayın.
