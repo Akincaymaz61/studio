@@ -1,0 +1,20 @@
+diff --git a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
+index 2c84d72..0884938 100644
+--- a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
++++ b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
+@@ -23,6 +23,7 @@ import { createPortal, findDOMNode } from 'react-dom';
+ import memoizeOne from 'memoize-one';
+ 
+ var index = (function (context, fn) {
++  if (typeof document === 'undefined') return;
+ 	var FakeWeakMap =
+ 		'undefined' != typeof WeakMap
+ 			? WeakMap
+@@ -5882,6 +5883,7 @@ var Droppable =
+ /*<style>
+ [data-rbd-droppable-context-id] {
+ 	overflow-anchor: none;
++  display: flow-root;
+ }
+ </style>*/
+ Droppable.displayName = 'Droppable';
