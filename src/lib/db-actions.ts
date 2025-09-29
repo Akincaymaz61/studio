@@ -29,7 +29,7 @@ export async function getDbData(): Promise<DbData> {
     const response = await fetch(`${BIN_URL}/latest`, {
       method: 'GET',
       headers: {
-        'X-Master-Key': JSONBIN_API_KEY!,
+        'X-Access-Key': JSONBIN_API_KEY!,
       },
       cache: 'no-store',
     });
@@ -86,7 +86,7 @@ export async function saveDbData(data: DbData): Promise<void> {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-Master-Key': JSONBIN_API_KEY!,
+            'X-Access-Key': JSONBIN_API_KEY!,
         },
         body: JSON.stringify(validatedData),
     });

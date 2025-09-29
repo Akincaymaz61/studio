@@ -66,9 +66,9 @@ Uygulamanın verilerini saklayabilmesi için ücretsiz bir bulut veritabanı kur
 
 3.  **API Anahtarınızı Alın:**
     *   Sağ üstteki menüden "API Keys" sayfasına gidin.
-    *   Bu sayfada size varsayılan olarak bir **"Master Key"** verilir. Bu anahtarın yanındaki kopyalama ikonuna tıklayarak **API anahtarınızı kopyalayın.** Bu anahtar genellikle `$2a$...` ile başlar.
+    *   Bu sayfada size varsayılan olarak bir **"Master Key"** verilir. Bu anahtarın yanındaki kopyalama ikonuna tıklayarak **API anahtarınızı (X-Access-Key) kopyalayın.** Bu anahtar genellikle `$2a$...` ile başlar.
 
-Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (Master Key)**.
+Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (X-Access-Key)**.
 
 ### Adım 5: Projeyi Vercel'de Yayınlama ve Veritabanını Bağlama
 
@@ -85,7 +85,7 @@ Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (Master Key)*
 
         *   **Değişken 1:**
             *   **Name:** `JSONBIN_API_KEY`
-            *   **Value:** JSONBin.io'dan aldığınız **API Anahtarını (Master Key)** buraya yapıştırın.
+            *   **Value:** JSONBin.io'dan aldığınız **API Anahtarını (X-Access-Key)** buraya yapıştırın.
             *   "Add" butonuna tıklayın.
 
         *   **Değişken 2:**
