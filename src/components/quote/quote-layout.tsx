@@ -10,6 +10,8 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarTrigger,
+  SidebarFooter,
+  SidebarSeparator
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -17,9 +19,10 @@ import {
   Building,
   Users,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import CompanyProfilesPanel from '../data-management/company-profiles-panel';
 import CustomersPanel from '../data-management/customers-panel';
 import { Customer, CompanyProfile, Quote, DbData, dbDataSchema, QuoteStatus } from '@/lib/schema';
@@ -52,12 +55,26 @@ export const useQuoteLayout = () => {
 
 export function QuoteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { toast } = useToast();
 
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check for auth status only on client-side
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    setIsAuthenticated(authStatus);
+    if (!authStatus && pathname !== '/login') {
+      router.push('/login');
+    } else if (authStatus && pathname === '/login') {
+      router.push('/');
+    }
+  }, [pathname, router]);
+
 
   const handleSaveAll = useCallback(async (data: DbData) => {
     try {
@@ -77,7 +94,10 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const fetchData = async () => {
+      setLoading(true);
       try {
         const data = await getDbData();
         const parsedData = dbDataSchema.safeParse(data);
@@ -104,7 +124,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       }
     };
     fetchData();
-  }, [toast]);
+  }, [toast, isAuthenticated]);
 
   const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
     const profileExists = companyProfiles.some(p => p.id === profile.id);
@@ -150,6 +170,16 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
   };
   
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
+    toast({
+        title: 'Çıkış Yapıldı',
+        description: 'Güvenli bir şekilde çıkış yaptınız.'
+    });
+    router.push('/login');
+  };
+
   const contextValue: QuoteLayoutContextType = {
     quotes,
     customers,
@@ -162,6 +192,18 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     handleDeleteCompanyProfile,
     handleStatusChange,
   };
+  
+  if (pathname === '/login') {
+     return <main>{children}</main>;
+  }
+
+  if (!isAuthenticated) {
+     return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+     );
+  }
 
   return (
     <QuoteLayoutContext.Provider value={contextValue}>
@@ -212,6 +254,17 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
               </CustomersPanel>
             </SidebarMenu>
           </SidebarContent>
+          <SidebarFooter>
+            <SidebarSeparator />
+             <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleLogout}>
+                        <LogOut />
+                        Çıkış Yap
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+             </SidebarMenu>
+          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <header className="flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6 lg:h-[60px] no-print">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
@@ -30,9 +30,9 @@ export default function QuotePage() {
     handleDeleteCustomer,
     handleSaveCompanyProfile,
     handleDeleteCompanyProfile,
+    loading
   } = useQuoteLayout();
 
-  const [isClient, setIsClient] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   
   const form = useForm<Quote>({
@@ -106,22 +106,23 @@ export default function QuotePage() {
         if (quoteToLoad) {
            reset(quoteToLoad, { keepDirty: false });
         } else {
+          router.push('/quote');
           reset(createNewQuoteObject(companyInfoFromCurrentQuote));
         }
       } else {
         reset(createNewQuoteObject(companyInfoFromCurrentQuote));
       }
-      setIsClient(true);
-  }, [quotes, reset, searchParams, createNewQuoteObject, getValues]);
+  }, [quotes, reset, searchParams, createNewQuoteObject, getValues, router]);
   
   useEffect(() => {
-    if(quotes) { // Wait for quotes to be loaded
+    if(!loading) { // Wait for data to be loaded
        loadInitialQuote();
     }
-  }, [quotes, loadInitialQuote]);
+  }, [loading, loadInitialQuote]);
   
   const saveCurrentQuote = useCallback(() => {
       const currentData = getValues();
+      if (!currentData.id) return; // Do not save if it's a new quote without ID yet
       const updatedQuote = { ...currentData, updatedAt: new Date() };
       const otherQuotes = quotes.filter(q => q.id !== updatedQuote.id);
       const newQuotesList = [...otherQuotes, updatedQuote];
@@ -196,12 +197,8 @@ export default function QuotePage() {
     if (quoteToLoad) {
       reset(quoteToLoad);
       router.push(`/quote?id=${quoteId}`);
-      toast({
-        title: "Teklif Yüklendi",
-        description: `${quoteToLoad.quoteNumber} numaralı teklif yüklendi.`,
-      });
     }
-  }, [quotes, reset, toast, router]);
+  }, [quotes, reset, router]);
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = quotes.filter(q => q.id !== quoteId);
@@ -250,14 +247,14 @@ export default function QuotePage() {
     const quoteToRevise = quotes.find(q => q.id === quoteId);
     if (!quoteToRevise) return;
 
-    const revisionRegex = new RegExp(`^${quoteToRevise.quoteNumber.split('-rev')[0]}-rev(\\d+)$`);
+    const revisionRegex = new RegExp(`^${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev(\\d+)$`);
     const existingRevisions = quotes.filter(q => revisionRegex.test(q.quoteNumber || ''));
     const nextRevisionNumber = existingRevisions.length + 1;
 
     const newRevisionQuote: Quote = {
       ...quoteToRevise,
       id: `QT-${Date.now()}`,
-      quoteNumber: `${quoteToRevise.quoteNumber.split('-rev')[0]}-rev${nextRevisionNumber}`,
+      quoteNumber: `${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev${nextRevisionNumber}`,
       quoteDate: new Date(),
       validUntil: addDays(new Date(), 30),
       updatedAt: new Date(),
@@ -280,7 +277,7 @@ export default function QuotePage() {
     });
   };
 
-  if (!isClient) {
+  if (loading || !getValues('id')) {
     return null;
   }
 
