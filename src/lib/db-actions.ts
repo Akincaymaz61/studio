@@ -30,9 +30,9 @@ export async function getDbData(): Promise<DbData> {
       method: 'GET',
       headers: {
         'X-Master-Key': JSONBIN_API_KEY!,
-        'X-Access-Key': '$2a$10$jB5oFPPQ1JUT53uFX.F7hOofrT/1qbQbFJmMPJ1XKifIJcP5ebzJi',
+        // 'X-Access-Key' is not needed for GET with master key
       },
-      cache: 'no-store', // Verinin her zaman en güncel halini al
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -44,10 +44,12 @@ export async function getDbData(): Promise<DbData> {
     }
     
     const data = await response.json();
-    const record = data.record;
+    // JSONBin's /latest endpoint wraps the data in a 'record' object.
+    // However, if the bin is brand new, 'record' might be an empty object {}.
+    const record = data.record || data;
 
     // Handle case where the bin is new and empty
-    if (record && Object.keys(record).length === 0) {
+    if (record && Object.keys(record).length === 0 && record.constructor === Object) {
         return initialData;
     }
 
@@ -77,7 +79,10 @@ export async function getDbData(): Promise<DbData> {
 
 export async function saveDbData(data: DbData): Promise<void> {
   const envsAreSet = await checkEnvVariables();
-  if (!envsAreSet) return;
+  if (!envsAreSet) {
+      console.warn("Cannot save data, environment variables are not set.");
+      return;
+  };
 
   try {
     const validatedData = dbDataSchema.parse(data);
