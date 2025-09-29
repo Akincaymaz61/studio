@@ -112,7 +112,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             )}
              <div className="w-full max-w-xs ml-auto break-inside-avoid print:w-full print:block">
                 <div className="space-y-2 print:scale-75 print:origin-top-right print:ml-auto print:mr-0">
-                    <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
+                    <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                       <div className="flex justify-between">
                           <span className="text-muted-foreground">Ara Toplam:</span>
                           <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
@@ -128,7 +128,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                           <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground shadow-md">
+                    <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
                         <span>Genel Toplam:</span>
                         <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                     </div>
