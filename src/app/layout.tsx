@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Fiyat Teklifi Oluşturucu",
-  description: "Fiyat Teklifi Oluşturucu",
+  title: "TeklifAI",
+  description: "Yapay Zeka Destekli Fiyat Teklifi Oluşturucu",
 };
 
 export default function RootLayout({
