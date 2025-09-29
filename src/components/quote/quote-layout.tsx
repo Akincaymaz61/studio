@@ -67,10 +67,10 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       setCustomers(data.customers);
       setCompanyProfiles(data.companyProfiles);
     } catch (error) {
-      console.error("Error saving to db.json: ", error);
+      console.error("Error saving to db: ", error);
       toast({
         title: "Kaydetme Hatası",
-        description: "Veriler dosyaya kaydedilirken bir hata oluştu.",
+        description: "Veriler veritabanına kaydedilirken bir hata oluştu.",
         variant: "destructive"
       });
     }
@@ -85,10 +85,20 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
           setQuotes(parsedData.data.quotes);
           setCustomers(parsedData.data.customers);
           setCompanyProfiles(parsedData.data.companyProfiles);
+        } else {
+             // If parsing fails, it might be an empty object from a new bin
+            if (data && Object.keys(data).length === 0) {
+                 setQuotes([]);
+                 setCustomers([]);
+                 setCompanyProfiles([]);
+            } else {
+                console.error("Zod validation failed for DB data: ", parsedData.error);
+                throw new Error("Veritabanı verisi bozuk.");
+            }
         }
       } catch (error) {
         console.error('Failed to load data', error);
-         toast({ title: "Veri Yükleme Hatası", description: "Veritabanı yüklenirken bir hata oluştu.", variant: "destructive" });
+         toast({ title: "Veri Yükleme Hatası", description: "Veritabanı yüklenirken bir hata oluştu. Lütfen ortam değişkenlerini kontrol edin.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
@@ -103,12 +113,14 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       : [...companyProfiles, profile];
     
     await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    setCompanyProfiles(newProfiles);
     toast({ title: `Firma Profili ${profileExists ? 'Güncellendi' : 'Kaydedildi'}` });
   };
 
   const handleDeleteCompanyProfile = async (profileId: string) => {
     const newProfiles = companyProfiles.filter(p => p.id !== profileId);
     await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    setCompanyProfiles(newProfiles);
     toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
@@ -118,12 +130,14 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       ? customers.map(c => c.id === customer.id ? customer : c)
       : [...customers, customer];
     await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    setCustomers(newCustomers);
     toast({ title: `Müşteri ${customerExists ? 'Güncellendi' : 'Kaydedildi'}` });
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
     await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    setCustomers(newCustomers);
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
@@ -132,6 +146,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
     );
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    setQuotes(newQuotes);
     toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
   };
   

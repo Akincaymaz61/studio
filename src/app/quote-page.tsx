@@ -93,24 +93,26 @@ export default function QuotePage() {
   
   const loadInitialQuote = useCallback(() => {
       const quoteId = searchParams.get('id');
+      const companyInfoFromCurrentQuote = {
+          companyName: getValues('companyName'),
+          companyAddress: getValues('companyAddress'),
+          companyPhone: getValues('companyPhone'),
+          companyEmail: getValues('companyEmail'),
+          companyLogo: getValues('companyLogo'),
+      };
+      
       if (quoteId) {
         const quoteToLoad = quotes.find(q => q.id === quoteId);
         if (quoteToLoad) {
            reset(quoteToLoad, { keepDirty: false });
-           toast({
-            title: "Teklif Yüklendi",
-            description: `${quoteToLoad.quoteNumber} numaralı teklif düzenleniyor.`,
-          });
         } else {
-          // Eğer ID bulunamazsa, yeni bir teklif oluştur.
-          reset(createNewQuoteObject());
+          reset(createNewQuoteObject(companyInfoFromCurrentQuote));
         }
       } else {
-        // ID yoksa, yeni bir teklif oluştur.
-        reset(createNewQuoteObject());
+        reset(createNewQuoteObject(companyInfoFromCurrentQuote));
       }
       setIsClient(true);
-  }, [quotes, reset, searchParams, toast, createNewQuoteObject]);
+  }, [quotes, reset, searchParams, createNewQuoteObject, getValues]);
   
   useEffect(() => {
     if(quotes) { // Wait for quotes to be loaded
@@ -118,12 +120,17 @@ export default function QuotePage() {
     }
   }, [quotes, loadInitialQuote]);
   
-  const saveCurrentQuote = useCallback((currentData: Quote) => {
+  const saveCurrentQuote = useCallback(() => {
+      const currentData = getValues();
       const updatedQuote = { ...currentData, updatedAt: new Date() };
       const otherQuotes = quotes.filter(q => q.id !== updatedQuote.id);
       const newQuotesList = [...otherQuotes, updatedQuote];
-      return newQuotesList;
-  }, [quotes]);
+      handleSaveAll({
+          quotes: newQuotesList,
+          customers: customers,
+          companyProfiles: companyProfiles,
+      });
+  }, [getValues, quotes, customers, companyProfiles, handleSaveAll]);
   
   
   const handlePdfExport = useCallback(() => {
@@ -141,18 +148,11 @@ export default function QuotePage() {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
     if (modifier && event.key === 's') {
       event.preventDefault();
-      handleSubmit(async (data) => {
-        const newQuotesList = saveCurrentQuote(data);
-        await handleSaveAll({
-            quotes: newQuotesList,
-            customers: customers,
-            companyProfiles: companyProfiles,
-        });
-        toast({
-            title: "Teklif Kaydedildi",
-            description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
-        });
-      })();
+      saveCurrentQuote();
+      toast({
+          title: "Teklif Kaydedildi",
+          description: "Değişiklikleriniz veritabanına başarıyla kaydedildi.",
+      });
     }
     if (modifier && event.key === 'p') {
       event.preventDefault();
@@ -162,7 +162,7 @@ export default function QuotePage() {
       event.preventDefault();
       handleNewQuote();
     }
-  }, [handleSubmit, saveCurrentQuote, handleSaveAll, toast, customers, companyProfiles, handleNewQuote, handlePdfExport]);
+  }, [saveCurrentQuote, toast, handleNewQuote, handlePdfExport]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -220,7 +220,6 @@ export default function QuotePage() {
       setValue('companyPhone', profile.companyPhone || '');
       setValue('companyEmail', profile.companyEmail || '');
       setValue('companyLogo', profile.companyLogo || '');
-      toast({ title: `${profile.companyName} profili yüklendi.` });
     }
   };
   
@@ -232,9 +231,8 @@ export default function QuotePage() {
       setValue('customerContact', customer.customerContact || '');
       setValue('customerEmail', customer.customerEmail || '');
       setValue('customerPhone', customer.customerPhone || '');
-      toast({ title: `${customer.customerName} müşterisi yüklendi.` });
     }
-  }, [customers, setValue, toast]);
+  }, [customers, setValue]);
 
   const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
     const newQuotes = quotes.map(q => 
@@ -333,18 +331,11 @@ export default function QuotePage() {
             <Toolbar
             onNewQuote={handleNewQuote}
             onSaveQuote={() => {
-                handleSubmit(async (data) => {
-                const newQuotesList = saveCurrentQuote(data);
-                await handleSaveAll({
-                    quotes: newQuotesList,
-                    customers: customers,
-                    companyProfiles: companyProfiles,
-                });
+                saveCurrentQuote();
                 toast({
                     title: "Teklif Kaydedildi",
-                    description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
+                    description: "Değişiklikleriniz veritabanına başarıyla kaydedildi.",
                 });
-                })();
             }}
             onPreviewToggle={() => setIsPreview(!isPreview)}
             onPdfExport={handlePdfExport}

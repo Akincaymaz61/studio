@@ -14,34 +14,42 @@ const initialData: DbData = {
 
 async function checkEnvVariables() {
     if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) {
-        throw new Error('JSONBIN_API_KEY ve JSONBIN_BIN_ID ortam değişkenleri ayarlanmamış. Lütfen README.md dosyasını kontrol edin.');
+        console.warn('JSONBIN_API_KEY and/or JSONBIN_BIN_ID environment variables are not set. Data will not be persisted. Please check README.md');
+        return false;
     }
+    return true;
 }
 
 
 export async function getDbData(): Promise<DbData> {
-  await checkEnvVariables();
+  const envsAreSet = await checkEnvVariables();
+  if (!envsAreSet) return initialData;
   
   try {
     const response = await fetch(`${BIN_URL}/latest`, {
       method: 'GET',
       headers: {
         'X-Master-Key': JSONBIN_API_KEY!,
+        'X-Access-Key': '$2a$10$jB5oFPPQ1JUT53uFX.F7hOofrT/1qbQbFJmMPJ1XKifIJcP5ebzJi',
       },
       cache: 'no-store', // Verinin her zaman en güncel halini al
     });
 
     if (!response.ok) {
-        // Eğer bin bulunamazsa (404), başlangıç verisini döndür
         if(response.status === 404) {
-            console.warn("JSONBin.io üzerinde belirtilen ID ile bir bin bulunamadı. Başlangıç verisi kullanılıyor.");
+            console.warn("JSONBin.io bin not found. Returning initial data.");
             return initialData;
         }
-        throw new Error(`JSONBin'den veri okunamadı: ${response.statusText}`);
+        throw new Error(`Failed to read from JSONBin: ${response.statusText}`);
     }
     
     const data = await response.json();
     const record = data.record;
+
+    // Handle case where the bin is new and empty
+    if (record && Object.keys(record).length === 0) {
+        return initialData;
+    }
 
     // Tarih alanlarını Date nesnesine çevir
     if (record.quotes) {
@@ -56,19 +64,20 @@ export async function getDbData(): Promise<DbData> {
     if (validatedData.success) {
       return validatedData.data;
     } else {
-      console.error('JSONBin verisi Zod şemasıyla uyuşmuyor, başlangıç verisi döndürülüyor:', validatedData.error);
+      console.error('Zod validation failed for JSONBin data, returning initial data:', validatedData.error);
       return initialData;
     }
 
   } catch (error) {
-    console.error('JSONBin.io\'dan veri okunurken hata oluştu:', error);
+    console.error('Error reading from JSONBin.io:', error);
     return initialData;
   }
 }
 
 
 export async function saveDbData(data: DbData): Promise<void> {
-  await checkEnvVariables();
+  const envsAreSet = await checkEnvVariables();
+  if (!envsAreSet) return;
 
   try {
     const validatedData = dbDataSchema.parse(data);
@@ -83,11 +92,11 @@ export async function saveDbData(data: DbData): Promise<void> {
     });
 
     if (!response.ok) {
-        throw new Error(`JSONBin'e veri yazılamadı: ${response.statusText}`);
+        throw new Error(`Failed to write to JSONBin: ${response.statusText}`);
     }
 
   } catch (error) {
-     console.error('Veri doğrulanırken veya JSONBin.io\'ya yazılırken hata oluştu:', error);
-     throw new Error('Veri kaydedilemedi.');
+     console.error('Error validating or writing to JSONBin.io:', error);
+     throw new Error('Data could not be saved.');
   }
 }
