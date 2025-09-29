@@ -86,6 +86,7 @@
     border: none !important;
     box-shadow: none !important;
     width: 100% !important;
+    min-height: initial !important;
     margin: 0 !important;
     border-radius: 0 !important;
   }
