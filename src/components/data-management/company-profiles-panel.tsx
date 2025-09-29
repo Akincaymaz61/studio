@@ -54,13 +54,9 @@ import {
 import {
   CompanyProfile,
   companyProfileSchema,
-  DbData,
-  dbDataSchema,
 } from '@/lib/schema';
-import { useState, useEffect, useCallback } from 'react';
-import { getDbData, saveDbData } from '@/lib/db-actions';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 
 const CompanyProfileForm = ({
   profile,
@@ -155,82 +151,20 @@ const CompanyProfileForm = ({
 
 export default function CompanyProfilesPanel({
   children,
+  profiles,
+  onSave,
+  onDelete,
 }: {
   children: React.ReactNode;
+  profiles: CompanyProfile[];
+  onSave: (profile: CompanyProfile) => void;
+  onDelete: (profileId: string) => void;
 }) {
-  const { toast } = useToast();
-  const [dbData, setDbData] = useState<DbData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<
     CompanyProfile | undefined
   >(undefined);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getDbData();
-      const parsedData = dbDataSchema.safeParse(data);
-      if (parsedData.success) {
-        setDbData(parsedData.data);
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: 'Hata',
-        description: 'Veriler yüklenemedi.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isSheetOpen) {
-      loadData();
-    }
-  }, [isSheetOpen, loadData]);
-
-  const handleSave = async (profile: CompanyProfile) => {
-    if (!dbData) return;
-
-    const newProfiles = dbData.companyProfiles.filter(p => p.id !== profile.id);
-    newProfiles.push(profile);
-    const newData = { ...dbData, companyProfiles: newProfiles };
-
-    try {
-      await saveDbData(newData);
-      setDbData(newData);
-      toast({ title: 'Profil Kaydedildi' });
-    } catch (error) {
-      toast({
-        title: 'Hata',
-        description: 'Profil kaydedilemedi.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDelete = async (profileId: string) => {
-    if (!dbData) return;
-
-    const newProfiles = dbData.companyProfiles.filter(p => p.id !== profileId);
-    const newData = { ...dbData, companyProfiles: newProfiles };
-
-    try {
-      await saveDbData(newData);
-      setDbData(newData);
-      toast({ title: 'Profil Silindi', variant: 'destructive' });
-    } catch (error) {
-      toast({
-        title: 'Hata',
-        description: 'Profil silinemedi.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
@@ -254,11 +188,7 @@ export default function CompanyProfilesPanel({
               <PlusCircle className="mr-2 h-4 w-4" /> Yeni Profil Ekle
             </Button>
           </div>
-          {loading ? (
-             <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-             </div>
-          ) : (
+          
             <div className="max-h-[70vh] overflow-y-auto border rounded-md">
               <Table>
                 <TableHeader>
@@ -268,7 +198,7 @@ export default function CompanyProfilesPanel({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dbData?.companyProfiles.map(p => (
+                  {profiles.map(p => (
                     <TableRow key={p.id}>
                       <TableCell>{p.companyName}</TableCell>
                       <TableCell className="text-right">
@@ -303,7 +233,7 @@ export default function CompanyProfilesPanel({
                             <AlertDialogFooter>
                               <AlertDialogCancel>İptal</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(p.id)}
+                                onClick={() => onDelete(p.id)}
                                 className="bg-destructive hover:bg-destructive/90"
                               >
                                 Sil
@@ -317,7 +247,7 @@ export default function CompanyProfilesPanel({
                 </TableBody>
               </Table>
             </div>
-          )}
+          
         </div>
       </SheetContent>
 
@@ -330,7 +260,7 @@ export default function CompanyProfilesPanel({
           </DialogHeader>
           <CompanyProfileForm
             profile={editingProfile}
-            onSave={handleSave}
+            onSave={onSave}
             closeDialog={() => setFormOpen(false)}
           />
         </DialogContent>

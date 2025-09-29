@@ -2,11 +2,20 @@
 
 import QuotePage from '@/app/quote-page';
 import { QuoteLayout } from '@/components/quote/quote-layout';
+import { Suspense } from 'react';
 
-export default function QuoteCreatorPage() {
+function QuoteCreator() {
   return (
     <QuoteLayout>
       <QuotePage />
     </QuoteLayout>
+  );
+}
+
+export default function QuoteCreatorPage() {
+  return (
+    <Suspense>
+      <QuoteCreator />
+    </Suspense>
   );
 }

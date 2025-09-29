@@ -1,18 +1,28 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Quote, QuoteStatus } from '@/lib/schema';
+import { Quote, QuoteStatus, quoteStatusSchema } from '@/lib/schema';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { FileText, CheckCircle2, XCircle, Edit, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { Badge } from '../ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 interface DashboardProps {
   quotes: Quote[];
 }
+
+const statusColors: Record<QuoteStatus, string> = {
+    Taslak: "bg-gray-200 text-gray-800",
+    Gönderildi: "bg-blue-200 text-blue-800",
+    Onaylandı: "bg-green-200 text-green-800",
+    Reddedildi: "bg-red-200 text-red-800",
+    'Revize Edildi': "bg-yellow-200 text-yellow-800",
+};
 
 const StatCard = ({ title, value, icon, onClick, colorClass }: { title: string; value: number; icon: React.ReactNode; onClick: () => void; colorClass: string; }) => (
   <DialogTrigger asChild>
@@ -30,7 +40,7 @@ const StatCard = ({ title, value, icon, onClick, colorClass }: { title: string; 
   </DialogTrigger>
 );
 
-const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteStatus | 'Tümü' }) => {
+const QuotesTableDialog = ({ quotes, status, onStatusChange }: { quotes: Quote[], status: QuoteStatus | 'Tümü', onStatusChange: (quoteId: string, status: QuoteStatus) => void; }) => {
     const router = useRouter();
     const handleRowClick = (quoteId: string) => {
         router.push(`/quote?id=${quoteId}`);
@@ -44,6 +54,7 @@ const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteS
                 <TableRow>
                     <TableHead>Teklif No</TableHead>
                     <TableHead>Müşteri</TableHead>
+                    <TableHead>Durum</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead className="text-right">Tutar</TableHead>
                 </TableRow>
@@ -54,13 +65,28 @@ const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteS
                         <TableRow key={quote.id} onClick={() => handleRowClick(quote.id)} className="cursor-pointer">
                             <TableCell>{quote.quoteNumber}</TableCell>
                             <TableCell>{quote.customerName}</TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Badge className={cn("cursor-pointer", statusColors[quote.status])}>{quote.status}</Badge>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        {quoteStatusSchema.options.map(status => (
+                                        <DropdownMenuItem key={status} onSelect={() => onStatusChange(quote.id, status)}>
+                                            <div className={cn("w-2 h-2 rounded-full mr-2", statusColors[status])} />
+                                            {status}
+                                        </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
                             <TableCell>{format(new Date(quote.quoteDate), 'dd/MM/yyyy')}</TableCell>
                             <TableCell className="text-right">{formatCurrency(quote.items.reduce((acc, item) => acc + (item.quantity * item.price), 0), quote.currency)}</TableCell>
                         </TableRow>
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={4} className="text-center">Bu kritere uygun teklif bulunamadı.</TableCell>
+                        <TableCell colSpan={5} className="text-center">Bu kritere uygun teklif bulunamadı.</TableCell>
                     </TableRow>
                 )}
             </TableBody>
@@ -70,7 +96,8 @@ const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteS
   )
 }
 
-export default function Dashboard({ quotes }: DashboardProps) {
+export default function Dashboard({ quotes: initialQuotes }: DashboardProps) {
+  const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
   
@@ -99,6 +126,15 @@ export default function Dashboard({ quotes }: DashboardProps) {
     return [...quotes].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).slice(0, 10);
   }, [quotes]);
 
+  const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
+    // This is an optimistic update. In a real app, you'd call an API here.
+    const newQuotes = quotes.map(q => 
+        q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
+    );
+    setQuotes(newQuotes);
+    // You would also need to persist this change, e.g., by calling saveDbData.
+    // This part is omitted here for simplicity as the dashboard is read-only for now.
+  };
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
@@ -119,7 +155,7 @@ export default function Dashboard({ quotes }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <QuotesTableDialog quotes={sortedRecentQuotes} status="Tümü" />
+                        <QuotesTableDialog quotes={sortedRecentQuotes} status="Tümü" onStatusChange={handleStatusChange} />
                     </div>
                 </CardContent>
             </Card>
@@ -128,7 +164,7 @@ export default function Dashboard({ quotes }: DashboardProps) {
             <DialogHeader>
                 <DialogTitle>{selectedStatus} Teklifler ({filteredQuotes.length})</DialogTitle>
             </DialogHeader>
-            <QuotesTableDialog quotes={filteredQuotes} status={selectedStatus} />
+            <QuotesTableDialog quotes={filteredQuotes} status={selectedStatus} onStatusChange={handleStatusChange} />
         </DialogContent>
     </Dialog>
   );

@@ -15,9 +15,12 @@ import { isMacOS } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getDbData, saveDbData } from '@/lib/db-actions';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function QuotePage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [isClient, setIsClient] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
@@ -52,15 +55,28 @@ export default function QuotePage() {
     try {
       const data = await getDbData();
       const parsedData = dbDataSchema.safeParse(data);
+      let initialQuote = defaultQuote;
 
       if (parsedData.success) {
         const { quotes, customers, companyProfiles } = parsedData.data;
         setSavedQuotes(quotes);
         setCustomers(customers);
         setCompanyProfiles(companyProfiles);
+
+        const quoteId = searchParams.get('id');
+        if (quoteId) {
+          const quoteToLoad = quotes.find(q => q.id === quoteId);
+          if (quoteToLoad) {
+            initialQuote = quoteToLoad;
+            toast({
+              title: "Teklif Yüklendi",
+              description: `${quoteToLoad.quoteNumber} numaralı teklif düzenleniyor.`,
+            });
+          }
+        }
       }
       
-      reset(defaultQuote, { keepDirty: false });
+      reset(initialQuote, { keepDirty: false });
 
     } catch (error) {
       console.error("Error loading initial data:", error);
@@ -69,7 +85,7 @@ export default function QuotePage() {
       setDbLoading(false);
       setIsClient(true);
     }
-  }, [reset, toast]);
+  }, [reset, toast, searchParams]);
 
   useEffect(() => {
     loadInitialData();
@@ -103,12 +119,13 @@ export default function QuotePage() {
       updatedAt: new Date(),
     };
     reset(newQuote);
+    router.push('/quote');
     
     toast({
       title: "Yeni Teklif Formu Hazır",
       description: "Yeni, boş bir teklif formu oluşturuldu. Kaydetmeyi unutmayın.",
     });
-  }, [getValues, reset, toast, savedQuotes.length]);
+  }, [getValues, reset, toast, savedQuotes.length, router]);
   
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
@@ -183,12 +200,13 @@ export default function QuotePage() {
     const quoteToLoad = savedQuotes.find(q => q.id === quoteId);
     if (quoteToLoad) {
       reset(quoteToLoad);
+      router.push(`/quote?id=${quoteId}`);
       toast({
         title: "Teklif Yüklendi",
         description: `${quoteToLoad.quoteNumber} numaralı teklif yüklendi.`,
       });
     }
-  }, [savedQuotes, reset, toast]);
+  }, [savedQuotes, reset, toast, router]);
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = savedQuotes.filter(q => q.id !== quoteId);
@@ -196,7 +214,7 @@ export default function QuotePage() {
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
 
     if (getValues('id') === quoteId) {
-       reset(defaultQuote);
+       handleNewQuote();
     }
     toast({ title: "Teklif Silindi", variant: 'destructive' });
   };
@@ -260,6 +278,12 @@ export default function QuotePage() {
         q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
     );
     setSavedQuotes(newQuotes);
+    
+    // Update form if the current quote is being changed
+    if (getValues('id') === quoteId) {
+      setValue('status', status, { shouldDirty: true });
+    }
+
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
     toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
   };
@@ -291,6 +315,7 @@ export default function QuotePage() {
     const newQuotesList = [...quotesWithRevision, newRevisionQuote];
     setSavedQuotes(newQuotesList);
     reset(newRevisionQuote);
+    router.push(`/quote?id=${newRevisionQuote.id}`);
 
     toast({
       title: "Teklif Revize Edildi",
@@ -375,14 +400,6 @@ export default function QuotePage() {
           onDeleteQuote={handleDeleteQuote}
           onReviseQuote={handleReviseQuote}
           onStatusChange={handleStatusChange}
-          companyProfiles={companyProfiles}
-          onSaveCompanyProfile={handleSaveCompanyProfile}
-          onSetCompanyProfile={handleSetCompanyProfile}
-          onDeleteCompanyProfile={handleDeleteCompanyProfile}
-          customers={customers}
-          onSaveCustomer={handleSaveCustomer}
-          onSetCustomer={handleSetCustomer}
-          onDeleteCustomer={handleDeleteCustomer}
           getValues={getValues}
         />
         

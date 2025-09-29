@@ -53,13 +53,8 @@ import {
 import {
   Customer,
   customerSchema,
-  DbData,
-  dbDataSchema,
 } from '@/lib/schema';
-import { useState, useEffect, useCallback } from 'react';
-import { getDbData, saveDbData } from '@/lib/db-actions';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 const CustomerForm = ({
   customer,
@@ -118,82 +113,20 @@ const CustomerForm = ({
 
 export default function CustomersPanel({
   children,
+  customers,
+  onSave,
+  onDelete,
 }: {
   children: React.ReactNode;
+  customers: Customer[];
+  onSave: (customer: Customer) => void;
+  onDelete: (customerId: string) => void;
 }) {
-  const { toast } = useToast();
-  const [dbData, setDbData] = useState<DbData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<
     Customer | undefined
   >(undefined);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getDbData();
-      const parsedData = dbDataSchema.safeParse(data);
-      if (parsedData.success) {
-        setDbData(parsedData.data);
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: 'Hata',
-        description: 'Veriler yüklenemedi.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isSheetOpen) {
-      loadData();
-    }
-  }, [isSheetOpen, loadData]);
-
-  const handleSave = async (customer: Customer) => {
-    if (!dbData) return;
-
-    const newCustomers = dbData.customers.filter(p => p.id !== customer.id);
-    newCustomers.push(customer);
-    const newData = { ...dbData, customers: newCustomers };
-
-    try {
-      await saveDbData(newData);
-      setDbData(newData);
-      toast({ title: 'Müşteri Kaydedildi' });
-    } catch (error) {
-      toast({
-        title: 'Hata',
-        description: 'Müşteri kaydedilemedi.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDelete = async (customerId: string) => {
-    if (!dbData) return;
-
-    const newCustomers = dbData.customers.filter(p => p.id !== customerId);
-    const newData = { ...dbData, customers: newCustomers };
-
-    try {
-      await saveDbData(newData);
-      setDbData(newData);
-      toast({ title: 'Müşteri Silindi', variant: 'destructive' });
-    } catch (error) {
-      toast({
-        title: 'Hata',
-        description: 'Müşteri silinemedi.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
@@ -217,11 +150,6 @@ export default function CustomersPanel({
               <PlusCircle className="mr-2 h-4 w-4" /> Yeni Müşteri Ekle
             </Button>
           </div>
-          {loading ? (
-             <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-             </div>
-          ) : (
             <div className="max-h-[70vh] overflow-y-auto border rounded-md">
               <Table>
                 <TableHeader>
@@ -233,7 +161,7 @@ export default function CustomersPanel({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dbData?.customers.map(c => (
+                  {customers.map(c => (
                     <TableRow key={c.id}>
                       <TableCell>{c.customerName}</TableCell>
                        <TableCell>{c.customerContact}</TableCell>
@@ -270,7 +198,7 @@ export default function CustomersPanel({
                             <AlertDialogFooter>
                               <AlertDialogCancel>İptal</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(c.id)}
+                                onClick={() => onDelete(c.id)}
                                 className="bg-destructive hover:bg-destructive/90"
                               >
                                 Sil
@@ -284,7 +212,6 @@ export default function CustomersPanel({
                 </TableBody>
               </Table>
             </div>
-          )}
         </div>
       </SheetContent>
 
@@ -297,7 +224,7 @@ export default function CustomersPanel({
           </DialogHeader>
           <CustomerForm
             customer={editingCustomer}
-            onSave={handleSave}
+            onSave={onSave}
             closeDialog={() => setFormOpen(false)}
           />
         </DialogContent>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Quote, CompanyProfile, Customer, quoteStatusSchema, QuoteStatus } from "@/lib/schema";
+import { Quote, QuoteStatus, quoteStatusSchema } from "@/lib/schema";
 import { formatCurrency, cn } from "@/lib/utils";
 import {
   FilePlus2,
@@ -19,19 +19,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-
-
-const statusColors: Record<QuoteStatus, string> = {
-    Taslak: "bg-gray-200 text-gray-800",
-    Gönderildi: "bg-blue-200 text-blue-800",
-    Onaylandı: "bg-green-200 text-green-800",
-    Reddedildi: "bg-red-200 text-red-800",
-    'Revize Edildi': "bg-yellow-200 text-yellow-800",
-};
-
 
 type ToolbarProps = {
   onNewQuote: () => void;
@@ -42,14 +31,18 @@ type ToolbarProps = {
   savedQuotes: Quote[];
   onLoadQuote: (quoteId: string) => void;
   onDeleteQuote: (quoteId: string) => void;
-  companyProfiles: CompanyProfile[];
-  onSetCompanyProfile: (profileId: string) => void;
-  customers: Customer[];
-  onSetCustomer: (customerId: string) => void;
   onReviseQuote: (quoteId: string) => void;
   onStatusChange: (quoteId: string, status: QuoteStatus) => void;
+  getValues: () => Quote;
 };
 
+const statusColors: Record<QuoteStatus, string> = {
+    Taslak: "bg-gray-200 text-gray-800",
+    Gönderildi: "bg-blue-200 text-blue-800",
+    Onaylandı: "bg-green-200 text-green-800",
+    Reddedildi: "bg-red-200 text-red-800",
+    'Revize Edildi': "bg-yellow-200 text-yellow-800",
+};
 
 export function Toolbar({
   onNewQuote,
@@ -60,14 +53,9 @@ export function Toolbar({
   savedQuotes,
   onLoadQuote,
   onDeleteQuote,
-  companyProfiles,
-  onSetCompanyProfile,
-  customers,
-  onSetCustomer,
   onReviseQuote,
   onStatusChange,
 }: ToolbarProps) {
-  const { toast } = useToast();
   const [isQuotesDialogOpen, setQuotesDialogOpen] = useState(false);
   
   return (
@@ -105,7 +93,7 @@ export function Toolbar({
                     {savedQuotes.length > 0 ? savedQuotes.sort((a,b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).map((quote) => (
                       <TableRow key={quote.id}>
                         <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                   <Badge className={cn("cursor-pointer", statusColors[quote.status])}>{quote.status}</Badge>
