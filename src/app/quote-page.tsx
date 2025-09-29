@@ -53,8 +53,6 @@ export default function QuotePage() {
     
     const newQuote: Quote = {
       ...defaultQuote,
-      companyName: currentCompanyInfo?.companyName || '',
-      customerName: '',
       id: `QT-${Date.now()}`,
       quoteNumber: quoteNumber,
       quoteDate: today,
