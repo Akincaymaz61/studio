@@ -103,40 +103,38 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </section>
             
             <section className="mt-8">
-                <div className="break-inside-avoid-page">
-                    {quote.notes && (
-                        <div className="w-full mb-8">
-                            <div className="bg-muted/50 p-4 rounded-lg h-full">
-                            <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                            <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="break-inside-avoid-page w-full max-w-xs ml-auto">
-                    <div className="space-y-2">
-                        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Ara Toplam:</span>
-                            <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
-                        </div>
-                        {calculations.discountAmount > 0 && (
-                            <div className="flex justify-between">
-                            <span className="text-muted-foreground">İndirim:</span>
-                            <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">KDV Toplam:</span>
-                            <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
-                        </div>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
-                            <span>Genel Toplam:</span>
-                            <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
-                        </div>
-                    </div>
-                </div>
+              {quote.notes && (
+                  <div className="mb-8 break-inside-avoid-page">
+                      <div className="bg-muted/50 p-4 rounded-lg h-full">
+                      <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                      <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                      </div>
+                  </div>
+              )}
+              <div className="w-full max-w-xs ml-auto break-inside-avoid-page">
+                  <div className="space-y-2">
+                      <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Ara Toplam:</span>
+                          <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
+                      </div>
+                      {calculations.discountAmount > 0 && (
+                          <div className="flex justify-between">
+                          <span className="text-muted-foreground">İndirim:</span>
+                          <span className="font-medium text-red-600">-{formatCurrency(calculations.discountAmount, quote.currency)}</span>
+                          </div>
+                      )}
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">KDV Toplam:</span>
+                          <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
+                      </div>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
+                          <span>Genel Toplam:</span>
+                          <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
+                      </div>
+                  </div>
+              </div>
             </section>
           </CardContent>
         </Card>
