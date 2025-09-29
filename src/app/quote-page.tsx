@@ -346,7 +346,7 @@ export default function QuotePage() {
                 <QuoteForm 
                     calculations={calculations} 
                     customers={customers}
-                    onSetCustomer={onSetCustomer}
+                    onSetCustomer={handleSetCustomer}
                     onSaveCustomer={handleSaveCustomer}
                     companyProfiles={companyProfiles}
                     onSetCompanyProfile={handleSetCompanyProfile}
