@@ -7,10 +7,12 @@ import { FileText, CheckCircle2, XCircle, Edit, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface DashboardProps {
   quotes: Quote[];
@@ -100,37 +102,84 @@ const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStat
 export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState('all');
+
+  const filteredQuotesByDate = useMemo(() => {
+    const now = new Date();
+    if (dateRange === 'all') return quotes;
+    if (dateRange === '7d') return quotes.filter(q => new Date(q.quoteDate) >= subDays(now, 7));
+    if (dateRange === '30d') return quotes.filter(q => new Date(q.quoteDate) >= subDays(now, 30));
+    if (dateRange === 'this_month') return quotes.filter(q => new Date(q.quoteDate) >= startOfMonth(now) && new Date(q.quoteDate) <= endOfMonth(now));
+    if (dateRange === 'last_month') return quotes.filter(q => new Date(q.quoteDate) >= startOfMonth(subDays(startOfMonth(now), 1)) && new Date(q.quoteDate) <= endOfMonth(subDays(startOfMonth(now), 1)));
+    return quotes;
+  }, [quotes, dateRange]);
   
   const stats = useMemo(() => {
     return {
-      Tümü: quotes.length,
-      Taslak: quotes.filter(q => q.status === 'Taslak').length,
-      Gönderildi: quotes.filter(q => q.status === 'Gönderildi').length,
-      Onaylandı: quotes.filter(q => q.status === 'Onaylandı').length,
-      Reddedildi: quotes.filter(q => q.status === 'Reddedildi').length,
-      'Revize Edildi': quotes.filter(q => q.status === 'Revize Edildi').length,
+      Tümü: filteredQuotesByDate.length,
+      Taslak: filteredQuotesByDate.filter(q => q.status === 'Taslak').length,
+      Gönderildi: filteredQuotesByDate.filter(q => q.status === 'Gönderildi').length,
+      Onaylandı: filteredQuotesByDate.filter(q => q.status === 'Onaylandı').length,
+      Reddedildi: filteredQuotesByDate.filter(q => q.status === 'Reddedildi').length,
+      'Revize Edildi': filteredQuotesByDate.filter(q => q.status === 'Revize Edildi').length,
     };
-  }, [quotes]);
+  }, [filteredQuotesByDate]);
 
-  const filteredQuotes = useMemo(() => {
-    if (selectedStatus === 'Tümü') return quotes;
-    return quotes.filter(q => q.status === selectedStatus);
-  }, [quotes, selectedStatus]);
-  
+  const dialogQuotes = useMemo(() => {
+    if (selectedStatus === 'Tümü') return filteredQuotesByDate;
+    return filteredQuotesByDate.filter(q => q.status === selectedStatus);
+  }, [filteredQuotesByDate, selectedStatus]);
+
   const handleCardClick = (status: QuoteStatus | 'Tümü') => {
       setSelectedStatus(status);
       setDialogOpen(true);
   }
 
   const sortedRecentQuotes = useMemo(() => {
-    return [...quotes].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).slice(0, 10);
-  }, [quotes]);
+    const searchLower = searchTerm.toLowerCase();
+    const filtered = filteredQuotesByDate.filter(quote => 
+        (quote.quoteNumber?.toLowerCase().includes(searchLower)) ||
+        (quote.customerName.toLowerCase().includes(searchLower)) ||
+        (quote.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toString().includes(searchLower))
+    );
+    return [...filtered].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+  }, [filteredQuotesByDate, searchTerm]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
         <div className="space-y-8">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             
+            <Card>
+                <CardHeader>
+                    <CardTitle>Filtreler</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-4">
+                    <div className="flex-1 min-w-[200px]">
+                        <Select value={dateRange} onValueChange={setDateRange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Dönem Seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tümü</SelectItem>
+                                <SelectItem value="7d">Son 7 Gün</SelectItem>
+                                <SelectItem value="30d">Son 30 Gün</SelectItem>
+                                <SelectItem value="this_month">Bu Ay</SelectItem>
+                                <SelectItem value="last_month">Geçen Ay</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex-1 min-w-[250px]">
+                        <Input 
+                            placeholder="Tekliflerde ara (No, Müşteri, Tutar...)"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                 <StatCard title="Toplam Teklif" value={stats.Tümü} icon={<FileText size={20} />} onClick={() => handleCardClick('Tümü')} colorClass="bg-gray-500" />
                 <StatCard title="Taslaklar" value={stats.Taslak} icon={<Edit size={20} />} onClick={() => handleCardClick('Taslak')} colorClass="bg-yellow-500"/>
@@ -145,16 +194,16 @@ export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <QuotesTableDialog quotes={sortedRecentQuotes} onStatusChange={onStatusChange} />
+                        <QuotesTableDialog quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} />
                     </div>
                 </CardContent>
             </Card>
         </div>
         <DialogContent className="max-w-4xl">
             <DialogHeader>
-                <DialogTitle>{selectedStatus} Teklifler ({filteredQuotes.length})</DialogTitle>
+                <DialogTitle>{selectedStatus} Teklifler ({dialogQuotes.length})</DialogTitle>
             </DialogHeader>
-            <QuotesTableDialog quotes={filteredQuotes} onStatusChange={onStatusChange} />
+            <QuotesTableDialog quotes={dialogQuotes} onStatusChange={onStatusChange} />
         </DialogContent>
     </Dialog>
   );
