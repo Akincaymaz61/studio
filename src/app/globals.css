@@ -68,6 +68,16 @@
   }
 }
 
+@layer utilities {
+    .break-inside-avoid {
+        break-inside: avoid;
+    }
+    .break-after-avoid {
+        break-after: avoid;
+    }
+}
+
+
 @media print {
   @page {
     size: A4;
