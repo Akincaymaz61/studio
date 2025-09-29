@@ -4,7 +4,7 @@ import { addDays, format } from 'date-fns';
 export const companyProfileSchema = z.object({
   id: z.string(),
   companyName: z.string().min(1, 'Firma adı gereklidir'),
-  companyLogo: z.string().optional(),
+  companyLogoId: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
   companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
@@ -50,7 +50,7 @@ export const quoteSchema = z.object({
   quoteNumber: z.string().optional(),
   quoteDate: z.coerce.date(),
   validUntil: z.coerce.date(),
-  updatedAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date(),
   
   currency: z.string().default('USD'),
   items: z.array(quoteItemSchema),

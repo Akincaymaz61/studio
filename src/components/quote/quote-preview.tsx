@@ -8,6 +8,7 @@ import type { Quote, CompanyProfile } from "@/lib/schema";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
+import { LOGOS } from "@/lib/logos";
 
 type QuotePreviewProps = {
   quote: Quote;
@@ -26,7 +27,8 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
     window.print();
   }
   
-  const companyLogo = companyProfiles.find(p => p.id === quote.companyProfileId)?.companyLogo;
+  const companyProfile = companyProfiles.find(p => p.id === quote.companyProfileId);
+  const companyLogo = companyProfile ? LOGOS.find(l => l.id === companyProfile.companyLogoId) : undefined;
 
   return (
     <div className="space-y-4">
@@ -47,7 +49,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 <div className="w-1/2">
                   {companyLogo && (
                     <div className="mb-4 relative w-56 h-28">
-                      <Image src={companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
+                      <Image src={companyLogo.url} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
                     </div>
                   )}
                 </div>

@@ -18,7 +18,6 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { LogoUploader } from './logo-uploader';
 import { RichTextEditor } from './rich-text-editor';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -162,43 +161,40 @@ export function QuoteForm({
   return (
     <div className="space-y-8">
       <FormSection title="Firma Bilgileri" icon={<Building2 />}>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-             <div className="grid grid-cols-[1fr_auto] items-start gap-4">
-                <FormField name="companyName" control={control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Firma Adı</FormLabel>
-                    <FormControl><Input placeholder="Firma adınızı girin" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <div className="flex items-end h-full">
-                   <CompanyProfileListPopover profiles={companyProfiles} onSetProfile={onSetCompanyProfile} />
-                </div>
-            </div>
-            <FormField name="companyAddress" control={control} render={({ field }) => (
-              <FormItem>
-                <FormLabel>Firma Adresi</FormLabel>
-                <FormControl><Textarea placeholder="Firma adresinizi girin" {...field} /></FormControl>
-              </FormItem>
-            )} />
-            <div className="grid sm:grid-cols-2 gap-6">
-              <FormField name="companyPhone" control={control} render={({ field }) => (
+        <div className="space-y-6">
+           <div className="grid grid-cols-[1fr_auto] items-start gap-4">
+              <FormField name="companyName" control={control} render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefon</FormLabel>
-                  <FormControl><Input placeholder="Telefon" {...field} /></FormControl>
-                </FormItem>
-              )} />
-              <FormField name="companyEmail" control={control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>E-posta</FormLabel>
-                  <FormControl><Input type="email" placeholder="E-posta" {...field} /></FormControl>
+                  <FormLabel>Firma Adı</FormLabel>
+                  <FormControl><Input placeholder="Firma adınızı girin" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
-            </div>
+              <div className="flex items-end h-full">
+                 <CompanyProfileListPopover profiles={companyProfiles} onSetProfile={onSetCompanyProfile} />
+              </div>
           </div>
-          <LogoUploader logoFieldName="companyLogo" />
+          <FormField name="companyAddress" control={control} render={({ field }) => (
+            <FormItem>
+              <FormLabel>Firma Adresi</FormLabel>
+              <FormControl><Textarea placeholder="Firma adresinizi girin" {...field} /></FormControl>
+            </FormItem>
+          )} />
+          <div className="grid sm:grid-cols-2 gap-6">
+            <FormField name="companyPhone" control={control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefon</FormLabel>
+                <FormControl><Input placeholder="Telefon" {...field} /></FormControl>
+              </FormItem>
+            )} />
+            <FormField name="companyEmail" control={control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-posta</FormLabel>
+                <FormControl><Input type="email" placeholder="E-posta" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
         </div>
       </FormSection>
 
