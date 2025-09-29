@@ -43,12 +43,13 @@ export async function getDbData(): Promise<DbData> {
     }
     
     const data = await response.json();
-    const record = data.record || data;
+    const record = data.record;
 
-    if (record && Object.keys(record).length === 0 && record.constructor === Object) {
+    if (!record || Object.keys(record).length === 0) {
         return initialData;
     }
 
+    // Ensure dates are converted from strings to Date objects
     if (record.quotes) {
         record.quotes.forEach((quote: any) => {
             if (quote.quoteDate) quote.quoteDate = new Date(quote.quoteDate);
