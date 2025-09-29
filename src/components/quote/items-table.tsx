@@ -8,26 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Trash2, Plus, GripVertical } from 'lucide-react';
 import { taxOptions, unitOptions, Quote } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
-import { DragDropContext, Droppable, Draggable, DropResult, DroppableProps } from 'react-beautiful-dnd';
-import { useState, useEffect } from 'react';
-
-
-// Custom Droppable component to prevent StrictMode issues with react-beautiful-dnd
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
-
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 export function ItemsTable() {
   const { control } = useFormContext<Quote>();
@@ -79,7 +60,7 @@ export function ItemsTable() {
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
-            <StrictModeDroppable droppableId="items">
+            <Droppable droppableId="items">
               {(provided: any) => (
                 <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                   {fields.map((item, index) => {
@@ -162,7 +143,7 @@ export function ItemsTable() {
                   {provided.placeholder}
                 </TableBody>
               )}
-            </StrictModeDroppable>
+            </Droppable>
           </Table>
         </DragDropContext>
       </div>
