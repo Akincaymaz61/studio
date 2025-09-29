@@ -58,17 +58,11 @@ export default function QuotePage() {
         setSavedQuotes(quotes);
         setCustomers(customers);
         setCompanyProfiles(companyProfiles);
-
-        const latestQuote = quotes.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
-        
-        if (latestQuote) {
-          reset(latestQuote, { keepDirty: false });
-        } else {
-          reset(defaultQuote, { keepDirty: false });
-        }
-      } else {
-         reset(defaultQuote, { keepDirty: false });
       }
+      
+      // Always reset to a default blank quote on initial load.
+      reset(defaultQuote, { keepDirty: false });
+
     } catch (error) {
       console.error("Error loading initial data:", error);
       toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
@@ -111,9 +105,6 @@ export default function QuotePage() {
       updatedAt: new Date(),
     };
     reset(newQuote);
-    
-    // Do not save the new quote automatically. Let the user save it.
-    // The new quote will be added to the list on save.
     
     toast({
       title: "Yeni Teklif Formu Hazır",
@@ -174,7 +165,7 @@ export default function QuotePage() {
   } else {
     discountAmount = Number(watchedDiscountValue) || 0;
   }
-  discountAmount = Math.min(discountAmount, totalWithTax);
+  discountAmount = Math.max(0, Math.min(discountAmount, totalWithTax));
 
   const grandTotal = totalWithTax - discountAmount;
   const calculations = { subtotal, taxTotal, discountAmount, grandTotal };
@@ -207,13 +198,7 @@ export default function QuotePage() {
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
 
     if (getValues('id') === quoteId) {
-      const latestQuote = newQuotes.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
-      if (latestQuote) {
-        reset(latestQuote);
-      } else {
-        // Just reset to a blank default form, don't create a new one automatically
-        reset(defaultQuote);
-      }
+       reset(defaultQuote);
     }
     toast({ title: "Teklif Silindi", variant: 'destructive' });
   };

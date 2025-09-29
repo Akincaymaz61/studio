@@ -238,6 +238,7 @@ export function QuoteForm({ calculations }: { calculations: any }) {
                         <FormControl>
                            <Input
                               type="number"
+                              min="0"
                               {...field}
                               onChange={e => handleNumericChange(field, e.target.value)}
                               onFocus={e => e.target.select()}
