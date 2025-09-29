@@ -38,7 +38,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
 
       <div id="print-area" className="print-container">
         <Card className="print:shadow-none print:border-none print:rounded-none">
-          <CardContent className="p-12 text-sm flex flex-col flex-grow">
+          <CardContent className="p-8 md:p-12 print:p-0">
             <header className="flex justify-between items-start mb-8">
                 <div className="w-1/2">
                   {quote.companyLogo && (
@@ -75,7 +75,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                 </div>
             </section>
 
-            <section className="mb-8 flex-grow">
+            <section className="mb-8">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-primary text-primary-foreground">
@@ -102,17 +102,15 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
               </table>
             </section>
             
-            <section className="mt-auto pt-8">
+            <section className="mt-8">
               {quote.notes && (
                   <div className="mb-8 break-inside-avoid">
-                      <div className="bg-muted/50 p-4 rounded-lg h-full">
                       <h3 className="font-semibold mb-2 text-primary break-after-avoid">Notlar:</h3>
                       <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-                      </div>
                   </div>
               )}
               
-              <div className="w-full max-w-xs ml-auto break-inside-avoid">
+              <div className="ml-auto w-full max-w-xs break-inside-avoid">
                   <div className="space-y-2">
                       <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                       <div className="flex justify-between">
@@ -137,7 +135,6 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                   </div>
               </div>
             </section>
-
           </CardContent>
         </Card>
       </div>
