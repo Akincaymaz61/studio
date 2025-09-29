@@ -25,7 +25,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import CompanyProfilesPanel from '../data-management/company-profiles-panel';
 import CustomersPanel from '../data-management/customers-panel';
-import { Customer, CompanyProfile, Quote, DbData, dbDataSchema, QuoteStatus } from '@/lib/schema';
+import { Customer, CompanyProfile, Quote, DbData, QuoteStatus } from '@/lib/schema';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getDbData, saveDbData } from '@/lib/db-actions';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +36,7 @@ type QuoteLayoutContextType = {
   customers: Customer[];
   companyProfiles: CompanyProfile[];
   loading: boolean;
-  handleSaveAll: (data: DbData) => Promise<void>;
+  handleSaveAll: (data: DbData) => Promise<boolean>;
   handleSaveCustomer: (customer: Customer) => Promise<void>;
   handleDeleteCustomer: (id: string) => Promise<void>;
   handleSaveCompanyProfile: (profile: CompanyProfile) => Promise<void>;
@@ -79,32 +79,23 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
 
 
-  const handleSaveAll = useCallback(async (data: DbData) => {
-    try {
-      // 1. Save to the external DB first
-      await saveDbData(data);
-      
-      // 2. If saving is successful, then update the local state
-      const parsedData = dbDataSchema.safeParse(data);
-       if (parsedData.success) {
-          setQuotes(parsedData.data.quotes);
-          setCustomers(parsedData.data.customers);
-          setCompanyProfiles(parsedData.data.companyProfiles);
-       } else {
-         console.error("Zod validation failed after save: ", parsedData.error);
-         // Even if validation fails on the way back, fetch from source to be sure
-         const freshData = await getDbData();
-         setQuotes(freshData.quotes);
-         setCustomers(freshData.customers);
-         setCompanyProfiles(freshData.companyProfiles);
-       }
-    } catch (error) {
-      console.error("Error saving to db: ", error);
+  const handleSaveAll = useCallback(async (data: DbData): Promise<boolean> => {
+    const result = await saveDbData(data);
+    
+    if (result.success) {
+      // Veritabanına başarıyla kaydedildiyse, local state'i güncelle
+      setQuotes(data.quotes);
+      setCustomers(data.customers);
+      setCompanyProfiles(data.companyProfiles);
+      return true;
+    } else {
+      console.error("Veritabanına kaydetme hatası: ", result.error);
       toast({
-        title: "Kaydetme Hatası",
-        description: "Veriler veritabanına kaydedilirken bir hata oluştu.",
+        title: "Kaydetme Başarısız",
+        description: "Veriler veritabanına kaydedilemedi. Lütfen internet bağlantınızı ve ayarlarınızı kontrol edin.",
         variant: "destructive"
       });
+      return false;
     }
   }, [toast]);
 
@@ -115,25 +106,13 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       setLoading(true);
       try {
         const data = await getDbData();
-        const parsedData = dbDataSchema.safeParse(data);
-        if (parsedData.success) {
-          setQuotes(parsedData.data.quotes);
-          setCustomers(parsedData.data.customers);
-          setCompanyProfiles(parsedData.data.companyProfiles);
-        } else {
-             // If parsing fails, it might be an empty object from a new bin
-            if (data && Object.keys(data).length === 0) {
-                 setQuotes([]);
-                 setCustomers([]);
-                 setCompanyProfiles([]);
-            } else {
-                console.error("Zod validation failed for DB data: ", parsedData.error);
-                throw new Error("Veritabanı verisi bozuk.");
-            }
-        }
+        // getDbData artık her zaman doğrulanmış veya boş bir DbData nesnesi döndürür.
+        setQuotes(data.quotes);
+        setCustomers(data.customers);
+        setCompanyProfiles(data.companyProfiles);
       } catch (error) {
-        console.error('Failed to load data', error);
-         toast({ title: "Veri Yükleme Hatası", description: "Veritabanı yüklenirken bir hata oluştu. Lütfen ortam değişkenlerini kontrol edin.", variant: "destructive" });
+        console.error('Veri yüklenirken beklenmedik bir hata oluştu:', error);
+         toast({ title: "Kritik Veri Yükleme Hatası", description: "Veritabanı yüklenemedi. Lütfen konsol kayıtlarını kontrol edin.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
@@ -147,14 +126,18 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       ? companyProfiles.map(p => p.id === profile.id ? profile : p)
       : [...companyProfiles, profile];
     
-    await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
-    toast({ title: `Firma Profili ${profileExists ? 'Güncellendi' : 'Kaydedildi'}` });
+    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    if (success) {
+        toast({ title: `Firma Profili ${profileExists ? 'Güncellendi' : 'Kaydedildi'}` });
+    }
   };
 
   const handleDeleteCompanyProfile = async (profileId: string) => {
     const newProfiles = companyProfiles.filter(p => p.id !== profileId);
-    await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
-    toast({ title: 'Profil Silindi', variant: 'destructive' });
+    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    if (success) {
+        toast({ title: 'Profil Silindi', variant: 'destructive' });
+    }
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
@@ -162,32 +145,40 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
      const newCustomers = customerExists
       ? customers.map(c => c.id === customer.id ? customer : c)
       : [...customers, customer];
-    await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
-    toast({ title: `Müşteri ${customerExists ? 'Güncellendi' : 'Kaydedildi'}` });
+    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    if (success) {
+        toast({ title: `Müşteri ${customerExists ? 'Güncellendi' : 'Kaydedildi'}` });
+    }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
-    await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
-    toast({ title: 'Müşteri Silindi', variant: 'destructive' });
+    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    if (success) {
+        toast({ title: 'Müşteri Silindi', variant: 'destructive' });
+    }
   };
 
   const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
     const newQuotes = quotes.map(q =>
       q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
     );
-    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
-    toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
+    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    if (success) {
+        toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
+    }
   };
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = quotes.filter(q => q.id !== quoteId);
-    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
-     toast({
-      title: "Teklif Silindi",
-      description: `Teklif başarıyla veritabanından silindi.`,
-      variant: "destructive"
-    });
+    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    if (success) {
+         toast({
+          title: "Teklif Silindi",
+          description: `Teklif başarıyla veritabanından silindi.`,
+          variant: "destructive"
+        });
+    }
   };
 
   const handleReviseQuote = (quoteId: string): string | undefined => {
@@ -214,12 +205,15 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
 
     const newQuotesList = [...quotesWithRevision, newRevisionQuote];
     
-    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles });
-
-    toast({
-      title: "Teklif Revize Edildi",
-      description: `Yeni revizyon "${newRevisionQuote.quoteNumber}" oluşturuldu.`,
+    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles }).then(success => {
+        if (success) {
+             toast({
+              title: "Teklif Revize Edildi",
+              description: `Yeni revizyon "${newRevisionQuote.quoteNumber}" oluşturuldu.`,
+            });
+        }
     });
+
     return newRevisionQuote.id;
   };
   

@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, quoteSchema, defaultQuote, QuoteStatus } from '@/lib/schema';
+import { Quote, quoteSchema, defaultQuote, QuoteStatus, Customer } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
@@ -27,9 +27,6 @@ export default function QuotePage() {
     companyProfiles,
     handleSaveAll,
     handleSaveCustomer,
-    handleDeleteCustomer,
-    handleSaveCompanyProfile,
-    handleDeleteCompanyProfile,
     handleDeleteQuote,
     handleReviseQuote,
     handleStatusChange,
@@ -56,6 +53,8 @@ export default function QuotePage() {
     
     const newQuote: Quote = {
       ...defaultQuote,
+      companyName: currentCompanyInfo?.companyName || '',
+      customerName: '',
       id: `QT-${Date.now()}`,
       quoteNumber: quoteNumber,
       quoteDate: today,
@@ -113,9 +112,10 @@ export default function QuotePage() {
           reset(createNewQuoteObject(companyInfoFromCurrentQuote));
         }
       } else {
-        reset(createNewQuoteObject(companyInfoFromCurrentQuote));
+        const defaultProfile = companyProfiles[0];
+        reset(createNewQuoteObject(defaultProfile || companyInfoFromCurrentQuote));
       }
-  }, [quotes, reset, searchParams, createNewQuoteObject, getValues, router]);
+  }, [quotes, reset, searchParams, createNewQuoteObject, getValues, router, companyProfiles]);
   
   useEffect(() => {
     if(!loading) { // Wait for data to be loaded
@@ -123,25 +123,45 @@ export default function QuotePage() {
     }
   }, [loading, loadInitialQuote]);
   
-  const saveCurrentQuote = useCallback(() => {
-      const currentData = getValues();
-      if (!currentData.id) return; // Do not save if it's a new quote without ID yet
-      
-      // Ensure all date fields are Date objects before saving
-      const dataToSave: Quote = {
-        ...currentData,
-        quoteDate: new Date(currentData.quoteDate),
-        validUntil: new Date(currentData.validUntil),
+ const saveCurrentQuote = useCallback(async () => {
+    const currentData = getValues();
+    
+    // Kaydetmeden önce Zod ile doğrula
+    const validationResult = quoteSchema.safeParse(currentData);
+    if (!validationResult.success) {
+        toast({
+            title: "Kaydetme Başarısız",
+            description: `Lütfen zorunlu alanları doldurun. Hata: ${validationResult.error.errors[0].message}`,
+            variant: 'destructive',
+        });
+        return; // Doğrulama başarısızsa kaydetmeyi durdur
+    }
+
+    // Doğrulanmış veriyi al
+    const dataToSave: Quote = {
+        ...validationResult.data,
         updatedAt: new Date(),
-      };
-      
-      handleSaveAll({
-          quotes: [...quotes.filter(q => q.id !== dataToSave.id), dataToSave],
-          customers: customers,
-          companyProfiles: companyProfiles,
-      });
-  }, [getValues, quotes, customers, companyProfiles, handleSaveAll]);
-  
+    };
+
+    const quoteExists = quotes.some(q => q.id === dataToSave.id);
+    const newQuotes = quoteExists
+        ? quotes.map(q => (q.id === dataToSave.id ? dataToSave : q))
+        : [...quotes, dataToSave];
+
+    const success = await handleSaveAll({
+        quotes: newQuotes,
+        customers: customers,
+        companyProfiles: companyProfiles,
+    });
+
+    if (success) {
+        toast({
+            title: "Teklif Kaydedildi",
+            description: "Değişiklikleriniz başarıyla veritabanına kaydedildi.",
+        });
+    }
+  }, [getValues, quotes, customers, companyProfiles, handleSaveAll, toast]);
+
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
@@ -159,10 +179,6 @@ export default function QuotePage() {
     if (modifier && event.key === 's') {
       event.preventDefault();
       saveCurrentQuote();
-      toast({
-          title: "Teklif Kaydedildi",
-          description: "Değişiklikleriniz veritabanına başarıyla kaydedildi.",
-      });
     }
     if (modifier && event.key === 'p') {
       event.preventDefault();
@@ -172,7 +188,7 @@ export default function QuotePage() {
       event.preventDefault();
       handleNewQuote();
     }
-  }, [saveCurrentQuote, toast, handleNewQuote, handlePdfExport]);
+  }, [saveCurrentQuote, handleNewQuote, handlePdfExport]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -303,13 +319,7 @@ export default function QuotePage() {
             
             <Toolbar
             onNewQuote={handleNewQuote}
-            onSaveQuote={() => {
-                saveCurrentQuote();
-                toast({
-                    title: "Teklif Kaydedildi",
-                    description: "Değişiklikleriniz veritabanına başarıyla kaydedildi.",
-                });
-            }}
+            onSaveQuote={saveCurrentQuote}
             onPreviewToggle={() => setIsPreview(!isPreview)}
             onPdfExport={handlePdfExport}
             isPreviewing={isPreview}

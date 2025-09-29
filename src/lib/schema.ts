@@ -35,13 +35,13 @@ export const quoteItemSchema = z.object({
 
 export const quoteSchema = z.object({
   id: z.string(),
-  companyName: z.string(),
+  companyName: z.string().min(1, "Firma adı boş bırakılamaz."),
   companyLogo: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
   companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
   
-  customerName: z.string(),
+  customerName: z.string().min(1, "Müşteri adı boş bırakılamaz."),
   customerContact: z.string().optional(),
   customerAddress: z.string().optional(),
   customerEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
@@ -73,13 +73,11 @@ export const dbDataSchema = z.object({
 export type DbData = z.infer<typeof dbDataSchema>;
 
 
-export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items'> = {
-  companyName: '',
+export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items' | 'companyName' | 'customerName'> = {
   companyLogo: '',
   companyAddress: '',
   companyPhone: '',
   companyEmail: '',
-  customerName: '',
   customerContact: '',
   customerAddress: '',
   customerEmail: '',
