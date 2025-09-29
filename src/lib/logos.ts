@@ -1,7 +1,7 @@
 export const LOGOS = [
   {
     id: 'logo1',
-    url: 'https://hizliresim.com/fxnuskb',
+    url: 'https://i.hizliresim.com/fxnuskb.png',
     name: 'Logo 1',
   },
   {
