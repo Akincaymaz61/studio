@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface DashboardProps {
   quotes: Quote[];
+  onStatusChange: (quoteId: string, status: QuoteStatus) => void;
 }
 
 const statusColors: Record<QuoteStatus, string> = {
@@ -40,7 +41,7 @@ const StatCard = ({ title, value, icon, onClick, colorClass }: { title: string; 
   </DialogTrigger>
 );
 
-const QuotesTableDialog = ({ quotes, status, onStatusChange }: { quotes: Quote[], status: QuoteStatus | 'Tümü', onStatusChange: (quoteId: string, status: QuoteStatus) => void; }) => {
+const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStatusChange: (quoteId: string, status: QuoteStatus) => void; }) => {
     const router = useRouter();
     const handleRowClick = (quoteId: string) => {
         router.push(`/quote?id=${quoteId}`);
@@ -96,8 +97,7 @@ const QuotesTableDialog = ({ quotes, status, onStatusChange }: { quotes: Quote[]
   )
 }
 
-export default function Dashboard({ quotes: initialQuotes }: DashboardProps) {
-  const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
+export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
   
@@ -126,16 +126,6 @@ export default function Dashboard({ quotes: initialQuotes }: DashboardProps) {
     return [...quotes].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).slice(0, 10);
   }, [quotes]);
 
-  const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
-    // This is an optimistic update. In a real app, you'd call an API here.
-    const newQuotes = quotes.map(q => 
-        q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
-    );
-    setQuotes(newQuotes);
-    // You would also need to persist this change, e.g., by calling saveDbData.
-    // This part is omitted here for simplicity as the dashboard is read-only for now.
-  };
-
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
         <div className="space-y-8">
@@ -155,7 +145,7 @@ export default function Dashboard({ quotes: initialQuotes }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <QuotesTableDialog quotes={sortedRecentQuotes} status="Tümü" onStatusChange={handleStatusChange} />
+                        <QuotesTableDialog quotes={sortedRecentQuotes} onStatusChange={onStatusChange} />
                     </div>
                 </CardContent>
             </Card>
@@ -164,7 +154,7 @@ export default function Dashboard({ quotes: initialQuotes }: DashboardProps) {
             <DialogHeader>
                 <DialogTitle>{selectedStatus} Teklifler ({filteredQuotes.length})</DialogTitle>
             </DialogHeader>
-            <QuotesTableDialog quotes={filteredQuotes} status={selectedStatus} onStatusChange={handleStatusChange} />
+            <QuotesTableDialog quotes={filteredQuotes} onStatusChange={onStatusChange} />
         </DialogContent>
     </Dialog>
   );
