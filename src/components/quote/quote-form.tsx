@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
@@ -18,6 +19,7 @@ import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { LogoUploader } from './logo-uploader';
+import { RichTextEditor } from './rich-text-editor';
 
 const FormSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
   <Card className="overflow-hidden">
@@ -296,11 +298,7 @@ export function QuoteForm({
       </FormSection>
       
       <FormSection title="Notlar" icon={<StickyNote />}>
-        <FormField name="notes" control={control} render={({ field }) => (
-          <FormItem>
-            <FormControl><Textarea placeholder="Teklif ile ilgili notlar, ödeme koşulları, teslimat bilgileri vb." rows={5} {...field} /></FormControl>
-          </FormItem>
-        )} />
+        <RichTextEditor name="notes" />
       </FormSection>
 
       <FormSection title="Özet" icon={<Calculator />}>

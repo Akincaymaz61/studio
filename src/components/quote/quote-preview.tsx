@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -104,9 +105,9 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             
             <section className="mt-8">
                 {quote.notes && (
-                    <div className="mb-8">
+                    <div className="mb-8 break-inside-avoid">
                         <h3 className="font-semibold mb-2 text-primary break-after-avoid">Notlar:</h3>
-                        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                        <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
                     </div>
                 )}
                 
