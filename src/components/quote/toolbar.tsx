@@ -98,43 +98,45 @@ export function Toolbar({
           <DialogTrigger asChild><Button variant="outline"><List /> Kayıtlı Teklifler</Button></DialogTrigger>
           <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Kaydedilmiş Teklifler</DialogTitle></DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
-              <Table>
-                <TableHeader><TableRow><TableHead>Teklif No</TableHead><TableHead>Müşteri</TableHead><TableHead>Durum</TableHead><TableHead>Tarih</TableHead><TableHead>Tutar</TableHead><TableHead className="text-right">İşlemler</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {savedQuotes.length > 0 ? savedQuotes.sort((a,b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).map((quote) => (
-                    <TableRow key={quote.id}>
-                      <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell>
-                      <TableCell>
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Badge className={cn("cursor-pointer", statusColors[quote.status])}>{quote.status}</Badge>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {quoteStatusSchema.options.map(status => (
-                                <DropdownMenuItem key={status} onSelect={() => onStatusChange(quote.id, status)}>
-                                    <div className={cn("w-2 h-2 rounded-full mr-2", statusColors[status])} />
-                                    {status}
-                                </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell>{format(new Date(quote.quoteDate), "dd/MM/yyyy")}</TableCell><TableCell>{formatCurrency(quote.items.reduce((acc, item) => acc + item.quantity * item.price, 0), quote.currency)}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        <Button variant="ghost" size="sm" onClick={() => { onLoadQuote(quote.id); setQuotesDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
-                        <Button variant="ghost" size="sm" onClick={() => { onReviseQuote(quote.id); setQuotesDialogOpen(false); }}><Copy className="h-4 w-4 mr-2" /> Revize Et</Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Teklifi Sil</AlertDialogTitle><AlertDialogDescription>Bu işlem geri alınamaz. {quote.quoteNumber} numaralı teklifi kalıcı olarak silmek istediğinizden emin misiniz?</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter><AlertDialogCancel>İptal</AlertDialogCancel><AlertDialogAction onClick={() => onDeleteQuote(quote.id)} className="bg-destructive hover:bg-destructive/90">Sil</AlertDialogAction></AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  )) : <TableRow><TableCell colSpan={6} className="text-center">Kaydedilmiş teklif bulunamadı.</TableCell></TableRow>}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Teklif No</TableHead><TableHead>Müşteri</TableHead><TableHead>Durum</TableHead><TableHead>Tarih</TableHead><TableHead>Tutar</TableHead><TableHead className="text-right">İşlemler</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {savedQuotes.length > 0 ? savedQuotes.sort((a,b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).map((quote) => (
+                      <TableRow key={quote.id}>
+                        <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell>
+                        <TableCell>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Badge className={cn("cursor-pointer", statusColors[quote.status])}>{quote.status}</Badge>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                  {quoteStatusSchema.options.map(status => (
+                                  <DropdownMenuItem key={status} onSelect={() => onStatusChange(quote.id, status)}>
+                                      <div className={cn("w-2 h-2 rounded-full mr-2", statusColors[status])} />
+                                      {status}
+                                  </DropdownMenuItem>
+                                  ))}
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                        <TableCell>{format(new Date(quote.quoteDate), "dd/MM/yyyy")}</TableCell><TableCell>{formatCurrency(quote.items.reduce((acc, item) => acc + item.quantity * item.price, 0), quote.currency)}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <Button variant="ghost" size="sm" onClick={() => { onLoadQuote(quote.id); setQuotesDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
+                          <Button variant="ghost" size="sm" onClick={() => { onReviseQuote(quote.id); setQuotesDialogOpen(false); }}><Copy className="h-4 w-4 mr-2" /> Revize Et</Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader><AlertDialogTitle>Teklifi Sil</AlertDialogTitle><AlertDialogDescription>Bu işlem geri alınamaz. {quote.quoteNumber} numaralı teklifi kalıcı olarak silmek istediğinizden emin misiniz?</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter><AlertDialogCancel>İptal</AlertDialogCancel><AlertDialogAction onClick={() => onDeleteQuote(quote.id)} className="bg-destructive hover:bg-destructive/90">Sil</AlertDialogAction></AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    )) : <TableRow><TableCell colSpan={6} className="text-center">Kaydedilmiş teklif bulunamadı.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

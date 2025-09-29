@@ -38,6 +38,7 @@ const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteS
 
   return (
     <div className="max-h-[70vh] overflow-y-auto">
+      <div className="overflow-x-auto">
         <Table>
             <TableHeader>
                 <TableRow>
@@ -64,6 +65,7 @@ const QuotesTableDialog = ({ quotes, status }: { quotes: Quote[], status: QuoteS
                 )}
             </TableBody>
         </Table>
+      </div>
     </div>
   )
 }
@@ -116,7 +118,9 @@ export default function Dashboard({ quotes }: DashboardProps) {
                     <CardTitle>Son Aktiviteler</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <QuotesTableDialog quotes={sortedRecentQuotes} status="Tümü" />
+                    <div className="overflow-x-auto">
+                        <QuotesTableDialog quotes={sortedRecentQuotes} status="Tümü" />
+                    </div>
                 </CardContent>
             </Card>
         </div>
