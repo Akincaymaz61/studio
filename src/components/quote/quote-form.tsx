@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { LogoUploader } from './logo-uploader';
 import { RichTextEditor } from './rich-text-editor';
+import { ScrollArea } from '../ui/scroll-area';
 
 const FormSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
   <Card className="overflow-hidden">
@@ -113,8 +114,6 @@ const CompanyProfileListPopover = ({ profiles, onSetProfile }: { profiles: Compa
     );
 };
 
-
-import { ScrollArea } from '../ui/scroll-area';
 
 export function QuoteForm({ 
     calculations, 
