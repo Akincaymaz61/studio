@@ -7,17 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
-import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Upload, Save, Users, Search } from 'lucide-react';
+import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Users, Save } from 'lucide-react';
 import { ItemsTable } from './items-table';
 import type { Quote, Customer } from '@/lib/schema';
 import { currencySymbols } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
-import React, { useState, useMemo, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { LogoUploader } from './logo-uploader';
 
 const FormSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
   <Card className="overflow-hidden">
@@ -32,49 +32,6 @@ const FormSection = ({ title, icon, children }: { title: string, icon: React.Rea
     </CardContent>
   </Card>
 );
-
-const LogoUploader = () => {
-  const { control, setValue, watch } = useFormContext<Quote>();
-  const logo = watch('companyLogo');
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue('companyLogo', reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor="companyLogo">Firma Logosu</Label>
-      <div className="relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
-        <Input
-          id="companyLogo"
-          type="file"
-          className="absolute w-full h-full opacity-0 cursor-pointer"
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-        {logo ? (
-          <Image src={logo} alt="Company Logo" layout="fill" objectFit="contain" className="p-2" />
-        ) : (
-          <div className="text-center text-muted-foreground">
-            <Upload className="mx-auto h-8 w-8" />
-            <p className="mt-2 text-sm">Logo yüklemek için tıklayın veya sürükleyin</p>
-            <p className="text-xs">(max 2MB)</p>
-          </div>
-        )}
-      </div>
-      <div className="flex justify-end mt-2">
-        <Button type="button" size="sm" variant="ghost" onClick={() => setValue('companyLogo', '')} disabled={!logo}>Logoyu Kaldır</Button>
-      </div>
-    </div>
-  );
-};
 
 const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer[], onSetCustomer: (id: string) => void}) => {
     const [open, setOpen] = useState(false);
@@ -178,26 +135,21 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
               )} />
             </div>
           </div>
-          <LogoUploader />
+          <LogoUploader logoFieldName="companyLogo" />
         </div>
       </FormSection>
 
       <FormSection title="Müşteri Bilgileri" icon={<User />}>
         <div className="grid grid-cols-[1fr_auto] items-start gap-4">
             <div className="grid md:grid-cols-2 gap-6">
-                <FormField
-                    name="customerName"
-                    control={control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Müşteri Adı</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Müşteri adını girin..." {...field} className="text-left" />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                 <FormField name="customerName" control={control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Müşteri Adı</FormLabel>
+                    <FormControl><Input placeholder="Müşteri adını girin..." {...field} className="text-left" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
                 <FormField name="customerContact" control={control} render={({ field }) => (
                     <FormItem>
                     <FormLabel>İlgili Kişi</FormLabel>

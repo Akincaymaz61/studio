@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Quote, CompanyProfile, Customer, companyProfileSchema, customerSchema } from "@/lib/schema";
@@ -27,26 +27,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { LogoUploader } from './logo-uploader';
 
-type ToolbarProps = {
-  onNewQuote: () => void;
-  onSaveQuote: () => void;
-  onPreviewToggle: () => void;
-  onPdfExport: () => void;
-  isPreviewing: boolean;
-  savedQuotes: Quote[];
-  onLoadQuote: (quoteId: string) => void;
-  onDeleteQuote: (quoteId: string) => void;
-  companyProfiles: CompanyProfile[];
-  onSaveCompanyProfile: (profile: CompanyProfile) => void;
-  onSetCompanyProfile: (profileId: string) => void;
-  onDeleteCompanyProfile: (profileId: string) => void;
-  customers: Customer[];
-  onSaveCustomer: (customer: Customer) => void;
-  onSetCustomer: (customerId: string) => void;
-  onDeleteCustomer: (customerId: string) => void;
-  getValues: any;
-};
 
 const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: CompanyProfile, onSave: (data: CompanyProfile) => void, closeDialog: () => void }) => {
   const form = useForm<CompanyProfile>({
@@ -75,7 +57,7 @@ const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: Compan
           <FormField control={form.control} name="companyEmail" render={({ field }) => (
             <FormItem><FormLabel>E-posta</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
           )} />
-          {/* Logo uploader could be added here if needed in the future */}
+          <LogoUploader logoFieldName="companyLogo" />
           <DialogFooter>
             <Button type="submit">Kaydet</Button>
           </DialogFooter>
@@ -130,6 +112,27 @@ const CustomerForm = ({ customer, onSave, closeDialog }: { customer?: Customer, 
     </FormProvider>
   )
 }
+
+type ToolbarProps = {
+  onNewQuote: () => void;
+  onSaveQuote: () => void;
+  onPreviewToggle: () => void;
+  onPdfExport: () => void;
+  isPreviewing: boolean;
+  savedQuotes: Quote[];
+  onLoadQuote: (quoteId: string) => void;
+  onDeleteQuote: (quoteId: string) => void;
+  companyProfiles: CompanyProfile[];
+  onSaveCompanyProfile: (profile: CompanyProfile) => void;
+  onSetCompanyProfile: (profileId: string) => void;
+  onDeleteCompanyProfile: (profileId: string) => void;
+  customers: Customer[];
+  onSaveCustomer: (customer: Customer) => void;
+  onSetCustomer: (customerId: string) => void;
+  onDeleteCustomer: (customerId: string) => void;
+  getValues: any;
+};
+
 
 export function Toolbar({
   onNewQuote,
