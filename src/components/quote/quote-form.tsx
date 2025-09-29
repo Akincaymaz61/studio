@@ -76,81 +76,6 @@ const LogoUploader = () => {
   );
 };
 
-
-const CustomerSelector = ({ customers, onSetCustomer }: { customers: Customer[], onSetCustomer: (id: string) => void }) => {
-    const { control, watch } = useFormContext<Quote>();
-    const customerName = watch('customerName');
-    const [open, setOpen] = useState(false);
-    const triggerRef = React.useRef<HTMLDivElement>(null);
-
-    const filteredCustomers = useMemo(() => {
-        if (!customerName) return [];
-        return customers.filter(c => c.customerName.toLowerCase().includes(customerName.toLowerCase()));
-    }, [customerName, customers]);
-    
-    useEffect(() => {
-        const isExactMatch = customers.some(c => c.customerName === customerName);
-        if (filteredCustomers.length > 0 && !isExactMatch) {
-            setOpen(true);
-        } else {
-            setOpen(false);
-        }
-    }, [filteredCustomers, customerName, customers]);
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <div ref={triggerRef}>
-                <FormField
-                    name="customerName"
-                    control={control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Müşteri Adı</FormLabel>
-                             <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Müşteri adını yazmaya başlayın..."
-                                        autoComplete="off"
-                                        className="text-left"
-                                        {...field}
-                                    />
-                                </FormControl>
-                            </PopoverTrigger>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-            <PopoverContent 
-                className="w-[var(--radix-popover-trigger-width)] p-0" 
-                style={{ width: triggerRef.current?.offsetWidth }}
-                align="start"
-            >
-                <Command>
-                    <CommandList>
-                        {filteredCustomers.length === 0 && customerName ? <CommandEmpty>Müşteri bulunamadı.</CommandEmpty> : null}
-                        <CommandGroup>
-                            {filteredCustomers.map(customer => (
-                                <CommandItem
-                                    key={customer.id}
-                                    value={customer.customerName}
-                                    onSelect={() => {
-                                        onSetCustomer(customer.id);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    {customer.customerName}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
-};
-
-
 const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer[], onSetCustomer: (id: string) => void}) => {
     const [open, setOpen] = useState(false);
 
@@ -260,7 +185,19 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
       <FormSection title="Müşteri Bilgileri" icon={<User />}>
         <div className="grid grid-cols-[1fr_auto] items-start gap-4">
             <div className="grid md:grid-cols-2 gap-6">
-                <CustomerSelector customers={customers} onSetCustomer={onSetCustomer} />
+                <FormField
+                    name="customerName"
+                    control={control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Müşteri Adı</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Müşteri adını girin..." {...field} className="text-left" />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField name="customerContact" control={control} render={({ field }) => (
                     <FormItem>
                     <FormLabel>İlgili Kişi</FormLabel>
