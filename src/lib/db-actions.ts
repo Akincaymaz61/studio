@@ -1,9 +1,10 @@
 'use server';
 
-import { kv } from '@vercel/kv';
 import { DbData, dbDataSchema } from './schema';
 
-const DB_KEY = 'teklifai-db';
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
+const BIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 const initialData: DbData = {
   quotes: [],
@@ -11,22 +12,37 @@ const initialData: DbData = {
   companyProfiles: [],
 };
 
-/**
- * Vercel KV'den tüm veriyi okur.
- * @returns {Promise<DbData>} Veritabanı içeriği
- */
-export async function getDbData(): Promise<DbData> {
-  try {
-    const data = await kv.get(DB_KEY);
+async function checkEnvVariables() {
+    if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) {
+        throw new Error('JSONBIN_API_KEY ve JSONBIN_BIN_ID ortam değişkenleri ayarlanmamış. Lütfen README.md dosyasını kontrol edin.');
+    }
+}
 
-    if (!data) {
-      console.log("Vercel KV'de veri bulunamadı, başlangıç verisi döndürülüyor.");
-      return initialData;
+
+export async function getDbData(): Promise<DbData> {
+  await checkEnvVariables();
+  
+  try {
+    const response = await fetch(`${BIN_URL}/latest`, {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': JSONBIN_API_KEY!,
+      },
+      cache: 'no-store', // Verinin her zaman en güncel halini al
+    });
+
+    if (!response.ok) {
+        // Eğer bin bulunamazsa (404), başlangıç verisini döndür
+        if(response.status === 404) {
+            console.warn("JSONBin.io üzerinde belirtilen ID ile bir bin bulunamadı. Başlangıç verisi kullanılıyor.");
+            return initialData;
+        }
+        throw new Error(`JSONBin'den veri okunamadı: ${response.statusText}`);
     }
     
-    // KV'den gelen veri JSON nesnesi olabilir, parse'a gerek yok.
-    const record = data as DbData;
-    
+    const data = await response.json();
+    const record = data.record;
+
     // Tarih alanlarını Date nesnesine çevir
     if (record.quotes) {
         record.quotes.forEach((quote: any) => {
@@ -37,31 +53,41 @@ export async function getDbData(): Promise<DbData> {
     }
 
     const validatedData = dbDataSchema.safeParse(record);
-    if(validatedData.success) {
-        return validatedData.data;
+    if (validatedData.success) {
+      return validatedData.data;
     } else {
-        console.error('KV verisi Zod şemasıyla uyuşmuyor:', validatedData.error);
-        return initialData;
+      console.error('JSONBin verisi Zod şemasıyla uyuşmuyor, başlangıç verisi döndürülüyor:', validatedData.error);
+      return initialData;
     }
 
   } catch (error) {
-    console.error('Vercel KV\'den veri okunurken hata oluştu:', error);
-    // Hata durumunda uygulamanın çökmemesi için başlangıç verisini döndür
+    console.error('JSONBin.io\'dan veri okunurken hata oluştu:', error);
     return initialData;
   }
 }
 
-/**
- * Gelen veriyi Vercel KV'ye yazar.
- * @param {DbData} data Kaydedilecek tüm veritabanı objesi
- */
+
 export async function saveDbData(data: DbData): Promise<void> {
+  await checkEnvVariables();
+
   try {
-    // @vercel/kv kütüphanesi Date nesnelerini otomatik olarak JSON'a çevirir.
-    // Bu yüzden burada tekrar parse etmeye gerek yok, bu hataya neden oluyordu.
-    await kv.set(DB_KEY, data);
+    const validatedData = dbDataSchema.parse(data);
+
+    const response = await fetch(BIN_URL, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY!,
+        },
+        body: JSON.stringify(validatedData),
+    });
+
+    if (!response.ok) {
+        throw new Error(`JSONBin'e veri yazılamadı: ${response.statusText}`);
+    }
+
   } catch (error) {
-     console.error('Veri Vercel KV\'ye yazılırken hata oluştu:', error);
+     console.error('Veri doğrulanırken veya JSONBin.io\'ya yazılırken hata oluştu:', error);
      throw new Error('Veri kaydedilemedi.');
   }
 }
