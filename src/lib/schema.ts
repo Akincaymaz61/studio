@@ -72,6 +72,7 @@ export const dbDataSchema = z.object({
 });
 export type DbData = z.infer<typeof dbDataSchema>;
 
+
 export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items'> = {
   companyName: '',
   companyLogo: '',
