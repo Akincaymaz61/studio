@@ -5,3 +5,11 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+# Firebase App Hosting'in kalıcı depolama özelliğini etkinleştir.
+# Bu, sunucu yeniden başlasa bile dosyaların korunmasını sağlar.
+persistence:
+  # Oluşturulacak diskin boyutu (örneğin 512MiB, 1GiB, 2GiB).
+  size: 512MiB
+  # Bu diskin uygulama içinde hangi yola bağlanacağı.
+  # Proje kök dizinine bağlanarak db.json dosyasının kalıcı olmasını sağlıyoruz.
+  mountPath: /

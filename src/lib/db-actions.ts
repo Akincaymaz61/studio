@@ -4,25 +4,20 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { DbData, dbDataSchema } from './schema';
 
-// Vercel'in yazılabilir tek alanı /tmp klasörüdür.
-// Projenin kök dizini salt okunurdur.
-const isVercel = process.env.VERCEL === '1';
-const dbPath = isVercel ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'db.json');
-const initialDbPath = path.join(process.cwd(), 'db.json');
-
+// Veritabanı dosyası her zaman projenin kök dizininde olacak.
+const dbPath = path.join(process.cwd(), 'db.json');
 
 async function ensureDbFile() {
   try {
-    // /tmp klasöründeki dosyanın varlığını kontrol et
+    // dosyanın varlığını kontrol et
     await fs.access(dbPath);
   } catch (error) {
-    // Eğer /tmp'de dosya yoksa, proje kökündeki orijinal dosyayı oraya kopyala
+    // Eğer dosya yoksa, boş bir tane oluştur.
     try {
-      const initialData = await fs.readFile(initialDbPath, 'utf8');
-      await fs.writeFile(dbPath, initialData, 'utf8');
-    } catch (copyError) {
-       // Kök dizinde de dosya yoksa (örneğin ilk dağıtım), boş bir tane oluştur.
-       await fs.writeFile(dbPath, JSON.stringify({ quotes: [], customers: [], companyProfiles: [] }, null, 2), 'utf8');
+      await fs.writeFile(dbPath, JSON.stringify({ quotes: [], customers: [], companyProfiles: [] }, null, 2), 'utf8');
+      console.log('db.json created as it did not exist.');
+    } catch (createError) {
+      console.error('Failed to create db.json:', createError);
     }
   }
 }
@@ -35,6 +30,10 @@ export async function getDbData(): Promise<DbData> {
   await ensureDbFile();
   try {
     const fileContent = await fs.readFile(dbPath, 'utf8');
+    // Dosya boşsa veya sadece boş bir nesne/dizi içeriyorsa varsayılan yapıya dön
+    if (!fileContent.trim()) {
+        return { quotes: [], customers: [], companyProfiles: [] };
+    }
     const data = JSON.parse(fileContent);
     
     // Tarih alanlarını Date nesnesine çevir
