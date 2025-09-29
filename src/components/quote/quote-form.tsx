@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
-import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Users, Save } from 'lucide-react';
+import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Users, Save, Building } from 'lucide-react';
 import { ItemsTable } from './items-table';
-import type { Quote, Customer } from '@/lib/schema';
+import type { Quote, Customer, CompanyProfile } from '@/lib/schema';
 import { currencySymbols } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
@@ -48,6 +48,7 @@ const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer
                 <Command>
                     <CommandInput placeholder="Müşteri ara..." />
                     <CommandList>
+                      <ScrollArea className="h-[200px]">
                         <CommandEmpty>Kayıtlı müşteri bulunamadı.</CommandEmpty>
                         <CommandGroup>
                             {customers.map((customer) => (
@@ -63,6 +64,46 @@ const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer
                                 </CommandItem>
                             ))}
                         </CommandGroup>
+                      </ScrollArea>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
+const CompanyProfileListPopover = ({ profiles, onSetProfile }: { profiles: CompanyProfile[], onSetProfile: (id: string) => void}) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="mt-auto">
+                    <Building className="h-4 w-4" />
+                    <span className="sr-only">Firma Profili Seç</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0">
+                <Command>
+                    <CommandInput placeholder="Profil ara..." />
+                    <CommandList>
+                      <ScrollArea className="h-[200px]">
+                        <CommandEmpty>Kayıtlı profil bulunamadı.</CommandEmpty>
+                        <CommandGroup>
+                            {profiles.map((profile) => (
+                                <CommandItem
+                                    key={profile.id}
+                                    value={profile.companyName}
+                                    onSelect={() => {
+                                        onSetProfile(profile.id);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {profile.companyName}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </ScrollArea>
                     </CommandList>
                 </Command>
             </PopoverContent>
@@ -71,7 +112,23 @@ const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer
 };
 
 
-export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustomer }: { calculations: any, customers: Customer[], onSetCustomer: (id: string) => void, onSaveCustomer: (customer: Customer) => void }) {
+import { ScrollArea } from '../ui/scroll-area';
+
+export function QuoteForm({ 
+    calculations, 
+    customers, 
+    onSetCustomer, 
+    onSaveCustomer, 
+    companyProfiles, 
+    onSetCompanyProfile 
+}: { 
+    calculations: any, 
+    customers: Customer[], 
+    onSetCustomer: (id: string) => void, 
+    onSaveCustomer: (customer: Customer) => void,
+    companyProfiles: CompanyProfile[],
+    onSetCompanyProfile: (id: string) => void
+}) {
   const { control, getValues } = useFormContext<Quote>();
   const currency = useWatch({ control, name: 'currency' });
   
@@ -106,13 +163,18 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
       <FormSection title="Firma Bilgileri" icon={<Building2 />}>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-6">
-            <FormField name="companyName" control={control} render={({ field }) => (
-              <FormItem>
-                <FormLabel>Firma Adı</FormLabel>
-                <FormControl><Input placeholder="Firma adınızı girin" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+             <div className="grid grid-cols-[1fr_auto] items-start gap-4">
+                <FormField name="companyName" control={control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Firma Adı</FormLabel>
+                    <FormControl><Input placeholder="Firma adınızı girin" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="flex items-end h-full">
+                   <CompanyProfileListPopover profiles={companyProfiles} onSetProfile={onSetCompanyProfile} />
+                </div>
+            </div>
             <FormField name="companyAddress" control={control} render={({ field }) => (
               <FormItem>
                 <FormLabel>Firma Adresi</FormLabel>
@@ -145,7 +207,7 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
                  <FormField name="customerName" control={control} render={({ field }) => (
                   <FormItem>
                     <FormLabel>Müşteri Adı</FormLabel>
-                    <FormControl><Input placeholder="Müşteri adını girin..." {...field} className="text-left" /></FormControl>
+                    <FormControl><Input placeholder="Müşteri adını girin..." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

@@ -65,7 +65,6 @@ export default function QuotePage() {
     } catch (error) {
       console.error("Error loading initial data:", error);
       toast({ title: "Başlangıç Hatası", description: "Veriler yüklenirken bir hata oluştu.", variant: "destructive" });
-      reset(defaultQuote);
     } finally {
       setDbLoading(false);
       setIsClient(true);
@@ -193,8 +192,8 @@ export default function QuotePage() {
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = savedQuotes.filter(q => q.id !== quoteId);
-    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
     setSavedQuotes(newQuotes);
+    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
 
     if (getValues('id') === quoteId) {
        reset(defaultQuote);
@@ -361,6 +360,8 @@ export default function QuotePage() {
                 customers={customers}
                 onSetCustomer={handleSetCustomer}
                 onSaveCustomer={handleSaveCustomer}
+                companyProfiles={companyProfiles}
+                onSetCompanyProfile={handleSetCompanyProfile}
               />
             </form>
           )}
