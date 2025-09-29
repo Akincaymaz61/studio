@@ -101,16 +101,16 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex items-start justify-between gap-8" style={{ breakInside: 'avoid' }}>
+          <section className="mt-8 flex flex-wrap items-start justify-between gap-8 print:block" style={{ breakInside: 'avoid-page' }}>
             {quote.notes && (
-                <div className="w-1/2">
+                <div className="w-full md:w-1/2 print:w-full">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto space-y-2 print:scale-75 print:origin-top-right">
+             <div className="w-full max-w-xs ml-auto space-y-2 print:scale-75 print:origin-top-right print:w-full print:max-w-full">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
