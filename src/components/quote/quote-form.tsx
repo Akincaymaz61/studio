@@ -81,13 +81,13 @@ const CustomerSelector = ({ customers, onSetCustomer }: { customers: Customer[],
     const { control, watch } = useFormContext<Quote>();
     const customerName = watch('customerName');
     const [open, setOpen] = useState(false);
+    const triggerRef = React.useRef<HTMLDivElement>(null);
 
     const filteredCustomers = useMemo(() => {
         if (!customerName) return [];
         return customers.filter(c => c.customerName.toLowerCase().includes(customerName.toLowerCase()));
     }, [customerName, customers]);
     
-    // Open popover only if there are results and the input is not an exact match
     useEffect(() => {
         const isExactMatch = customers.some(c => c.customerName === customerName);
         if (filteredCustomers.length > 0 && !isExactMatch) {
@@ -97,53 +97,59 @@ const CustomerSelector = ({ customers, onSetCustomer }: { customers: Customer[],
         }
     }, [filteredCustomers, customerName, customers]);
 
-
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <FormField
-          name="customerName"
-          control={control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Müşteri Adı</FormLabel>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Input
-                    placeholder="Müşteri adını yazmaya başlayın..."
-                    autoComplete="off"
-                    className="text-left"
-                    {...field}
-                  />
-                </FormControl>
-              </PopoverTrigger>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-          <Command>
-            <CommandList>
-              {filteredCustomers.length === 0 ? <CommandEmpty>Müşteri bulunamadı.</CommandEmpty> : null}
-              <CommandGroup>
-                {filteredCustomers.map(customer => (
-                  <CommandItem
-                    key={customer.id}
-                    value={customer.customerName}
-                    onSelect={() => {
-                      onSetCustomer(customer.id);
-                      setOpen(false);
-                    }}
-                  >
-                    {customer.customerName}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+        <Popover open={open} onOpenChange={setOpen}>
+            <div ref={triggerRef}>
+                <FormField
+                    name="customerName"
+                    control={control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Müşteri Adı</FormLabel>
+                             <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Input
+                                        placeholder="Müşteri adını yazmaya başlayın..."
+                                        autoComplete="off"
+                                        className="text-left"
+                                        {...field}
+                                    />
+                                </FormControl>
+                            </PopoverTrigger>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <PopoverContent 
+                className="w-[var(--radix-popover-trigger-width)] p-0" 
+                style={{ width: triggerRef.current?.offsetWidth }}
+                align="start"
+            >
+                <Command>
+                    <CommandList>
+                        {filteredCustomers.length === 0 && customerName ? <CommandEmpty>Müşteri bulunamadı.</CommandEmpty> : null}
+                        <CommandGroup>
+                            {filteredCustomers.map(customer => (
+                                <CommandItem
+                                    key={customer.id}
+                                    value={customer.customerName}
+                                    onSelect={() => {
+                                        onSetCustomer(customer.id);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {customer.customerName}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     );
 };
+
 
 const CustomerListPopover = ({ customers, onSetCustomer }: { customers: Customer[], onSetCustomer: (id: string) => void}) => {
     const [open, setOpen] = useState(false);
