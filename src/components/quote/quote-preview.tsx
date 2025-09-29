@@ -36,8 +36,8 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
         </Button>
       </div>
 
-      <Card id="print-area" className="print-container">
-        <CardContent className="p-8 md:p-12 text-sm">
+      <Card id="print-area" className="print-container print:shadow-none print:border-none print:rounded-none">
+        <CardContent className="p-8 md:p-12 text-sm print:p-12">
           <header className="flex justify-between items-start mb-8">
               <div className="w-1/2">
                 {quote.companyLogo && (
@@ -101,9 +101,9 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex justify-between gap-8 print:block">
+          <section className="mt-8 flex justify-between gap-8 flex-wrap md:flex-nowrap print:block">
             {quote.notes && (
-                <div className="w-full md:w-1/2 print:w-full mb-8 print:mb-8">
+                <div className="w-full md:w-1/2 print:w-full mb-8 print:mb-8 break-inside-avoid">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
