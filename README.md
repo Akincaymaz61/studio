@@ -22,7 +22,44 @@ Proje klasörünü bilgisayarınızda bir terminal veya komut istemi ile açın 
 npm install
 ```
 
-### Adım 3: Yerel Bilgisayarda Çalıştırma (Opsiyonel)
+### Adım 3: Projeyi GitHub'a Yükleme (Opsiyonel ama Tavsiye Edilir)
+
+Uygulamanızı Vercel gibi platformlarda yayınlamanın en kolay yolu, projenizi bir GitHub deposuna yüklemektir. Bu, hem kodlarınızın bir yedeğini tutmanızı sağlar hem de yayınlama sürecini otomatikleştirir.
+
+1.  **GitHub'da Yeni Depo Oluşturun:**
+    *   [GitHub.com](https://github.com) adresine gidin ve hesabınıza giriş yapın.
+    *   Sağ üst köşedeki "+" simgesine tıklayıp "New repository" seçeneğini seçin.
+    *   Deponuza bir isim verin (örneğin, `teklif-ai-uygulamam`).
+    *   Deponun "Public" (Herkese Açık) veya "Private" (Özel) olmasını seçin. Kodunuzu başkalarının görmesini istemiyorsanız "Private" seçebilirsiniz.
+    *   "Create repository" butonuna tıklayın.
+
+2.  **Projeyi Yerel Bilgisayarınızdan GitHub'a Gönderin:**
+    *   Bilgisayarınızda projenin bulunduğu klasörü terminalde açın.
+    *   Aşağıdaki komutları sırasıyla çalıştırın. GitHub'ın size verdiği depo URL'sini (`https://github.com/kullanici-adiniz/depo-adiniz.git`) kendi URL'niz ile değiştirmeyi unutmayın.
+
+    ```bash
+    # 1. Proje klasöründe yeni bir Git deposu başlatır.
+    git init
+    
+    # 2. Tüm proje dosyalarını takip listesine ekler.
+    git add .
+    
+    # 3. Dosyaların ilk versiyonunu "İlk versiyon" mesajıyla kaydeder.
+    git commit -m "İlk versiyon"
+    
+    # 4. Ana dalın adını "main" olarak belirler.
+    git branch -M main
+    
+    # 5. Yerel deponuzu GitHub'daki uzak depoya bağlar. (URL'yi değiştirin!)
+    git remote add origin https://github.com/kullanici-adiniz/depo-adiniz.git
+    
+    # 6. Kaydettiğiniz dosyaları GitHub'a gönderir.
+    git push -u origin main
+    ```
+
+Bu komutlardan sonra proje dosyalarınız GitHub deponuza yüklenmiş olacaktır.
+
+### Adım 4: Yerel Bilgisayarda Çalıştırma (Opsiyonel)
 
 Uygulamayı hosting'e yüklemeden önce kendi bilgisayarınızda test etmek için aşağıdaki komutu kullanabilirsiniz:
 
@@ -32,19 +69,18 @@ npm run dev
 
 Bu komut, uygulamayı `http://localhost:9002` adresinde çalıştıracaktır. Tarayıcınızda bu adrese giderek uygulamayı görüntüleyebilirsiniz.
 
-### Adım 4: Projeyi Yayınlama (Deployment)
+### Adım 5: Projeyi Yayınlama (Deployment)
 
 Uygulamayı web'de yayınlamak için Vercel veya Netlify gibi modern hosting platformlarını kullanmanızı şiddetle tavsiye ederiz. Bu platformlar, Next.js projelerini yayınlamak için özel olarak tasarlanmıştır ve süreci inanılmaz derecede basitleştirir.
 
 **Örnek: Vercel ile Yayınlama**
 
 1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve bir hesap oluşturun (GitHub hesabınızla giriş yapabilirsiniz).
-2.  **Projenizi GitHub'a Yükleyin:** Proje dosyalarınızı bir GitHub deposuna yükleyin.
-3.  **Vercel'de Yeni Proje Oluşturun:**
+2.  **Vercel'de Yeni Proje Oluşturun:**
     *   Vercel dashboard'unda "Add New... -> Project" seçeneğine tıklayın.
-    *   GitHub hesabınızı bağlayın ve projenizin bulunduğu depoyu seçin.
+    *   GitHub hesabınızı bağlayın ve projenizin bulunduğu depoyu (bir önceki adımda oluşturduğunuz) seçin.
     *   Vercel, projenizin bir Next.js uygulaması olduğunu otomatik olarak algılayacaktır. Herhangi bir ayar değiştirmenize gerek yoktur.
-4.  **Deploy Edin:** "Deploy" butonuna tıklayın.
+3.  **Deploy Edin:** "Deploy" butonuna tıklayın.
 
 Hepsi bu kadar! Vercel, projenizi otomatik olarak kuracak (`npm install`), yayına hazırlayacak (`npm run build`) ve size özel bir `.vercel.app` adresi üzerinden yayınlayacaktır. Daha sonra bu adresi kendi alan adınıza (örneğin, `teklif.siteniz.com`) kolayca bağlayabilirsiniz.
 
