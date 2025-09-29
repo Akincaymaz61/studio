@@ -95,4 +95,23 @@ Vercel'in size verdiği adresi kendi alan adınıza (örneğin, `teklif.siteniz.
 5.  **Kaydı Ekleyin:** Vercel'in size verdiği kaydı, alan adı sağlayıcınızın DNS yönetimi bölümüne ekleyin.
 6.  **Bekleyin:** DNS kayıtlarının internete yayılması birkaç dakikadan birkaç saate kadar sürebilir. Vercel, bağlantı kurulduğunda sizi bilgilendirecektir.
 
+## Proje Nasıl Güncellenir?
+
+Bu geliştirme ortamında veya kendi bilgisayarınızda projede bir değişiklik yaptıktan sonra, bu güncellemeyi canlı sitenize yansıtmak çok basittir.
+
+1.  **Değişiklikleri GitHub'a Gönderin:** Bilgisayarınızda proje klasörünü terminalde açın ve aşağıdaki komutları çalıştırın. Bu, yeni değişiklikleri kaydedip GitHub'a gönderir.
+
+    ```bash
+    # 1. Tüm değiştirilen dosyaları takip listesine ekler.
+    git add .
+    
+    # 2. Değişiklikleri anlamlı bir mesajla kaydeder.
+    git commit -m "Yaptığınız değişikliğin kısa bir açıklaması"
+    
+    # 3. Kaydettiğiniz değişiklikleri GitHub'a gönderir.
+    git push origin main
+    ```
+
+2.  **Otomatik Güncelleme:** Vercel, projenizin GitHub deposuna bağlı olduğu için bu yeni güncellemeyi otomatik olarak algılayacaktır. Vercel projenizin kontrol paneline baktığınızda, sitenizin yeniden derlenip yayınlandığını göreceksiniz. İşlem bittiğinde, siteniz güncellenmiş olacaktır.
+
 Artık kendi profesyonel teklif oluşturma aracınızı kullanmaya hazırsınız!
