@@ -82,6 +82,17 @@ Uygulamayı web'de yayınlamak için Vercel veya Netlify gibi modern hosting pla
     *   Vercel, projenizin bir Next.js uygulaması olduğunu otomatik olarak algılayacaktır. Herhangi bir ayar değiştirmenize gerek yoktur.
 3.  **Deploy Edin:** "Deploy" butonuna tıklayın.
 
-Hepsi bu kadar! Vercel, projenizi otomatik olarak kuracak (`npm install`), yayına hazırlayacak (`npm run build`) ve size özel bir `.vercel.app` adresi üzerinden yayınlayacaktır. Daha sonra bu adresi kendi alan adınıza (örneğin, `teklif.siteniz.com`) kolayca bağlayabilirsiniz.
+Vercel, projenizi otomatik olarak kuracak (`npm install`), yayına hazırlayacak (`npm run build`) ve size özel bir `.vercel.app` adresi üzerinden yayınlayacaktır.
+
+#### Kendi Alan Adınızı Bağlama
+
+Vercel'in size verdiği adresi kendi alan adınıza (örneğin, `teklif.siteniz.com`) kolayca bağlayabilirsiniz.
+
+1.  **Vercel Proje Ayarları:** Vercel'deki proje sayfanızda "Settings" sekmesine ve ardından "Domains" menüsüne gidin.
+2.  **Alan Adı Ekleme:** Kullanmak istediğiniz alan adını (örneğin, `teklif.siteniz.com`) girin ve "Add" butonuna tıklayın.
+3.  **DNS Kayıtlarını Alın:** Vercel size bir CNAME veya A kaydı gibi bir DNS kaydı verecektir. Bu, Vercel sunucularını işaret eden bir adrestir.
+4.  **DNS Yönetimi:** Alan adınızı satın aldığınız firmanın (GoDaddy, Namecheap, Turhost vb.) web sitesine gidin. Alan adı yönetim panelinizde "DNS Yönetimi", "DNS Zone" veya benzeri bir bölüm bulun.
+5.  **Kaydı Ekleyin:** Vercel'in size verdiği kaydı, alan adı sağlayıcınızın DNS yönetimi bölümüne ekleyin.
+6.  **Bekleyin:** DNS kayıtlarının internete yayılması birkaç dakikadan birkaç saate kadar sürebilir. Vercel, bağlantı kurulduğunda sizi bilgilendirecektir.
 
 Artık kendi profesyonel teklif oluşturma aracınızı kullanmaya hazırsınız!
