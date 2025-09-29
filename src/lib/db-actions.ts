@@ -1,74 +1,126 @@
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { DbData, dbDataSchema } from './schema';
 
-// Veritabanı dosyası her zaman projenin kök dizininde olacak.
-const dbPath = path.join(process.cwd(), 'db.json');
+const API_KEY = process.env.JSONBIN_API_KEY;
+const BIN_ID = process.env.JSONBIN_BIN_ID;
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-async function ensureDbFile() {
+const initialData: DbData = {
+  quotes: [],
+  customers: [],
+  companyProfiles: [],
+};
+
+async function ensureBinExists(): Promise<void> {
+  if (!API_KEY || !BIN_ID) {
+    throw new Error('JSONBin API Key veya Bin ID ortam değişkenlerinde tanımlanmamış.');
+  }
   try {
-    // dosyanın varlığını kontrol et
-    await fs.access(dbPath);
-  } catch (error) {
-    // Eğer dosya yoksa, boş bir tane oluştur.
-    try {
-      await fs.writeFile(dbPath, JSON.stringify({ quotes: [], customers: [], companyProfiles: [] }, null, 2), 'utf8');
-      console.log('db.json created as it did not exist.');
-    } catch (createError) {
-      console.error('Failed to create db.json:', createError);
+    const response = await fetch(`${BIN_URL}/latest`);
+    if (response.status === 404) {
+      // Bin yok, oluşturalım
+      const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': API_KEY,
+          'X-Bin-Name': 'TeklifAI-DB',
+        },
+        body: JSON.stringify(initialData),
+      });
+      if (!createResponse.ok) {
+        const errorBody = await createResponse.text();
+        throw new Error(`Failed to create bin: ${errorBody}`);
+      }
+      console.log('JSONBin.io bin başarıyla oluşturuldu.');
     }
+  } catch (error) {
+    console.error('Error ensuring bin exists:', error);
+    throw error;
   }
 }
 
 /**
- * db.json dosyasından tüm veriyi okur.
+ * JSONBin.io'dan tüm veriyi okur.
  * @returns {Promise<DbData>} Veritabanı içeriği
  */
 export async function getDbData(): Promise<DbData> {
-  await ensureDbFile();
+  if (!API_KEY || !BIN_ID) {
+    console.warn("JSONBin.io anahtarları ayarlanmamış, boş veri döndürülüyor.");
+    return initialData;
+  }
+  
+  await ensureBinExists();
+
   try {
-    const fileContent = await fs.readFile(dbPath, 'utf8');
-    // Dosya boşsa veya sadece boş bir nesne/dizi içeriyorsa varsayılan yapıya dön
-    if (!fileContent.trim()) {
-        return { quotes: [], customers: [], companyProfiles: [] };
+    const response = await fetch(`${BIN_URL}/latest`, {
+      headers: {
+        'X-Master-Key': API_KEY,
+      },
+      cache: 'no-store', // Verinin her zaman en güncel halini almak için
+    });
+
+    if (!response.ok) {
+        if(response.status === 404) {
+             console.log("Bin bulunamadı, başlangıç verisi döndürülüyor.");
+             return initialData;
+        }
+      throw new Error(`Failed to fetch data: ${response.statusText}`);
     }
-    const data = JSON.parse(fileContent);
     
+    const data = await response.json();
+    const record = data.record;
+
+    // Eğer bin boşsa veya beklenen yapıda değilse, başlangıç verisini döndür.
+    if (Object.keys(record).length === 0) {
+        return initialData;
+    }
+
     // Tarih alanlarını Date nesnesine çevir
-    if (data.quotes) {
-        data.quotes.forEach((quote: any) => {
+    if (record.quotes) {
+        record.quotes.forEach((quote: any) => {
             if (quote.quoteDate) quote.quoteDate = new Date(quote.quoteDate);
             if (quote.validUntil) quote.validUntil = new Date(quote.validUntil);
             if (quote.updatedAt) quote.updatedAt = new Date(quote.updatedAt);
         });
     }
 
-    // Veriyi schema'ya göre doğrula
-    const validatedData = dbDataSchema.parse(data);
+    const validatedData = dbDataSchema.parse(record);
     return validatedData;
 
   } catch (error) {
-    console.error('Error reading or parsing db.json:', error);
-    // Hata durumunda veya dosya boşsa, boş bir veritabanı yapısı döndür.
-    return { quotes: [], customers: [], companyProfiles: [] };
+    console.error('Error reading or parsing data from JSONBin.io:', error);
+    return initialData;
   }
 }
 
 /**
- * Gelen veriyi db.json dosyasına yazar.
+ * Gelen veriyi JSONBin.io'ya yazar.
  * @param {DbData} data Kaydedilecek tüm veritabanı objesi
  */
 export async function saveDbData(data: DbData): Promise<void> {
-  await ensureDbFile();
+   if (!API_KEY || !BIN_ID) {
+    throw new Error('Kaydetme başarısız: JSONBin API Key veya Bin ID ayarlanmamış.');
+  }
+
   try {
-    // Veriyi schema'ya göre doğrula
     const validatedData = dbDataSchema.parse(data);
-    const fileContent = JSON.stringify(validatedData, null, 2);
-    await fs.writeFile(dbPath, fileContent, 'utf8');
+    const response = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY,
+      },
+      body: JSON.stringify(validatedData),
+    });
+
+    if (!response.ok) {
+       const errorBody = await response.text();
+       throw new Error(`Failed to save data: ${response.statusText} - ${errorBody}`);
+    }
   } catch (error) {
-     console.error('Error validating or writing to db.json:', error);
-     throw new Error('Failed to save data.');
+     console.error('Error validating or writing to JSONBin.io:', error);
+     throw new Error('Veri kaydedilemedi.');
   }
 }
