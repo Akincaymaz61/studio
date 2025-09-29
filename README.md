@@ -66,26 +66,34 @@ Uygulamanın verilerini saklayabilmesi için ücretsiz bir bulut veritabanı kur
 
 3.  **API Anahtarınızı Alın:**
     *   Sağ üstteki menüden "API Keys" sayfasına gidin.
-    *   Bu sayfada size varsayılan olarak bir **"Master Key"** verilir. Bu anahtarın yanındaki kopyalama ikonuna tıklayarak **API anahtarınızı kopyalayın.** Bu anahtar `$2a$...` ile başlar.
+    *   Bu sayfada size varsayılan olarak bir **"Master Key"** verilir. Bu anahtarın yanındaki kopyalama ikonuna tıklayarak **API anahtarınızı kopyalayın.** Bu anahtar genellikle `$2a$...` ile başlar.
 
-Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı**.
+Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (Master Key)**.
 
 ### Adım 5: Projeyi Vercel'de Yayınlama ve Veritabanını Bağlama
 
 1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve GitHub hesabınızla giriş yapın.
 2.  **Vercel'de Yeni Proje Oluşturun:**
-    *   Vercel dashboard'unda "Add New... -> Project" seçeneğine tıklayın.
+    *   Vercel kontrol panelinde "Add New... -> Project" seçeneğine tıklayın.
     *   Bir önceki adımda oluşturduğunuz GitHub deposunu seçin ve "Import" deyin.
 3.  **Ortam Değişkenlerini (Environment Variables) Ayarlayın:**
-    *   Bu en kritik adımdır. Deploy ekranında, **"Environment Variables"** bölümünü bulun.
-    *   **"Add New"** diyerek iki adet değişken ekleyin:
+    *   **Bu en kritik adımdır.** GitHub deponuzu seçtikten sonra Vercel sizi bir "Configure Project" (Projeyi Yapılandır) ekranına yönlendirir.
+    *   Bu ekranda biraz aşağı kaydırarak **"Environment Variables"** (Ortam Değişkenleri) başlıklı bölümü bulun. Bu bölüm, projenizin canlıda çalışırken kullanacağı hassas bilgileri (API anahtarları gibi) güvenli bir şekilde saklamak içindir.
+    *   Burada iki adet değişken oluşturacağız:
+
         *   **Değişken 1:**
             *   **Name:** `JSONBIN_API_KEY`
-            *   **Value:** JSONBin.io'dan aldığınız **API Anahtarını** buraya yapıştırın.
+            *   **Value:** JSONBin.io'dan aldığınız **API Anahtarını (Master Key)** buraya yapıştırın.
+            *   "Add" butonuna tıklayın.
+
         *   **Değişken 2:**
             *   **Name:** `JSONBIN_BIN_ID`
             *   **Value:** JSONBin.io'dan aldığınız **Bin ID**'yi buraya yapıştırın.
-4.  **Deploy Edin:** "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve veritabanı bağlantı bilgilerinizle birlikte çalışır hale getirecektir.
+            *   "Add" butonuna tıklayın.
+
+    *   Bu iki değişkeni ekledikten sonra, uygulamanız veritabanına nasıl bağlanacağını bilecektir.
+
+4.  **Deploy Edin:** Sayfanın altındaki "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve veritabanı bağlantı bilgilerinizle birlikte çalışır hale getirecektir.
 
 ---
 
