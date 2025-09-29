@@ -36,7 +36,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
         </Button>
       </div>
 
-      <Card id="print-area" className="print-container shadow-lg">
+      <Card id="print-area" className="print-container">
         <CardContent className="p-8 md:p-12 text-sm">
           <header className="flex justify-between items-start mb-8">
               <div className="w-1/2">
