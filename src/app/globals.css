@@ -75,6 +75,9 @@
     .break-after-avoid {
         break-after: avoid;
     }
+    .break-inside-avoid-page {
+        break-inside: avoid-page;
+    }
 }
 
 
@@ -83,7 +86,7 @@
     size: A4;
     margin: 0;
   }
-  body, .print-container {
+  body, #__next, main {
     background-color: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -95,5 +98,11 @@
     background-color: white !important;
     border: none !important;
     box-shadow: none !important;
+  }
+   *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 }
