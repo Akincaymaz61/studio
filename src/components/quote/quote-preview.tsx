@@ -101,7 +101,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex flex-wrap items-start justify-between gap-8 print:block" style={{ breakInside: 'avoid-page' }}>
+          <section className="mt-8 flex flex-wrap items-start justify-between gap-8 print:block">
             {quote.notes && (
                 <div className="w-full md:w-1/2 print:w-full">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
@@ -110,7 +110,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto print:block print:w-full">
+             <div className="w-full max-w-xs ml-auto print:block print:w-full break-inside-avoid-page">
                 <div className="space-y-2 print:scale-75 print:origin-top-right print:ml-auto print:mr-0">
                     <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                       <div className="flex justify-between">
