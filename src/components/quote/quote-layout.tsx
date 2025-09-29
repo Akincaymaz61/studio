@@ -36,7 +36,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" legacyBehavior passHref>
+              <Link href="/">
                 <SidebarMenuButton isActive={pathname === '/'}>
                   <LayoutDashboard />
                   Dashboard
@@ -44,7 +44,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/quote" legacyBehavior passHref>
+              <Link href="/quote">
                 <SidebarMenuButton isActive={pathname.startsWith('/quote')}>
                   <FilePlus2 />
                   Teklif Oluşturucu
