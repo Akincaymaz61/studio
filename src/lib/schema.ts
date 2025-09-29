@@ -72,13 +72,7 @@ export const dbDataSchema = z.object({
 });
 export type DbData = z.infer<typeof dbDataSchema>;
 
-const today = new Date();
-const datePart = format(today, 'yyyyMMdd');
-const sequencePart = '0001';
-const defaultQuoteNumber = `QT-${datePart}-${sequencePart}`;
-
-export const defaultQuote: Quote = {
-  id: `QT-${Date.now()}`,
+export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items'> = {
   companyName: '',
   companyLogo: '',
   companyAddress: '',
@@ -89,21 +83,7 @@ export const defaultQuote: Quote = {
   customerAddress: '',
   customerEmail: '',
   customerPhone: '',
-  quoteNumber: defaultQuoteNumber,
-  quoteDate: new Date(),
-  validUntil: addDays(new Date(), 30),
-  updatedAt: new Date(),
   currency: 'USD',
-  items: [
-    {
-      id: `item-${crypto.randomUUID()}`,
-      description: '',
-      quantity: 1,
-      unit: 'adet',
-      price: 0,
-      tax: 20,
-    }
-  ],
   discountType: 'percentage',
   discountValue: 0,
   notes: '',

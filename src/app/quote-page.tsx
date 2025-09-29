@@ -37,30 +37,83 @@ export default function QuotePage() {
   
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
-    defaultValues: defaultQuote,
   });
 
   const { handleSubmit, reset, watch, getValues, setValue, formState: { isDirty } } = form;
+
+  const createNewQuoteObject = useCallback((currentCompanyInfo?: {
+      companyName: string;
+      companyAddress: string;
+      companyPhone: string;
+      companyEmail: string;
+      companyLogo: string;
+  }) => {
+    const today = new Date();
+    const quoteNumber = `QT-${format(today, 'yyyyMMdd')}-${(quotes.length + 1).toString().padStart(4, '0')}`;
+    
+    const newQuote: Quote = {
+      ...defaultQuote,
+      id: `QT-${Date.now()}`,
+      quoteNumber: quoteNumber,
+      quoteDate: today,
+      validUntil: addDays(today, 30),
+      updatedAt: today,
+      items: [{
+          id: `item-${crypto.randomUUID()}`,
+          description: '',
+          quantity: 1,
+          unit: 'adet',
+          price: 0,
+          tax: 20,
+      }],
+      ...(currentCompanyInfo || {}),
+    };
+    return newQuote;
+  }, [quotes.length]);
+  
+  const handleNewQuote = useCallback(() => {
+    const currentCompanyInfo = {
+      companyName: getValues('companyName'),
+      companyAddress: getValues('companyAddress'),
+      companyPhone: getValues('companyPhone'),
+      companyEmail: getValues('companyEmail'),
+      companyLogo: getValues('companyLogo'),
+    };
+
+    const newQuote = createNewQuoteObject(currentCompanyInfo);
+    reset(newQuote);
+    router.push('/quote');
+    
+    toast({
+      title: "Yeni Teklif Formu Hazır",
+      description: "Yeni, boş bir teklif formu oluşturuldu. Kaydetmeyi unutmayın.",
+    });
+  }, [getValues, reset, toast, router, createNewQuoteObject]);
+
   
   const loadInitialQuote = useCallback(() => {
-      let initialQuote = defaultQuote;
       const quoteId = searchParams.get('id');
       if (quoteId) {
         const quoteToLoad = quotes.find(q => q.id === quoteId);
         if (quoteToLoad) {
-          initialQuote = quoteToLoad;
-          toast({
+           reset(quoteToLoad, { keepDirty: false });
+           toast({
             title: "Teklif Yüklendi",
             description: `${quoteToLoad.quoteNumber} numaralı teklif düzenleniyor.`,
           });
+        } else {
+          // Eğer ID bulunamazsa, yeni bir teklif oluştur.
+          reset(createNewQuoteObject());
         }
+      } else {
+        // ID yoksa, yeni bir teklif oluştur.
+        reset(createNewQuoteObject());
       }
-      reset(initialQuote, { keepDirty: false });
       setIsClient(true);
-  }, [quotes, reset, searchParams, toast]);
+  }, [quotes, reset, searchParams, toast, createNewQuoteObject]);
   
   useEffect(() => {
-    if(quotes.length > 0) {
+    if(quotes) { // Wait for quotes to be loaded
        loadInitialQuote();
     }
   }, [quotes, loadInitialQuote]);
@@ -72,32 +125,6 @@ export default function QuotePage() {
       return newQuotesList;
   }, [quotes]);
   
-  const handleNewQuote = useCallback(() => {
-    const currentCompanyInfo = {
-      companyName: getValues('companyName'),
-      companyAddress: getValues('companyAddress'),
-      companyPhone: getValues('companyPhone'),
-      companyEmail: getValues('companyEmail'),
-      companyLogo: getValues('companyLogo'),
-    };
-
-    const newQuote: Quote = {
-      ...defaultQuote,
-      ...currentCompanyInfo,
-      id: `QT-${Date.now()}`,
-      quoteNumber: `QT-${format(new Date(), 'yyyyMMdd')}-${(quotes.length + 1).toString().padStart(4, '0')}`,
-      quoteDate: new Date(),
-      validUntil: addDays(new Date(), 30),
-      updatedAt: new Date(),
-    };
-    reset(newQuote);
-    router.push('/quote');
-    
-    toast({
-      title: "Yeni Teklif Formu Hazır",
-      description: "Yeni, boş bir teklif formu oluşturuldu. Kaydetmeyi unutmayın.",
-    });
-  }, [getValues, reset, toast, quotes.length, router]);
   
   const handlePdfExport = useCallback(() => {
     const originalTitle = document.title;
