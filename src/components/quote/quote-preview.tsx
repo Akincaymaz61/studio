@@ -105,13 +105,13 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             
             <section className="mt-8">
                 {quote.notes && (
-                    <div className="mb-8">
-                        <h3 className="font-semibold mb-2 text-primary break-after-avoid">Notlar:</h3>
+                    <div className="mb-8 break-inside-avoid">
+                        <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                         <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
                     </div>
                 )}
                 
-                <div className="ml-auto w-full max-w-xs break-inside-avoid">
+                <div className="ml-auto w-full max-w-xs break-inside-avoid print-summary-box">
                     <div className="space-y-2">
                         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                         <div className="flex justify-between">
