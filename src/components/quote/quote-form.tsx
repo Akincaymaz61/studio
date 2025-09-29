@@ -7,15 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
-import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Upload } from 'lucide-react';
+import { Building2, User, FileText, ShoppingCart, StickyNote, Calculator, Upload, Save } from 'lucide-react';
 import { ItemsTable } from './items-table';
-import type { Quote } from '@/lib/schema';
+import type { Quote, Customer } from '@/lib/schema';
 import { currencySymbols } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 const FormSection = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
   <Card className="overflow-hidden">
@@ -75,12 +76,83 @@ const LogoUploader = () => {
 };
 
 
-export function QuoteForm({ calculations }: { calculations: any }) {
-  const { control } = useFormContext<Quote>();
+const CustomerAutocomplete = ({ customers, onSetCustomer }: { customers: Customer[], onSetCustomer: (id: string) => void }) => {
+    const { control, watch } = useFormContext<Quote>();
+    const customerName = watch('customerName');
+    const [open, setOpen] = useState(false);
+
+    const filteredCustomers = customerName
+        ? customers.filter(c => c.customerName.toLowerCase().includes(customerName.toLowerCase()))
+        : [];
+    
+    return (
+        <Popover open={open && filteredCustomers.length > 0} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <FormField name="customerName" control={control} render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Müşteri Adı</FormLabel>
+                        <FormControl>
+                            <Input 
+                                placeholder="Müşteri adını yazmaya başlayın..." 
+                                {...field} 
+                                autoComplete="off"
+                                onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value) {
+                                        setOpen(true);
+                                    } else {
+                                        setOpen(false);
+                                    }
+                                }}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <ul className="max-h-60 overflow-y-auto">
+                    {filteredCustomers.map(customer => (
+                        <li key={customer.id}>
+                            <Button 
+                                variant="ghost" 
+                                className="w-full justify-start font-normal"
+                                onClick={() => {
+                                    onSetCustomer(customer.id);
+                                    setOpen(false);
+                                }}
+                            >
+                                {customer.customerName}
+                            </Button>
+                        </li>
+                    ))}
+                </ul>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
+
+export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustomer }: { calculations: any, customers: Customer[], onSetCustomer: (id: string) => void, onSaveCustomer: (customer: Customer) => void }) {
+  const { control, getValues } = useFormContext<Quote>();
   const currency = useWatch({ control, name: 'currency' });
+  
   const handleNumericChange = (field: any, value: string) => {
     const parsedValue = parseFloat(value);
     field.onChange(isNaN(parsedValue) ? '' : parsedValue);
+  };
+  
+  const handleSaveCurrentCustomer = () => {
+    const values = getValues();
+    const currentCustomer: Customer = {
+      id: `CUS-${Date.now()}`,
+      customerName: values.customerName,
+      customerContact: values.customerContact,
+      customerAddress: values.customerAddress,
+      customerEmail: values.customerEmail,
+      customerPhone: values.customerPhone,
+    };
+    onSaveCustomer(currentCustomer);
   };
 
   return (
@@ -123,13 +195,7 @@ export function QuoteForm({ calculations }: { calculations: any }) {
 
       <FormSection title="Müşteri Bilgileri" icon={<User />}>
         <div className="grid md:grid-cols-2 gap-6">
-          <FormField name="customerName" control={control} render={({ field }) => (
-            <FormItem>
-              <FormLabel>Müşteri Adı</FormLabel>
-              <FormControl><Input placeholder="Müşteri adını girin" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+          <CustomerAutocomplete customers={customers} onSetCustomer={onSetCustomer} />
           <FormField name="customerContact" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>İlgili Kişi</FormLabel>
@@ -157,6 +223,12 @@ export function QuoteForm({ calculations }: { calculations: any }) {
               <FormControl><Input placeholder="Müşteri telefon numarası" {...field} /></FormControl>
             </FormItem>
           )} />
+        </div>
+        <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={handleSaveCurrentCustomer}>
+                <Save className="mr-2 h-4 w-4" />
+                Bu Müşteriyi Kaydet
+            </Button>
         </div>
       </FormSection>
 

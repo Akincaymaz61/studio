@@ -60,7 +60,6 @@ export default function QuotePage() {
         setCompanyProfiles(companyProfiles);
       }
       
-      // Always reset to a default blank quote on initial load.
       reset(defaultQuote, { keepDirty: false });
 
     } catch (error) {
@@ -86,7 +85,7 @@ export default function QuotePage() {
       return newQuotesList;
   }, [savedQuotes]);
   
-  const handleNewQuote = useCallback(async () => {
+  const handleNewQuote = useCallback(() => {
     const currentCompanyInfo = {
       companyName: getValues('companyName'),
       companyAddress: getValues('companyAddress'),
@@ -230,15 +229,15 @@ export default function QuotePage() {
     toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
-  const handleSaveCustomer = async (customer: Customer) => {
+  const handleSaveCustomer = useCallback(async (customer: Customer) => {
     const otherCustomers = customers.filter(c => c.id !== customer.id);
     const newCustomers = [...otherCustomers, customer];
     setCustomers(newCustomers);
     await handleSaveAll({ quotes: savedQuotes, customers: newCustomers, companyProfiles });
     toast({ title: 'Müşteri Kaydedildi' });
-  };
+  }, [customers, savedQuotes, companyProfiles, handleSaveAll, toast]);
   
-  const handleSetCustomer = (customerId: string) => {
+  const handleSetCustomer = useCallback((customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     if (customer) {
       setValue('customerName', customer.customerName);
@@ -248,7 +247,7 @@ export default function QuotePage() {
       setValue('customerPhone', customer.customerPhone || '');
       toast({ title: `${customer.customerName} müşterisi yüklendi.` });
     }
-  };
+  }, [customers, setValue, toast]);
 
   const handleDeleteCustomer = async (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
@@ -359,6 +358,9 @@ export default function QuotePage() {
              }}>
               <QuoteForm 
                 calculations={calculations} 
+                customers={customers}
+                onSetCustomer={handleSetCustomer}
+                onSaveCustomer={handleSaveCustomer}
               />
             </form>
           )}

@@ -3,7 +3,7 @@ import { addDays, format } from 'date-fns';
 
 export const companyProfileSchema = z.object({
   id: z.string(),
-  companyName: z.string(),
+  companyName: z.string().min(1, 'Firma adı gereklidir'),
   companyLogo: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
@@ -13,7 +13,7 @@ export type CompanyProfile = z.infer<typeof companyProfileSchema>;
 
 export const customerSchema = z.object({
   id: z.string(),
-  customerName: z.string(),
+  customerName: z.string().min(1, 'Müşteri adı gereklidir'),
   customerContact: z.string().optional(),
   customerAddress: z.string().optional(),
   customerEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
@@ -89,7 +89,7 @@ export const defaultQuote: Quote = {
   quoteDate: new Date(),
   validUntil: addDays(new Date(), 30),
   updatedAt: new Date(),
-  currency: 'TRY',
+  currency: 'USD',
   items: [
     {
       id: `item-${crypto.randomUUID()}`,
