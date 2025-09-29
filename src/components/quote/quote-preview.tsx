@@ -36,7 +36,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
         </Button>
       </div>
 
-      <Card id="print-area" className="print-container print:shadow-none print:border-none print:rounded-none">
+      <Card id="print-area" className="print:shadow-none print:border-none print:rounded-none">
         <CardContent className="p-8 md:p-12 text-sm print:p-12">
           <header className="flex justify-between items-start mb-8">
               <div className="w-1/2">
@@ -101,16 +101,16 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </table>
           </section>
           
-          <section className="mt-8 flex justify-between gap-8 flex-wrap md:flex-nowrap print:block">
+          <section className="mt-8">
             {quote.notes && (
-                <div className="w-full md:w-1/2 print:w-full mb-8 print:mb-8 break-inside-avoid">
+                <div className="w-full print:w-full mb-8 break-inside-avoid">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto break-inside-avoid print:w-full print:block">
+             <div className="w-full max-w-xs ml-auto break-inside-avoid print:w-full">
                 <div className="space-y-2">
                     <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                       <div className="flex justify-between">
