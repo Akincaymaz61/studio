@@ -2,13 +2,17 @@
 
 Bu proje, [Firebase Studio](https://studio.firebase.google.com/) ortamında geliştirilmiş, Next.js tabanlı modern bir web uygulamasıdır. Tekliflerinizi kolayca oluşturmanıza, yönetmenize ve müşterilerinize göndermenize olanak tanır.
 
+**ÖNEMLİ: Bu uygulamanın verilerini kalıcı olarak saklayabilmesi için ücretsiz bir [JSONBin.io](https://jsonbin.io/) hesabına ihtiyacı vardır.**
+
 ## Projeyi İndirme ve Kendi Sitenizde Yayınlama
 
-Bu uygulamayı kendi hosting platformunuzda yayınlayarak `teklif.siteniz.com` gibi bir adres üzerinden kullanabilirsiniz. Gördüğünüz on binlerce dosyayı indirmenize gerek yoktur. Süreç oldukça basittir.
+Bu uygulamayı kendi hosting platformunuzda yayınlayarak `teklif.siteniz.com` gibi bir adres üzerinden kullanabilirsiniz. Süreç oldukça basittir.
 
 ### Gereksinimler
 - [Node.js](https://nodejs.org/en) (v20 veya üstü)
 - [Git](https://git-scm.com/)
+- [GitHub Hesabı](https://github.com/) (Ücretsiz)
+- [JSONBin.io Hesabı](https://jsonbin.io/) (Ücretsiz)
 
 ### Adım 1: Proje Dosyalarını İndirin
 
@@ -22,84 +26,70 @@ Proje klasörünü bilgisayarınızda bir terminal veya komut istemi ile açın 
 npm install
 ```
 
-### Adım 3: Projeyi GitHub'a Yükleme (Opsiyonel ama Tavsiye Edilir)
+### Adım 3: Veritabanını Ayarlama (JSONBin.io)
 
-Uygulamanızı Vercel gibi platformlarda yayınlamanın en kolay yolu, projenizi bir GitHub deposuna yüklemektir. Bu, hem kodlarınızın bir yedeğini tutmanızı sağlar hem de yayınlama sürecini otomatikleştirir.
+Uygulamanın kaydettiği tekliflerin ve müşteri bilgilerinin kalıcı olması için ücretsiz bir bulut veritabanı hizmeti olan JSONBin.io'yu kullanacağız.
+
+1.  **JSONBin.io'ya Kaydolun:** [jsonbin.io](https://jsonbin.io/signup) adresine gidin ve ücretsiz bir hesap oluşturun.
+2.  **API Anahtarı Alın:** Giriş yaptıktan sonra, sol menüden "API Keys" sayfasına gidin. Sağ üstteki "Create Key" butonuna tıklayın. Anahtarınıza bir isim verin (örn. "TeklifAI Anahtarım") ve anahtarı oluşturun. **Size verilen API anahtarını kopyalayıp güvenli bir yere not edin.**
+3.  **Yeni bir "Bin" (Kutu) Oluşturun:** Sol menüden "Bins" sayfasına gidin. Sağ üstteki "Create Bin" butonuna tıklayın. Bin'inize bir isim verin (örn. "TeklifAI-DB") ve "Private" (Özel) olarak işaretlendiğinden emin olun. Ardından "Create Bin" butonuna basın.
+4.  **Bin ID'sini Kopyalayın:** Oluşturulan Bin'in URL'sinden veya ayarlarından Bin ID'sini kopyalayın. ID, genellikle URL'nin sonundaki uzun karakter dizisidir (örneğin: `https://jsonbin.io/b/66fa1b2be402bf3e552...`).
+
+### Adım 4: Proje Ayarlarını Yapılandırma
+
+1.  **`.env` Dosyasını Düzenleyin:** Proje klasörünüzdeki `.env` dosyasını bir metin editörü ile açın. Bir önceki adımda aldığınız bilgileri aşağıdaki gibi doldurun:
+
+    ```
+    JSONBIN_API_KEY=buraya_kopyaladiginiz_api_anahtarini_yapistirin
+    JSONBIN_BIN_ID=buraya_kopyaladiginiz_bin_id_sini_yapistirin
+    ```
+
+2.  **Değişiklikleri Kaydedin.**
+
+### Adım 5: Projeyi GitHub'a Yükleme
+
+Uygulamanızı Vercel gibi platformlarda yayınlamanın en kolay yolu, projenizi bir GitHub deposuna yüklemektir.
 
 1.  **GitHub'da Yeni Depo Oluşturun:**
-    *   [GitHub.com](https://github.com) adresine gidin ve hesabınıza giriş yapın.
-    *   Sağ üst köşedeki "+" simgesine tıklayıp "New repository" seçeneğini seçin.
-    *   Deponuza bir isim verin (örneğin, `teklif-ai-uygulamam`).
-    *   Deponun "Public" (Herkese Açık) veya "Private" (Özel) olmasını seçin. Kodunuzu başkalarının görmesini istemiyorsanız "Private" seçebilirsiniz.
+    *   [GitHub.com](https://github.com) adresine gidin ve "New repository" seçeneğini seçin.
+    *   Deponuza bir isim verin (örneğin, `teklif-ai-uygulamam`) ve "Private" (Özel) olarak seçin.
     *   "Create repository" butonuna tıklayın.
 
-2.  **Projeyi Yerel Bilgisayarınızdan GitHub'a Gönderin:**
-    *   Bilgisayarınızda projenin bulunduğu klasörü terminalde açın.
-    *   Aşağıdaki komutları sırasıyla çalıştırın. GitHub'ın size verdiği depo URL'sini (`https://github.com/kullanici-adiniz/depo-adiniz.git`) kendi URL'niz ile değiştirmeyi unutmayın.
+2.  **Projeyi GitHub'a Gönderin:**
+    *   Bilgisayarınızda projenin bulunduğu klasörü terminalde açın ve aşağıdaki komutları sırasıyla çalıştırın. GitHub'ın size verdiği depo URL'sini kendi URL'niz ile değiştirmeyi unutmayın.
 
     ```bash
-    # 1. Proje klasöründe yeni bir Git deposu başlatır.
     git init
-    
-    # 2. Tüm proje dosyalarını takip listesine ekler.
     git add .
-    
-    # 3. Dosyaların ilk versiyonunu "İlk versiyon" mesajıyla kaydeder.
     git commit -m "İlk versiyon"
-    
-    # 4. Ana dalın adını "main" olarak belirler.
     git branch -M main
-    
-    # 5. Yerel deponuzu GitHub'daki uzak depoya bağlar. (URL'yi değiştirin!)
     git remote add origin https://github.com/kullanici-adiniz/depo-adiniz.git
-    
-    # 6. Kaydettiğiniz dosyaları GitHub'a gönderir.
     git push -u origin main
     ```
 
-Bu komutlardan sonra proje dosyalarınız GitHub deponuza yüklenmiş olacaktır.
+### Adım 6: Projeyi Vercel'de Yayınlama
 
-### Adım 4: Yerel Bilgisayarda Çalıştırma (Opsiyonel)
-
-Uygulamayı hosting'e yüklemeden önce kendi bilgisayarınızda test etmek için aşağıdaki komutu kullanabilirsiniz:
-
-```bash
-npm run dev
-```
-
-Bu komut, uygulamayı `http://localhost:9002` adresinde çalıştıracaktır. Tarayıcınızda bu adrese giderek uygulamayı görüntüleyebilirsiniz.
-
-### Adım 5: Projeyi Yayınlama (Deployment)
-
-Uygulamayı web'de yayınlamak için Vercel veya Netlify gibi modern hosting platformlarını kullanmanızı şiddetle tavsiye ederiz. Bu platformlar, Next.js projelerini yayınlamak için özel olarak tasarlanmıştır ve süreci inanılmaz derecede basitleştirir.
-
-**Örnek: Vercel ile Yayınlama**
-
-1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve bir hesap oluşturun (GitHub hesabınızla giriş yapabilirsiniz).
+1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve GitHub hesabınızla giriş yapın.
 2.  **Vercel'de Yeni Proje Oluşturun:**
     *   Vercel dashboard'unda "Add New... -> Project" seçeneğine tıklayın.
-    *   GitHub hesabınızı bağlayın ve projenizin bulunduğu depoyu (bir önceki adımda oluşturduğunuz) seçin.
-    *   Vercel, projenizin bir Next.js uygulaması olduğunu otomatik olarak algılayacaktır. Herhangi bir ayar değiştirmenize gerek yoktur.
-3.  **Deploy Edin:** "Deploy" butonuna tıklayın.
+    *   Projenizin bulunduğu GitHub deposunu seçin ve "Import" deyin.
+3.  **Ortam Değişkenlerini Ayarlayın:** Bu en önemli adımdır. "Environment Variables" bölümünü açın ve `.env` dosyanıza girdiğiniz bilgileri buraya da ekleyin:
+    *   **İsim:** `JSONBIN_API_KEY`, **Değer:** `buraya_api_anahtarinizi_yapistirin`
+    *   **İsim:** `JSONBIN_BIN_ID`, **Değer:** `buraya_bin_id_nizi_yapistirin`
+4.  **Deploy Edin:** "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve size bir `.vercel.app` adresi verecektir.
 
-Vercel, projenizi otomatik olarak kuracak (`npm install`), yayına hazırlayacak (`npm run build`) ve size özel bir `.vercel.app` adresi üzerinden yayınlayacaktır.
-
-#### Kendi Alan Adınızı Bağlama
-
-Vercel'in size verdiği adresi kendi alan adınıza (örneğin, `teklif.siteniz.com`) kolayca bağlayabilirsiniz.
+### Adım 7: Kendi Alan Adınızı Bağlama (Opsiyonel)
 
 1.  **Vercel Proje Ayarları:** Vercel'deki proje sayfanızda "Settings" sekmesine ve ardından "Domains" menüsüne gidin.
 2.  **Alan Adı Ekleme:** Kullanmak istediğiniz alan adını (örneğin, `teklif.siteniz.com`) girin ve "Add" butonuna tıklayın.
-3.  **DNS Kayıtlarını Alın:** Vercel size bir CNAME veya A kaydı gibi bir DNS kaydı verecektir. Bu, Vercel sunucularını işaret eden bir adrestir.
-4.  **DNS Yönetimi:** Alan adınızı satın aldığınız firmanın (GoDaddy, Namecheap, Turhost vb.) web sitesine gidin. Alan adı yönetim panelinizde "DNS Yönetimi", "DNS Zone" veya benzeri bir bölüm bulun.
-5.  **Kaydı Ekleyin:** Vercel'in size verdiği kaydı, alan adı sağlayıcınızın DNS yönetimi bölümüne ekleyin.
-6.  **Bekleyin:** DNS kayıtlarının internete yayılması birkaç dakikadan birkaç saate kadar sürebilir. Vercel, bağlantı kurulduğunda sizi bilgilendirecektir.
+3.  **DNS Kayıtlarını Alın:** Vercel size bir CNAME veya A kaydı gibi bir DNS kaydı verecektir.
+4.  **DNS Yönetimi:** Alan adınızı satın aldığınız firmanın (GoDaddy, Namecheap, Turhost vb.) web sitesine gidip DNS yönetim bölümüne Vercel'in verdiği kaydı ekleyin. Bu işlemin aktif olması birkaç saat sürebilir.
 
 ## Proje Nasıl Güncellenir?
 
 Bu geliştirme ortamında veya kendi bilgisayarınızda projede bir değişiklik yaptıktan sonra, bu güncellemeyi canlı sitenize yansıtmak çok basittir.
 
-1.  **Değişiklikleri GitHub'a Gönderin:** Bilgisayarınızda proje klasörünü terminalde açın ve aşağıdaki komutları çalıştırın. Bu, yeni değişiklikleri kaydedip GitHub'a gönderir.
+1.  **Değişiklikleri GitHub'a Gönderin:** Bilgisayarınızda proje klasörünü terminalde açın ve aşağıdaki komutları çalıştırın.
 
     ```bash
     # 1. Tüm değiştirilen dosyaları takip listesine ekler.
@@ -112,6 +102,6 @@ Bu geliştirme ortamında veya kendi bilgisayarınızda projede bir değişiklik
     git push origin main
     ```
 
-2.  **Otomatik Güncelleme:** Vercel, projenizin GitHub deposuna bağlı olduğu için bu yeni güncellemeyi otomatik olarak algılayacaktır. Vercel projenizin kontrol paneline baktığınızda, sitenizin yeniden derlenip yayınlandığını göreceksiniz. İşlem bittiğinde, siteniz güncellenmiş olacaktır.
+2.  **Otomatik Güncellemeyi Doğrulama:** Bu komutları çalıştırdıktan hemen sonra Vercel, GitHub'daki güncellemeyi otomatik olarak algılar. Projenizin Vercel kontrol paneline giderseniz, projenizin en üstünde "Building" (İnşa Ediliyor) durumunda yeni bir dağıtımın başladığını göreceksiniz. Bu sürecin yanında yazdığınız commit mesajını da ("Yaptığınız değişikliğin kısa bir açıklaması") görebilirsiniz. İşlem bitip "Ready" (Hazır) durumuna geçtiğinde, siteniz güncellenmiş demektir.
 
 Artık kendi profesyonel teklif oluşturma aracınızı kullanmaya hazırsınız!
