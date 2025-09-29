@@ -4,7 +4,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft } from "lucide-react";
-import type { Quote } from "@/lib/schema";
+import type { Quote, CompanyProfile } from "@/lib/schema";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -17,14 +17,17 @@ type QuotePreviewProps = {
     discountAmount: number;
     grandTotal: number;
   };
+  companyProfiles: CompanyProfile[];
   onBackToEdit: () => void;
 };
 
-export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreviewProps) {
+export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdit }: QuotePreviewProps) {
   const handlePrint = () => {
     window.print();
   }
   
+  const companyLogo = companyProfiles.find(p => p.id === quote.companyProfileId)?.companyLogo;
+
   return (
     <div className="space-y-4">
        <div className="flex justify-between items-center no-print">
@@ -42,9 +45,9 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           <CardContent className="p-8 md:p-12 print:p-12">
             <header className="flex justify-between items-start mb-8">
                 <div className="w-1/2">
-                  {quote.companyLogo && (
+                  {companyLogo && (
                     <div className="mb-4 relative w-56 h-28">
-                      <Image src={quote.companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
+                      <Image src={companyLogo} alt="Firma Logosu" layout="fill" objectFit="contain" className="object-left" />
                     </div>
                   )}
                 </div>

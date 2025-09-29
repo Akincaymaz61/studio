@@ -46,7 +46,7 @@ export default function QuotePage() {
       companyAddress: string;
       companyPhone: string;
       companyEmail: string;
-      companyLogo: string;
+      companyProfileId?: string;
   }) => {
     const today = new Date();
     const quoteNumber = `QT-${format(today, 'yyyyMMdd')}-${(quotes.length + 1).toString().padStart(4, '0')}`;
@@ -77,7 +77,7 @@ export default function QuotePage() {
       companyAddress: getValues('companyAddress'),
       companyPhone: getValues('companyPhone'),
       companyEmail: getValues('companyEmail'),
-      companyLogo: getValues('companyLogo'),
+      companyProfileId: getValues('companyProfileId'),
     };
 
     const newQuote = createNewQuoteObject(currentCompanyInfo);
@@ -98,7 +98,7 @@ export default function QuotePage() {
           companyAddress: getValues('companyAddress'),
           companyPhone: getValues('companyPhone'),
           companyEmail: getValues('companyEmail'),
-          companyLogo: getValues('companyLogo'),
+          companyProfileId: getValues('companyProfileId'),
       };
       
       if (quoteId) {
@@ -111,7 +111,13 @@ export default function QuotePage() {
         }
       } else {
         const defaultProfile = companyProfiles[0];
-        reset(createNewQuoteObject(defaultProfile || companyInfoFromCurrentQuote));
+        reset(createNewQuoteObject(defaultProfile ? {
+            companyName: defaultProfile.companyName,
+            companyAddress: defaultProfile.companyAddress || '',
+            companyPhone: defaultProfile.companyPhone || '',
+            companyEmail: defaultProfile.companyEmail || '',
+            companyProfileId: defaultProfile.id,
+        } : companyInfoFromCurrentQuote));
       }
   }, [quotes, reset, searchParams, createNewQuoteObject, getValues, router, companyProfiles]);
   
@@ -243,7 +249,7 @@ export default function QuotePage() {
       setValue('companyAddress', profile.companyAddress || '');
       setValue('companyPhone', profile.companyPhone || '');
       setValue('companyEmail', profile.companyEmail || '');
-      setValue('companyLogo', profile.companyLogo || '');
+      setValue('companyProfileId', profile.id);
     }
   };
   
@@ -255,8 +261,12 @@ export default function QuotePage() {
       setValue('customerContact', customer.customerContact || '');
       setValue('customerEmail', customer.customerEmail || '');
       setValue('customerPhone', customer.customerPhone || '');
+      toast({
+        title: "Müşteri Yüklendi",
+        description: `${customer.customerName} bilgileri forma yüklendi.`
+      });
     }
-  }, [customers, setValue]);
+  }, [customers, setValue, toast]);
 
   const handleLocalStatusChange = async (quoteId: string, status: QuoteStatus) => {
     if (getValues('id') === quoteId) {
@@ -333,6 +343,7 @@ export default function QuotePage() {
                 <QuotePreview
                 quote={getValues()}
                 calculations={calculations}
+                companyProfiles={companyProfiles}
                 onBackToEdit={() => setIsPreview(false)}
                 />
             ) : (
