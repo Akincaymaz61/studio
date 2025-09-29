@@ -110,7 +110,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto space-y-2 print:scale-50 print:origin-top-right">
+             <div className="w-full max-w-xs ml-auto space-y-2 print:scale-75 print:origin-top-right">
                 <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Ara Toplam:</span>
