@@ -77,8 +77,10 @@ Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (Master Key)*
     *   Vercel kontrol panelinde "Add New... -> Project" seçeneğine tıklayın.
     *   Bir önceki adımda oluşturduğunuz GitHub deposunu seçin ve "Import" deyin.
 3.  **Ortam Değişkenlerini (Environment Variables) Ayarlayın:**
-    *   **Bu en kritik adımdır.** GitHub deponuzu seçtikten sonra Vercel sizi bir "Configure Project" (Projeyi Yapılandır) ekranına yönlendirir.
-    *   Bu ekranda biraz aşağı kaydırarak **"Environment Variables"** (Ortam Değişkenleri) başlıklı bölümü bulun. Bu bölüm, projenizin canlıda çalışırken kullanacağı hassas bilgileri (API anahtarları gibi) güvenli bir şekilde saklamak içindir.
+    *   **Bu en kritik adımdır.** Vercel, uygulamanızın veritabanı gibi dış servislerle konuşabilmesi için bu değişkenlere ihtiyaç duyar.
+    *   Projenizi Vercel'e aktardıktan sonra, projenizin ana sayfasına gidin.
+    *   Üst menüden **"Settings"** sekmesine tıklayın.
+    *   Soldaki menüden **"Environment Variables"** seçeneğini bulun.
     *   Burada iki adet değişken oluşturacağız:
 
         *   **Değişken 1:**
@@ -91,9 +93,10 @@ Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (Master Key)*
             *   **Value:** JSONBin.io'dan aldığınız **Bin ID**'yi buraya yapıştırın.
             *   "Add" butonuna tıklayın.
 
-    *   Bu iki değişkeni ekledikten sonra, uygulamanız veritabanına nasıl bağlanacağını bilecektir.
+4.  **Değişiklikleri Aktif Edin (Redeploy):**
+    *   Ortam değişkenlerini kaydettikten sonra, Vercel projenizin "Deployments" sekmesine gidin.
+    *   En son dağıtımın yanındaki üç noktaya (...) tıklayın ve **"Redeploy"** seçeneğini seçin. Bu, Vercel'in projenizi yeni eklediğiniz değişkenlerle birlikte yeniden başlatmasını sağlar.
 
-4.  **Deploy Edin:** Sayfanın altındaki "Deploy" butonuna tıklayın. Vercel projenizi yayınlayacak ve veritabanı bağlantı bilgilerinizle birlikte çalışır hale getirecektir.
 
 ---
 
