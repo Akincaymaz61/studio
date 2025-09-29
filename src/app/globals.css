@@ -87,4 +87,7 @@
     box-shadow: none !important;
     text-shadow: none !important;
   }
+  .print-container .bg-card {
+    background-color: transparent !important;
+  }
 }
