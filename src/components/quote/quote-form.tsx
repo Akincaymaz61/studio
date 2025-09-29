@@ -13,7 +13,7 @@ import type { Quote, Customer } from '@/lib/schema';
 import { currencySymbols } from '@/lib/schema';
 import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '../ui/date-picker';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -81,66 +81,67 @@ const CustomerSelector = ({ customers, onSetCustomer }: { customers: Customer[],
     const { control, watch } = useFormContext<Quote>();
     const customerName = watch('customerName');
     const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState('');
 
     const filteredCustomers = useMemo(() => {
-        if (open) { // Popover for selection list is open
-             return search
-                ? customers.filter(c => c.customerName.toLowerCase().includes(search.toLowerCase()))
-                : customers;
+        if (!customerName) return [];
+        return customers.filter(c => c.customerName.toLowerCase().includes(customerName.toLowerCase()));
+    }, [customerName, customers]);
+    
+    // Open popover only if there are results and the input is not an exact match
+    useEffect(() => {
+        const isExactMatch = customers.some(c => c.customerName === customerName);
+        if (filteredCustomers.length > 0 && !isExactMatch) {
+            setOpen(true);
+        } else {
+            setOpen(false);
         }
-        // Autocomplete suggestions while typing in the main input
-        return customerName
-            ? customers.filter(c => c.customerName.toLowerCase().includes(customerName.toLowerCase()))
-            : [];
-    }, [customerName, customers, open, search]);
+    }, [filteredCustomers, customerName, customers]);
 
 
     return (
-        <div className="grid gap-2">
-        <FormField name="customerName" control={control} render={({ field }) => (
-            <Popover open={open && customerName.length > 0 && !customers.some(c => c.customerName === customerName)} onOpenChange={setOpen}>
-                 <FormItem>
-                    <FormLabel>Müşteri Adı</FormLabel>
-                    <PopoverTrigger asChild>
-                        <FormControl>
-                            <Input 
-                                placeholder="Müşteri adını yazmaya başlayın..." 
-                                {...field} 
-                                autoComplete="off"
-                                onChange={(e) => {
-                                    field.onChange(e);
-                                    setOpen(e.target.value.length > 0);
-                                }}
-                            />
-                        </FormControl>
-                    </PopoverTrigger>
-                    <FormMessage />
-                </FormItem>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command>
-                         <CommandList>
-                            {filteredCustomers.length === 0 ? <CommandEmpty>Müşteri bulunamadı.</CommandEmpty> : null}
-                            <CommandGroup>
-                                {filteredCustomers.map(customer => (
-                                    <CommandItem
-                                        key={customer.id}
-                                        value={customer.customerName}
-                                        onSelect={() => {
-                                            onSetCustomer(customer.id);
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {customer.customerName}
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                         </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-        )} />
-        </div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <FormField
+          name="customerName"
+          control={control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Müşteri Adı</FormLabel>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Input
+                    placeholder="Müşteri adını yazmaya başlayın..."
+                    autoComplete="off"
+                    className="text-left"
+                    {...field}
+                  />
+                </FormControl>
+              </PopoverTrigger>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+          <Command>
+            <CommandList>
+              {filteredCustomers.length === 0 ? <CommandEmpty>Müşteri bulunamadı.</CommandEmpty> : null}
+              <CommandGroup>
+                {filteredCustomers.map(customer => (
+                  <CommandItem
+                    key={customer.id}
+                    value={customer.customerName}
+                    onSelect={() => {
+                      onSetCustomer(customer.id);
+                      setOpen(false);
+                    }}
+                  >
+                    {customer.customerName}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     );
 };
 
@@ -187,13 +188,16 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
   const currency = useWatch({ control, name: 'currency' });
   
   const handleNumericChange = (field: any, value: string) => {
+    if (value === '' || value === '-') {
+       field.onChange('');
+       return;
+    }
     const parsedValue = parseFloat(value);
     field.onChange(isNaN(parsedValue) ? '' : parsedValue);
   };
   
   const handleSaveCurrentCustomer = () => {
     const values = getValues();
-    // Prevent saving if customer name is empty
     if (!values.customerName) return;
 
     const existingCustomer = customers.find(c => c.customerName.toLowerCase() === values.customerName.toLowerCase());
@@ -397,5 +401,3 @@ export function QuoteForm({ calculations, customers, onSetCustomer, onSaveCustom
     </div>
   );
 }
-
-    

@@ -193,8 +193,8 @@ export default function QuotePage() {
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = savedQuotes.filter(q => q.id !== quoteId);
-    setSavedQuotes(newQuotes);
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    setSavedQuotes(newQuotes);
 
     if (getValues('id') === quoteId) {
        reset(defaultQuote);
