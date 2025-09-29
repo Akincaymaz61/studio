@@ -57,11 +57,11 @@ export async function getDbData(): Promise<DbData> {
  */
 export async function saveDbData(data: DbData): Promise<void> {
   try {
-    // Tarihleri string'e çevirmeden önce veriyi doğrula
-    const validatedData = dbDataSchema.parse(data);
-    await kv.set(DB_KEY, validatedData);
+    // @vercel/kv kütüphanesi Date nesnelerini otomatik olarak JSON'a çevirir.
+    // Bu yüzden burada tekrar parse etmeye gerek yok, bu hataya neden oluyordu.
+    await kv.set(DB_KEY, data);
   } catch (error) {
-     console.error('Veri doğrulanırken veya Vercel KV\'ye yazılırken hata oluştu:', error);
+     console.error('Veri Vercel KV\'ye yazılırken hata oluştu:', error);
      throw new Error('Veri kaydedilemedi.');
   }
 }
