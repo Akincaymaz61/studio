@@ -69,9 +69,6 @@
 }
 
 @layer utilities {
-    .break-inside-avoid {
-        break-inside: avoid;
-    }
     .break-after-avoid {
         break-after: avoid;
     }
@@ -111,5 +108,8 @@
   .print-summary-box {
     transform: scale(0.82);
     transform-origin: bottom right;
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
   }
 }
