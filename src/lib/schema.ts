@@ -21,6 +21,8 @@ export const customerSchema = z.object({
 });
 export type Customer = z.infer<typeof customerSchema>;
 
+export const quoteStatusSchema = z.enum(['Taslak', 'Gönderildi', 'Onaylandı', 'Reddedildi', 'Revize Edildi']);
+export type QuoteStatus = z.infer<typeof quoteStatusSchema>;
 
 export const quoteItemSchema = z.object({
   id: z.string(),
@@ -56,6 +58,8 @@ export const quoteSchema = z.object({
   
   discountType: z.enum(['percentage', 'fixed']).default('percentage'),
   discountValue: z.coerce.number().min(0).default(0),
+
+  status: quoteStatusSchema.default('Taslak'),
 });
 
 export type Quote = z.infer<typeof quoteSchema>;
@@ -103,6 +107,7 @@ export const defaultQuote: Quote = {
   discountType: 'percentage',
   discountValue: 0,
   notes: '',
+  status: 'Taslak',
 };
 
 export const currencySymbols: { [key: string]: string } = {

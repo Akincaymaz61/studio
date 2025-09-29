@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Quote, CompanyProfile, Customer, companyProfileSchema, customerSchema } from "@/lib/schema";
-import { formatCurrency } from "@/lib/utils";
+import { Quote, CompanyProfile, Customer, companyProfileSchema, customerSchema, quoteStatusSchema, QuoteStatus } from "@/lib/schema";
+import { formatCurrency, cn } from "@/lib/utils";
 import {
   FilePlus2,
   Save,
@@ -19,6 +19,7 @@ import {
   Users,
   PlusCircle,
   Edit,
+  Copy,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
@@ -28,6 +29,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { LogoUploader } from './logo-uploader';
+import { Badge } from '../ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 
 const CompanyProfileForm = ({ profile, onSave, closeDialog }: { profile?: CompanyProfile, onSave: (data: CompanyProfile) => void, closeDialog: () => void }) => {
@@ -113,6 +116,15 @@ const CustomerForm = ({ customer, onSave, closeDialog }: { customer?: Customer, 
   )
 }
 
+const statusColors: Record<QuoteStatus, string> = {
+    Taslak: "bg-gray-200 text-gray-800",
+    Gönderildi: "bg-blue-200 text-blue-800",
+    Onaylandı: "bg-green-200 text-green-800",
+    Reddedildi: "bg-red-200 text-red-800",
+    'Revize Edildi': "bg-yellow-200 text-yellow-800",
+};
+
+
 type ToolbarProps = {
   onNewQuote: () => void;
   onSaveQuote: () => void;
@@ -131,6 +143,8 @@ type ToolbarProps = {
   onSetCustomer: (customerId: string) => void;
   onDeleteCustomer: (customerId: string) => void;
   getValues: any;
+  onReviseQuote: (quoteId: string) => void;
+  onStatusChange: (quoteId: string, status: QuoteStatus) => void;
 };
 
 
@@ -152,6 +166,8 @@ export function Toolbar({
   onSetCustomer,
   onDeleteCustomer,
   getValues,
+  onReviseQuote,
+  onStatusChange,
 }: ToolbarProps) {
   const { toast } = useToast();
   const [isQuotesDialogOpen, setQuotesDialogOpen] = useState(false);
@@ -207,13 +223,30 @@ export function Toolbar({
           <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Kaydedilmiş Teklifler</DialogTitle></DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Teklif No</TableHead><TableHead>Müşteri</TableHead><TableHead>Tarih</TableHead><TableHead>Tutar</TableHead><TableHead className="text-right">İşlemler</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Teklif No</TableHead><TableHead>Müşteri</TableHead><TableHead>Durum</TableHead><TableHead>Tarih</TableHead><TableHead>Tutar</TableHead><TableHead className="text-right">İşlemler</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {savedQuotes.length > 0 ? savedQuotes.map((quote) => (
+                  {savedQuotes.length > 0 ? savedQuotes.sort((a,b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()).map((quote) => (
                     <TableRow key={quote.id}>
-                      <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell><TableCell>{format(new Date(quote.quoteDate), "dd/MM/yyyy")}</TableCell><TableCell>{formatCurrency(quote.items.reduce((acc, item) => acc + item.quantity * item.price, 0), quote.currency)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>{quote.quoteNumber}</TableCell><TableCell>{quote.customerName}</TableCell>
+                      <TableCell>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Badge className={cn("cursor-pointer", statusColors[quote.status])}>{quote.status}</Badge>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {quoteStatusSchema.options.map(status => (
+                                <DropdownMenuItem key={status} onSelect={() => onStatusChange(quote.id, status)}>
+                                    <div className={cn("w-2 h-2 rounded-full mr-2", statusColors[status])} />
+                                    {status}
+                                </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                      <TableCell>{format(new Date(quote.quoteDate), "dd/MM/yyyy")}</TableCell><TableCell>{formatCurrency(quote.items.reduce((acc, item) => acc + item.quantity * item.price, 0), quote.currency)}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
                         <Button variant="ghost" size="sm" onClick={() => { onLoadQuote(quote.id); setQuotesDialogOpen(false); }}><FolderOpen className="h-4 w-4 mr-2" /> Yükle</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { onReviseQuote(quote.id); setQuotesDialogOpen(false); }}><Copy className="h-4 w-4 mr-2" /> Revize Et</Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Sil</Button></AlertDialogTrigger>
                           <AlertDialogContent>
@@ -223,7 +256,7 @@ export function Toolbar({
                         </AlertDialog>
                       </TableCell>
                     </TableRow>
-                  )) : <TableRow><TableCell colSpan={5} className="text-center">Kaydedilmiş teklif bulunamadı.</TableCell></TableRow>}
+                  )) : <TableRow><TableCell colSpan={6} className="text-center">Kaydedilmiş teklif bulunamadı.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

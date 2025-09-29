@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer, DbData, dbDataSchema } from '@/lib/schema';
+import { Quote, quoteSchema, defaultQuote, CompanyProfile, Customer, DbData, dbDataSchema, QuoteStatus } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
@@ -255,6 +255,50 @@ export default function QuotePage() {
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
+  const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
+    const newQuotes = savedQuotes.map(q => 
+        q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
+    );
+    setSavedQuotes(newQuotes);
+    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
+  };
+
+  const handleReviseQuote = (quoteId: string) => {
+    const quoteToRevise = savedQuotes.find(q => q.id === quoteId);
+    if (!quoteToRevise) return;
+
+    // Find existing revisions
+    const revisionRegex = new RegExp(`^${quoteToRevise.quoteNumber.split('-rev')[0]}-rev(\\d+)$`);
+    const existingRevisions = savedQuotes.filter(q => revisionRegex.test(q.quoteNumber || ''));
+    const nextRevisionNumber = existingRevisions.length + 1;
+
+    const newRevisionQuote: Quote = {
+      ...quoteToRevise,
+      id: `QT-${Date.now()}`,
+      quoteNumber: `${quoteToRevise.quoteNumber.split('-rev')[0]}-rev${nextRevisionNumber}`,
+      quoteDate: new Date(),
+      validUntil: addDays(new Date(), 30),
+      updatedAt: new Date(),
+      status: 'Taslak',
+    };
+
+    // Update old quote status
+    const quotesWithRevision = savedQuotes.map(q => 
+        q.id === quoteId ? { ...q, status: 'Revize Edildi' as QuoteStatus, updatedAt: new Date() } : q
+    );
+
+    const newQuotesList = [...quotesWithRevision, newRevisionQuote];
+    setSavedQuotes(newQuotesList);
+    reset(newRevisionQuote);
+
+    toast({
+      title: "Teklif Revize Edildi",
+      description: `Yeni revizyon "${newRevisionQuote.quoteNumber}" oluşturuldu.`,
+    });
+  };
+
+
   if (!isClient || dbLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -329,10 +373,12 @@ export default function QuotePage() {
           savedQuotes={savedQuotes}
           onLoadQuote={handleLoadQuote}
           onDeleteQuote={handleDeleteQuote}
+          onReviseQuote={handleReviseQuote}
+          onStatusChange={handleStatusChange}
           companyProfiles={companyProfiles}
           onSaveCompanyProfile={handleSaveCompanyProfile}
           onSetCompanyProfile={handleSetCompanyProfile}
-  onDeleteCompanyProfile={handleDeleteCompanyProfile}
+          onDeleteCompanyProfile={handleDeleteCompanyProfile}
           customers={customers}
           onSaveCustomer={handleSaveCustomer}
           onSetCustomer={handleSetCustomer}
