@@ -29,6 +29,7 @@ import { Customer, CompanyProfile, Quote, DbData, dbDataSchema, QuoteStatus } fr
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getDbData, saveDbData } from '@/lib/db-actions';
 import { useToast } from '@/hooks/use-toast';
+import { addDays } from 'date-fns';
 
 type QuoteLayoutContextType = {
   quotes: Quote[];
@@ -41,6 +42,8 @@ type QuoteLayoutContextType = {
   handleSaveCompanyProfile: (profile: CompanyProfile) => Promise<void>;
   handleDeleteCompanyProfile: (id: string) => Promise<void>;
   handleStatusChange: (quoteId: string, status: QuoteStatus) => Promise<void>;
+  handleDeleteQuote: (quoteId: string) => Promise<void>;
+  handleReviseQuote: (quoteId: string) => string | undefined;
 };
 
 const QuoteLayoutContext = createContext<QuoteLayoutContextType | null>(null);
@@ -80,9 +83,14 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     try {
       await saveDbData(data);
       // After saving, update the state to reflect the changes
-      setQuotes(data.quotes);
-      setCustomers(data.customers);
-      setCompanyProfiles(data.companyProfiles);
+      const parsedData = dbDataSchema.safeParse(data);
+       if (parsedData.success) {
+          setQuotes(parsedData.data.quotes);
+          setCustomers(parsedData.data.customers);
+          setCompanyProfiles(parsedData.data.companyProfiles);
+       } else {
+         console.error("Zod validation failed after save: ", parsedData.error);
+       }
     } catch (error) {
       console.error("Error saving to db: ", error);
       toast({
@@ -133,14 +141,12 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       : [...companyProfiles, profile];
     
     await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
-    setCompanyProfiles(newProfiles);
     toast({ title: `Firma Profili ${profileExists ? 'Güncellendi' : 'Kaydedildi'}` });
   };
 
   const handleDeleteCompanyProfile = async (profileId: string) => {
     const newProfiles = companyProfiles.filter(p => p.id !== profileId);
     await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
-    setCompanyProfiles(newProfiles);
     toast({ title: 'Profil Silindi', variant: 'destructive' });
   };
 
@@ -150,14 +156,12 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       ? customers.map(c => c.id === customer.id ? customer : c)
       : [...customers, customer];
     await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
-    setCustomers(newCustomers);
     toast({ title: `Müşteri ${customerExists ? 'Güncellendi' : 'Kaydedildi'}` });
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
     await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
-    setCustomers(newCustomers);
     toast({ title: 'Müşteri Silindi', variant: 'destructive' });
   };
 
@@ -166,8 +170,50 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
     );
     await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
-    setQuotes(newQuotes);
     toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
+  };
+  
+  const handleDeleteQuote = async (quoteId: string) => {
+    const newQuotes = quotes.filter(q => q.id !== quoteId);
+    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+     toast({
+      title: "Teklif Silindi",
+      description: `Teklif başarıyla veritabanından silindi.`,
+      variant: "destructive"
+    });
+  };
+
+  const handleReviseQuote = (quoteId: string): string | undefined => {
+    const quoteToRevise = quotes.find(q => q.id === quoteId);
+    if (!quoteToRevise) return;
+
+    const revisionRegex = new RegExp(`^${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev(\\d+)$`);
+    const existingRevisions = quotes.filter(q => revisionRegex.test(q.quoteNumber || ''));
+    const nextRevisionNumber = existingRevisions.length + 1;
+
+    const newRevisionQuote: Quote = {
+      ...quoteToRevise,
+      id: `QT-${Date.now()}`,
+      quoteNumber: `${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev${nextRevisionNumber}`,
+      quoteDate: new Date(),
+      validUntil: addDays(new Date(), 30),
+      updatedAt: new Date(),
+      status: 'Taslak',
+    };
+
+    const quotesWithRevision = quotes.map(q => 
+        q.id === quoteId ? { ...q, status: 'Revize Edildi' as QuoteStatus, updatedAt: new Date() } : q
+    );
+
+    const newQuotesList = [...quotesWithRevision, newRevisionQuote];
+    
+    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles });
+
+    toast({
+      title: "Teklif Revize Edildi",
+      description: `Yeni revizyon "${newRevisionQuote.quoteNumber}" oluşturuldu.`,
+    });
+    return newRevisionQuote.id;
   };
   
   const handleLogout = () => {
@@ -191,10 +237,12 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     handleSaveCompanyProfile,
     handleDeleteCompanyProfile,
     handleStatusChange,
+    handleDeleteQuote,
+    handleReviseQuote,
   };
   
   if (pathname === '/login') {
-     return <main>{children}</main>;
+     return <main className="p-4 sm:p-6 md:p-8">{children}</main>;
   }
 
   if (!isAuthenticated) {

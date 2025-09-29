@@ -3,20 +3,24 @@
 import React, { useState, useMemo } from 'react';
 import { Quote, QuoteStatus, quoteStatusSchema } from '@/lib/schema';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { FileText, CheckCircle2, XCircle, Edit, Send } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, cn } from '@/lib/utils';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Badge } from '../ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Button } from '../ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
 interface DashboardProps {
   quotes: Quote[];
   onStatusChange: (quoteId: string, status: QuoteStatus) => void;
+  onDeleteQuote: (quoteId: string) => void;
+  onReviseQuote: (quoteId: string) => string | undefined;
 }
 
 const statusColors: Record<QuoteStatus, string> = {
@@ -43,11 +47,18 @@ const StatCard = ({ title, value, icon, onClick, colorClass }: { title: string; 
   </DialogTrigger>
 );
 
-const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStatusChange: (quoteId: string, status: QuoteStatus) => void; }) => {
+const QuotesTable = ({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: { quotes: Quote[], onStatusChange: (quoteId: string, status: QuoteStatus) => void, onDeleteQuote: (id: string) => void, onReviseQuote: (id: string) => string | undefined }) => {
     const router = useRouter();
-    const handleRowClick = (quoteId: string) => {
+    const handleEditClick = (quoteId: string) => {
         router.push(`/quote?id=${quoteId}`);
     };
+    const handleReviseClick = (quoteId: string) => {
+        const newId = onReviseQuote(quoteId);
+        if (newId) {
+            router.push(`/quote?id=${newId}`);
+        }
+    };
+
 
   return (
     <div className="max-h-[70vh] overflow-y-auto">
@@ -60,14 +71,15 @@ const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStat
                     <TableHead>Durum</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead className="text-center">İşlemler</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {quotes.length > 0 ? (
                     quotes.map(quote => (
-                        <TableRow key={quote.id} onClick={() => handleRowClick(quote.id)} className="cursor-pointer">
-                            <TableCell>{quote.quoteNumber}</TableCell>
-                            <TableCell>{quote.customerName}</TableCell>
+                        <TableRow key={quote.id} className="cursor-pointer">
+                            <TableCell onClick={() => handleEditClick(quote.id)}>{quote.quoteNumber}</TableCell>
+                            <TableCell onClick={() => handleEditClick(quote.id)}>{quote.customerName}</TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -83,13 +95,45 @@ const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStat
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
-                            <TableCell>{format(new Date(quote.quoteDate), 'dd/MM/yyyy')}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(quote.items.reduce((acc, item) => acc + (item.quantity * item.price), 0), quote.currency)}</TableCell>
+                            <TableCell onClick={() => handleEditClick(quote.id)}>{format(new Date(quote.quoteDate), 'dd/MM/yyyy')}</TableCell>
+                            <TableCell onClick={() => handleEditClick(quote.id)} className="text-right">{formatCurrency(quote.items.reduce((acc, item) => acc + (item.quantity * item.price), 0), quote.currency)}</TableCell>
+                             <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onSelect={() => handleEditClick(quote.id)}>
+                                            <FolderOpen className="h-4 w-4 mr-2" />
+                                            Yükle & Düzenle
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleReviseClick(quote.id)}>
+                                            <Copy className="h-4 w-4 mr-2" />
+                                            Revize Et
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                         <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                                  <Trash2 className="h-4 w-4 mr-2" />
+                                                  Sil
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader><AlertDialogTitle>Teklifi Sil</AlertDialogTitle><AlertDialogDescription>Bu işlem geri alınamaz. {quote.quoteNumber} numaralı teklifi kalıcı olarak silmek istediğinizden emin misiniz?</AlertDialogDescription></AlertDialogHeader>
+                                                <AlertDialogFooter><AlertDialogCancel>İptal</AlertDialogCancel><AlertDialogAction onClick={() => onDeleteQuote(quote.id)} className="bg-destructive hover:bg-destructive/90">Sil</AlertDialogAction></AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
                         </TableRow>
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">Bu kritere uygun teklif bulunamadı.</TableCell>
+                        <TableCell colSpan={6} className="text-center">Bu kritere uygun teklif bulunamadı.</TableCell>
                     </TableRow>
                 )}
             </TableBody>
@@ -99,7 +143,7 @@ const QuotesTableDialog = ({ quotes, onStatusChange }: { quotes: Quote[], onStat
   )
 }
 
-export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
+export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: DashboardProps) {
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -148,7 +192,7 @@ export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-        <div className="space-y-8">
+        <div className="space-y-8 p-4 sm:p-6 md:p-8">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             
             <Card>
@@ -194,7 +238,7 @@ export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <QuotesTableDialog quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} />
+                        <QuotesTable quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
                     </div>
                 </CardContent>
             </Card>
@@ -203,7 +247,7 @@ export default function Dashboard({ quotes, onStatusChange }: DashboardProps) {
             <DialogHeader>
                 <DialogTitle>{selectedStatus} Teklifler ({dialogQuotes.length})</DialogTitle>
             </DialogHeader>
-            <QuotesTableDialog quotes={dialogQuotes} onStatusChange={onStatusChange} />
+            <QuotesTable quotes={dialogQuotes} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
         </DialogContent>
     </Dialog>
   );

@@ -30,6 +30,9 @@ export default function QuotePage() {
     handleDeleteCustomer,
     handleSaveCompanyProfile,
     handleDeleteCompanyProfile,
+    handleDeleteQuote,
+    handleReviseQuote,
+    handleStatusChange,
     loading
   } = useQuoteLayout();
 
@@ -123,11 +126,17 @@ export default function QuotePage() {
   const saveCurrentQuote = useCallback(() => {
       const currentData = getValues();
       if (!currentData.id) return; // Do not save if it's a new quote without ID yet
-      const updatedQuote = { ...currentData, updatedAt: new Date() };
-      const otherQuotes = quotes.filter(q => q.id !== updatedQuote.id);
-      const newQuotesList = [...otherQuotes, updatedQuote];
+      
+      // Ensure all date fields are Date objects before saving
+      const dataToSave: Quote = {
+        ...currentData,
+        quoteDate: new Date(currentData.quoteDate),
+        validUntil: new Date(currentData.validUntil),
+        updatedAt: new Date(),
+      };
+      
       handleSaveAll({
-          quotes: newQuotesList,
+          quotes: [...quotes.filter(q => q.id !== dataToSave.id), dataToSave],
           customers: customers,
           companyProfiles: companyProfiles,
       });
@@ -200,13 +209,18 @@ export default function QuotePage() {
     }
   }, [quotes, reset, router]);
   
-  const handleDeleteQuote = async (quoteId: string) => {
-    const newQuotes = quotes.filter(q => q.id !== quoteId);
-    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+  const handleDeleteQuoteAndRedirect = async (quoteId: string) => {
+      await handleDeleteQuote(quoteId);
+      if (getValues('id') === quoteId) {
+        handleNewQuote();
+      }
+  };
 
-    if (getValues('id') === quoteId) {
-       handleNewQuote();
-    }
+  const handleReviseQuoteAndRedirect = (quoteId: string) => {
+      const newId = handleReviseQuote(quoteId);
+      if (newId) {
+        router.push(`/quote?id=${newId}`);
+      }
   };
   
   const handleSetCompanyProfile = (profileId: string) => {
@@ -231,51 +245,13 @@ export default function QuotePage() {
     }
   }, [customers, setValue]);
 
-  const handleStatusChange = async (quoteId: string, status: QuoteStatus) => {
-    const newQuotes = quotes.map(q => 
-        q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
-    );
-    
+  const handleLocalStatusChange = async (quoteId: string, status: QuoteStatus) => {
     if (getValues('id') === quoteId) {
       setValue('status', status, { shouldDirty: true });
     }
-
-    await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    await handleStatusChange(quoteId, status);
   };
 
-  const handleReviseQuote = (quoteId: string) => {
-    const quoteToRevise = quotes.find(q => q.id === quoteId);
-    if (!quoteToRevise) return;
-
-    const revisionRegex = new RegExp(`^${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev(\\d+)$`);
-    const existingRevisions = quotes.filter(q => revisionRegex.test(q.quoteNumber || ''));
-    const nextRevisionNumber = existingRevisions.length + 1;
-
-    const newRevisionQuote: Quote = {
-      ...quoteToRevise,
-      id: `QT-${Date.now()}`,
-      quoteNumber: `${(quoteToRevise.quoteNumber || '').split('-rev')[0]}-rev${nextRevisionNumber}`,
-      quoteDate: new Date(),
-      validUntil: addDays(new Date(), 30),
-      updatedAt: new Date(),
-      status: 'Taslak',
-    };
-
-    const quotesWithRevision = quotes.map(q => 
-        q.id === quoteId ? { ...q, status: 'Revize Edildi' as QuoteStatus, updatedAt: new Date() } : q
-    );
-
-    const newQuotesList = [...quotesWithRevision, newRevisionQuote];
-    reset(newRevisionQuote);
-    router.push(`/quote?id=${newRevisionQuote.id}`);
-
-    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles });
-
-    toast({
-      title: "Teklif Revize Edildi",
-      description: `Yeni revizyon "${newRevisionQuote.quoteNumber}" oluşturuldu.`,
-    });
-  };
 
   if (loading || !getValues('id')) {
     return null;
@@ -339,9 +315,9 @@ export default function QuotePage() {
             isPreviewing={isPreview}
             savedQuotes={quotes}
             onLoadQuote={handleLoadQuote}
-            onDeleteQuote={handleDeleteQuote}
-            onReviseQuote={handleReviseQuote}
-            onStatusChange={handleStatusChange}
+            onDeleteQuote={handleDeleteQuoteAndRedirect}
+            onReviseQuote={handleReviseQuoteAndRedirect}
+            onStatusChange={handleLocalStatusChange}
             getValues={getValues}
             />
             
