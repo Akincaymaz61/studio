@@ -86,6 +86,9 @@
     size: A4;
     margin: 0;
   }
+  body {
+    font-size: 10pt;
+  }
   body, #__next, main {
     background-color: white !important;
     -webkit-print-color-adjust: exact;
