@@ -30,7 +30,6 @@ export async function getDbData(): Promise<DbData> {
       method: 'GET',
       headers: {
         'X-Master-Key': JSONBIN_API_KEY!,
-        // 'X-Access-Key' is not needed for GET with master key
       },
       cache: 'no-store',
     });
@@ -44,16 +43,12 @@ export async function getDbData(): Promise<DbData> {
     }
     
     const data = await response.json();
-    // JSONBin's /latest endpoint wraps the data in a 'record' object.
-    // However, if the bin is brand new, 'record' might be an empty object {}.
     const record = data.record || data;
 
-    // Handle case where the bin is new and empty
     if (record && Object.keys(record).length === 0 && record.constructor === Object) {
         return initialData;
     }
 
-    // Tarih alanlarını Date nesnesine çevir
     if (record.quotes) {
         record.quotes.forEach((quote: any) => {
             if (quote.quoteDate) quote.quoteDate = new Date(quote.quoteDate);
