@@ -81,8 +81,10 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
 
   const handleSaveAll = useCallback(async (data: DbData) => {
     try {
+      // 1. Save to the external DB first
       await saveDbData(data);
-      // After saving, update the state to reflect the changes
+      
+      // 2. If saving is successful, then update the local state
       const parsedData = dbDataSchema.safeParse(data);
        if (parsedData.success) {
           setQuotes(parsedData.data.quotes);
@@ -90,6 +92,11 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
           setCompanyProfiles(parsedData.data.companyProfiles);
        } else {
          console.error("Zod validation failed after save: ", parsedData.error);
+         // Even if validation fails on the way back, fetch from source to be sure
+         const freshData = await getDbData();
+         setQuotes(freshData.quotes);
+         setCustomers(freshData.customers);
+         setCompanyProfiles(freshData.companyProfiles);
        }
     } catch (error) {
       console.error("Error saving to db: ", error);
