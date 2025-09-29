@@ -86,49 +86,49 @@ const CustomerAutocomplete = ({ customers, onSetCustomer }: { customers: Custome
         : [];
     
     return (
-        <Popover open={open && filteredCustomers.length > 0} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <FormField name="customerName" control={control} render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Müşteri Adı</FormLabel>
+        <FormField name="customerName" control={control} render={({ field }) => (
+            <Popover open={open && filteredCustomers.length > 0} onOpenChange={setOpen}>
+                <FormItem>
+                    <FormLabel>Müşteri Adı</FormLabel>
+                    <PopoverTrigger asChild>
                         <FormControl>
-                            <Input 
-                                placeholder="Müşteri adını yazmaya başlayın..." 
-                                {...field} 
-                                autoComplete="off"
-                                onChange={(e) => {
-                                    field.onChange(e);
-                                    if (e.target.value) {
-                                        setOpen(true);
-                                    } else {
-                                        setOpen(false);
-                                    }
-                                }}
-                            />
+                                <Input 
+                                    placeholder="Müşteri adını yazmaya başlayın..." 
+                                    {...field} 
+                                    autoComplete="off"
+                                    onChange={(e) => {
+                                        field.onChange(e);
+                                        if (e.target.value) {
+                                            setOpen(true);
+                                        } else {
+                                            setOpen(false);
+                                        }
+                                    }}
+                                />
                         </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <ul className="max-h-60 overflow-y-auto">
-                    {filteredCustomers.map(customer => (
-                        <li key={customer.id}>
-                            <Button 
-                                variant="ghost" 
-                                className="w-full justify-start font-normal"
-                                onClick={() => {
-                                    onSetCustomer(customer.id);
-                                    setOpen(false);
-                                }}
-                            >
-                                {customer.customerName}
-                            </Button>
-                        </li>
-                    ))}
-                </ul>
-            </PopoverContent>
-        </Popover>
+                    </PopoverTrigger>
+                    <FormMessage />
+                </FormItem>
+                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <ul className="max-h-60 overflow-y-auto">
+                        {filteredCustomers.map(customer => (
+                            <li key={customer.id}>
+                                <Button 
+                                    variant="ghost" 
+                                    className="w-full justify-start font-normal"
+                                    onClick={() => {
+                                        onSetCustomer(customer.id);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {customer.customerName}
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                </PopoverContent>
+            </Popover>
+        )} />
     );
 };
 
