@@ -17,7 +17,11 @@ async function ensureBinExists(): Promise<void> {
     throw new Error('JSONBin API Key veya Bin ID ortam değişkenlerinde tanımlanmamış.');
   }
   try {
-    const response = await fetch(`${BIN_URL}/latest`);
+    const response = await fetch(`${BIN_URL}/latest`, {
+        headers: { 'X-Master-Key': API_KEY },
+        cache: 'no-store',
+    });
+    
     if (response.status === 404) {
       // Bin yok, oluşturalım
       const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
@@ -26,6 +30,7 @@ async function ensureBinExists(): Promise<void> {
           'Content-Type': 'application/json',
           'X-Master-Key': API_KEY,
           'X-Bin-Name': 'TeklifAI-DB',
+          'X-Bin-Private': 'true',
         },
         body: JSON.stringify(initialData),
       });
@@ -33,7 +38,9 @@ async function ensureBinExists(): Promise<void> {
         const errorBody = await createResponse.text();
         throw new Error(`Failed to create bin: ${errorBody}`);
       }
-      console.log('JSONBin.io bin başarıyla oluşturuldu.');
+      const newBin = await createResponse.json();
+      console.log(`JSONBin.io bin başarıyla oluşturuldu. Yeni Bin ID: ${newBin.metadata.id}. Lütfen bu ID'yi ortam değişkenlerinize ekleyin.`);
+
     }
   } catch (error) {
     console.error('Error ensuring bin exists:', error);
