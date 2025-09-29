@@ -1,7 +1,7 @@
 export const LOGOS = [
   {
     id: 'logo1',
-    url: 'https://picsum.photos/seed/logo1/400/150',
+    url: 'https://hizliresim.com/fxnuskb',
     name: 'Logo 1',
   },
   {
