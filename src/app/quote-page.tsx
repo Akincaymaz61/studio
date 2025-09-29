@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getDbData, saveDbData } from '@/lib/db-actions';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { QuoteLayout } from '@/components/quote/quote-layout';
 
 export default function QuotePage() {
   const { toast } = useToast();
@@ -279,7 +280,6 @@ export default function QuotePage() {
     );
     setSavedQuotes(newQuotes);
     
-    // Update form if the current quote is being changed
     if (getValues('id') === quoteId) {
       setValue('status', status, { shouldDirty: true });
     }
@@ -292,7 +292,6 @@ export default function QuotePage() {
     const quoteToRevise = savedQuotes.find(q => q.id === quoteId);
     if (!quoteToRevise) return;
 
-    // Find existing revisions
     const revisionRegex = new RegExp(`^${quoteToRevise.quoteNumber.split('-rev')[0]}-rev(\\d+)$`);
     const existingRevisions = savedQuotes.filter(q => revisionRegex.test(q.quoteNumber || ''));
     const nextRevisionNumber = existingRevisions.length + 1;
@@ -307,7 +306,6 @@ export default function QuotePage() {
       status: 'Taslak',
     };
 
-    // Update old quote status
     const quotesWithRevision = savedQuotes.map(q => 
         q.id === quoteId ? { ...q, status: 'Revize Edildi' as QuoteStatus, updatedAt: new Date() } : q
     );
@@ -339,97 +337,106 @@ export default function QuotePage() {
   );
 
   return (
-    <FormProvider {...form}>
-      <div className="container mx-auto p-4 sm:p-6 md:p-8 print:p-0">
-        <header className="mb-8 no-print flex justify-between items-center">
-          <div/>
-          <div>
-            <h1 className="text-4xl font-bold text-primary text-center font-headline">Fiyat Teklifi Oluşturucu</h1>
-            <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
-          </div>
-           <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Keyboard className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Kısayollar</h4>
-                <p className="text-sm text-muted-foreground">Hızlı işlemler için klavye kısayolları.</p>
-                <div className="grid gap-2 text-sm">
-                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-                    <span className="text-muted-foreground">Teklifi Kaydet</span>
-                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>S</KBD></span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-                     <span className="text-muted-foreground">Yeni Teklif</span>
-                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>N</KBD></span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-                     <span className="text-muted-foreground">PDF İndir</span>
-                    <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>P</KBD></span>
-                  </div>
+    <QuoteLayout
+        customers={customers}
+        onSaveCustomer={handleSaveCustomer}
+        onDeleteCustomer={handleDeleteCustomer}
+        companyProfiles={companyProfiles}
+        onSaveCompanyProfile={handleSaveCompanyProfile}
+        onDeleteCompanyProfile={handleDeleteCompanyProfile}
+    >
+        <FormProvider {...form}>
+        <div className="container mx-auto p-4 sm:p-6 md:p-8 print:p-0">
+            <header className="mb-8 no-print flex justify-between items-center">
+            <div/>
+            <div>
+                <h1 className="text-4xl font-bold text-primary text-center font-headline">Fiyat Teklifi Oluşturucu</h1>
+                <p className="text-center text-muted-foreground mt-2">Tekliflerinizi kolayca oluşturun, yönetin ve dışa aktarın.</p>
+            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                <Button variant="outline" size="icon">
+                    <Keyboard className="h-4 w-4" />
+                </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto">
+                <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Kısayollar</h4>
+                    <p className="text-sm text-muted-foreground">Hızlı işlemler için klavye kısayolları.</p>
+                    <div className="grid gap-2 text-sm">
+                    <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <span className="text-muted-foreground">Teklifi Kaydet</span>
+                        <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>S</KBD></span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <span className="text-muted-foreground">Yeni Teklif</span>
+                        <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>N</KBD></span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <span className="text-muted-foreground">PDF İndir</span>
+                        <span><KBD>{isMacOS() ? '⌘' : 'Ctrl'}</KBD> <KBD>P</KBD></span>
+                    </div>
+                    </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </header>
-        
-        <Toolbar
-          onNewQuote={handleNewQuote}
-          onSaveQuote={() => {
-            handleSubmit(async (data) => {
-              const newQuotesList = saveCurrentQuote(data);
-              await handleSaveAll({
-                  quotes: newQuotesList,
-                  customers: customers,
-                  companyProfiles: companyProfiles,
-              });
-              toast({
-                  title: "Teklif Kaydedildi",
-                  description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
-              });
-            })();
-          }}
-          onPreviewToggle={() => setIsPreview(!isPreview)}
-          onPdfExport={handlePdfExport}
-          isPreviewing={isPreview}
-          savedQuotes={savedQuotes}
-          onLoadQuote={handleLoadQuote}
-          onDeleteQuote={handleDeleteQuote}
-          onReviseQuote={handleReviseQuote}
-          onStatusChange={handleStatusChange}
-          getValues={getValues}
-        />
-        
-        <main className="mt-8">
-          {isPreview ? (
-            <QuotePreview
-              quote={getValues()}
-              calculations={calculations}
-              onBackToEdit={() => setIsPreview(false)}
+                </PopoverContent>
+            </Popover>
+            </header>
+            
+            <Toolbar
+            onNewQuote={handleNewQuote}
+            onSaveQuote={() => {
+                handleSubmit(async (data) => {
+                const newQuotesList = saveCurrentQuote(data);
+                await handleSaveAll({
+                    quotes: newQuotesList,
+                    customers: customers,
+                    companyProfiles: companyProfiles,
+                });
+                toast({
+                    title: "Teklif Kaydedildi",
+                    description: "Değişiklikleriniz dosyaya başarıyla kaydedildi.",
+                });
+                })();
+            }}
+            onPreviewToggle={() => setIsPreview(!isPreview)}
+            onPdfExport={handlePdfExport}
+            isPreviewing={isPreview}
+            savedQuotes={savedQuotes}
+            onLoadQuote={handleLoadQuote}
+            onDeleteQuote={handleDeleteQuote}
+            onReviseQuote={handleReviseQuote}
+            onStatusChange={handleStatusChange}
+            getValues={getValues}
             />
-          ) : (
-             <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
-                if(e.key === 'Enter' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
-                    if (!(e.target instanceof HTMLTextAreaElement)) {
-                        e.preventDefault();
+            
+            <main className="mt-8">
+            {isPreview ? (
+                <QuotePreview
+                quote={getValues()}
+                calculations={calculations}
+                onBackToEdit={() => setIsPreview(false)}
+                />
+            ) : (
+                <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
+                    if(e.key === 'Enter' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+                        if (!(e.target instanceof HTMLTextAreaElement)) {
+                            e.preventDefault();
+                        }
                     }
-                }
-             }}>
-              <QuoteForm 
-                calculations={calculations} 
-                customers={customers}
-                onSetCustomer={handleSetCustomer}
-                onSaveCustomer={handleSaveCustomer}
-                companyProfiles={companyProfiles}
-                onSetCompanyProfile={handleSetCompanyProfile}
-              />
-            </form>
-          )}
-        </main>
-      </div>
-    </FormProvider>
+                }}>
+                <QuoteForm 
+                    calculations={calculations} 
+                    customers={customers}
+                    onSetCustomer={handleSetCustomer}
+                    onSaveCustomer={handleSaveCustomer}
+                    companyProfiles={companyProfiles}
+                    onSetCompanyProfile={handleSetCompanyProfile}
+                />
+                </form>
+            )}
+            </main>
+        </div>
+        </FormProvider>
+    </QuoteLayout>
   );
 }

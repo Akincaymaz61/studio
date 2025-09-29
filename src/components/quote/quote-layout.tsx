@@ -21,8 +21,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import CompanyProfilesPanel from '../data-management/company-profiles-panel';
 import CustomersPanel from '../data-management/customers-panel';
+import { Customer, CompanyProfile } from '@/lib/schema';
 
-export function QuoteLayout({ children }: { children: React.ReactNode }) {
+type QuoteLayoutProps = {
+  children: React.ReactNode;
+  customers: Customer[];
+  onSaveCustomer: (customer: Customer) => void;
+  onDeleteCustomer: (id: string) => void;
+  companyProfiles: CompanyProfile[];
+  onSaveCompanyProfile: (profile: CompanyProfile) => void;
+  onDeleteCompanyProfile: (id: string) => void;
+};
+
+
+export function QuoteLayout({ 
+  children,
+  customers,
+  onSaveCustomer,
+  onDeleteCustomer,
+  companyProfiles,
+  onSaveCompanyProfile,
+  onDeleteCompanyProfile
+}: QuoteLayoutProps) {
   const pathname = usePathname();
 
   return (
@@ -51,13 +71,21 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <CompanyProfilesPanel>
+             <CompanyProfilesPanel 
+                profiles={companyProfiles} 
+                onSave={onSaveCompanyProfile} 
+                onDelete={onDeleteCompanyProfile}
+             >
                 <SidebarMenuButton>
                     <Building />
                     Firma Profilleri
                 </SidebarMenuButton>
             </CompanyProfilesPanel>
-             <CustomersPanel>
+             <CustomersPanel 
+                customers={customers} 
+                onSave={onSaveCustomer}
+                onDelete={onDeleteCustomer}
+             >
                 <SidebarMenuButton>
                     <Users />
                     Müşteriler
@@ -73,7 +101,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
             {/* Header Content can go here */}
            </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
