@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft } from "lucide-react";
 import type { Quote } from "@/lib/schema";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
 
@@ -77,24 +77,24 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           <section className="mb-8">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-primary text-primary-foreground">
-                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg">Ürün/Hizmet</th>
-                  <th className="p-3 font-semibold text-sm text-center">Miktar</th>
-                  <th className="p-3 font-semibold text-sm text-center">Birim</th>
-                  <th className="p-3 font-semibold text-sm text-right">Birim Fiyat</th>
-                  <th className="p-3 font-semibold text-sm text-center">KDV</th>
-                  <th className="p-3 font-semibold text-sm text-right rounded-r-lg">Toplam</th>
+                <tr className="bg-primary text-primary-foreground print:text-xs">
+                  <th className="p-3 font-semibold text-sm w-2/5 rounded-l-lg print:text-xs print:bg-muted/30">Ürün/Hizmet</th>
+                  <th className="p-3 font-semibold text-sm text-center print:text-xs">Miktar</th>
+                  <th className="p-3 font-semibold text-sm text-center print:text-xs print:bg-muted/30">Birim</th>
+                  <th className="p-3 font-semibold text-sm text-right print:text-xs">Birim Fiyat</th>
+                  <th className="p-3 font-semibold text-sm text-center print:text-xs print:bg-muted/30">KDV</th>
+                  <th className="p-3 font-semibold text-sm text-right rounded-r-lg print:text-xs">Toplam</th>
                 </tr>
               </thead>
               <tbody>
                 {quote.items.map((item, index) => (
-                  <tr key={item.id} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}`}>
-                    <td className="p-3 border-r">{item.description}</td>
-                    <td className="p-3 text-center border-r">{item.quantity}</td>
-                    <td className="p-3 text-center border-r">{item.unit}</td>
-                    <td className="p-3 text-right border-r">{formatCurrency(item.price, quote.currency)}</td>
-                    <td className="p-3 text-center border-r">{item.tax}%</td>
-                    <td className="p-3 text-right font-medium">{formatCurrency(item.price * item.quantity, quote.currency)}</td>
+                  <tr key={item.id} className="border-b print:text-xs">
+                    <td className={cn("p-3 border-r", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-muted/30")}>{item.description}</td>
+                    <td className={cn("p-3 text-center border-r", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-white")}>{item.quantity}</td>
+                    <td className={cn("p-3 text-center border-r", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-muted/30")}>{item.unit}</td>
+                    <td className={cn("p-3 text-right border-r", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-white")}>{formatCurrency(item.price, quote.currency)}</td>
+                    <td className={cn("p-3 text-center border-r", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-muted/30")}>{item.tax}%</td>
+                    <td className={cn("p-3 text-right font-medium", index % 2 === 0 ? 'bg-white' : 'bg-muted/30', "print:bg-white")}>{formatCurrency(item.price * item.quantity, quote.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -103,14 +103,14 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
           
           <section className="mt-8 flex flex-wrap items-start justify-between gap-8 print:block">
             {quote.notes && (
-                <div className="w-full md:w-1/2 print:w-full">
+                <div className="w-full md:w-1/2 print:w-full break-inside-avoid">
                     <div className="bg-muted/50 p-4 rounded-lg h-full">
                     <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
                     </div>
                 </div>
             )}
-             <div className="w-full max-w-xs ml-auto print:block print:w-full break-inside-avoid-page">
+             <div className="w-full max-w-xs ml-auto break-inside-avoid print:block print:w-full">
                 <div className="space-y-2 print:scale-75 print:origin-top-right print:ml-auto print:mr-0">
                     <div className="p-4 bg-muted/50 rounded-lg space-y-3 shadow-inner">
                       <div className="flex justify-between">
