@@ -92,7 +92,7 @@ export const defaultQuote: Quote = {
   currency: 'TRY',
   items: [
     {
-      id: 'default-item-1',
+      id: `item-${crypto.randomUUID()}`,
       description: '',
       quantity: 1,
       unit: 'adet',
