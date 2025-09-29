@@ -126,18 +126,17 @@ export default function QuotePage() {
  const saveCurrentQuote = useCallback(async () => {
     const currentData = getValues();
     
-    // Kaydetmeden önce Zod ile doğrula
     const validationResult = quoteSchema.safeParse(currentData);
     if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
         toast({
             title: "Kaydetme Başarısız",
-            description: `Lütfen zorunlu alanları doldurun. Hata: ${validationResult.error.errors[0].message}`,
+            description: `Lütfen zorunlu alanları doldurun. Hata: ${firstError.path.join('.')} - ${firstError.message}`,
             variant: 'destructive',
         });
-        return; // Doğrulama başarısızsa kaydetmeyi durdur
+        return;
     }
 
-    // Doğrulanmış veriyi al
     const dataToSave: Quote = {
         ...validationResult.data,
         updatedAt: new Date(),
@@ -349,7 +348,7 @@ export default function QuotePage() {
                 <QuoteForm 
                     calculations={calculations} 
                     customers={customers}
-                    onSetCustomer={handleSetCustomer}
+                    onSetCustomer={onSetCustomer}
                     onSaveCustomer={handleSaveCustomer}
                     companyProfiles={companyProfiles}
                     onSetCompanyProfile={handleSetCompanyProfile}
