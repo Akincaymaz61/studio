@@ -1,20 +1,29 @@
 diff --git a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
-index 2c84d72..0884938 100644
+index 548c267..5f8e356 100644
 --- a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
 +++ b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
-@@ -23,6 +23,7 @@ import { createPortal, findDOMNode } from 'react-dom';
- import memoizeOne from 'memoize-one';
+@@ -4619,7 +4619,10 @@
+   useDev(useDevSetupWarning);
  
- var index = (function (context, fn) {
-+  if (typeof document === 'undefined') return;
- 	var FakeWeakMap =
- 		'undefined' != typeof WeakMap
- 			? WeakMap
-@@ -5882,6 +5883,7 @@ var Droppable =
- /*<style>
- [data-rbd-droppable-context-id] {
- 	overflow-anchor: none;
-+  display: flow-root;
- }
- </style>*/
- Droppable.displayName = 'Droppable';
+   var _useState = useState(false),
+-      isEnabled = _useState[0],
+-      setIsEnabled = _useState[1];
+-
+-  useEffect(function () {
++    isEnabled = _useState[0],
++    setIsEnabled = _useState[1];
++  useEffect(function () {
++    if (isEnabled) return;
+     var unsub = dragDropManager.subscribe(function () {
+       return setIsEnabled(true);
+     });
+@@ -4627,7 +4630,7 @@
+     return function unsubscribe() {
+       unsub();
+     };
+-  }, []);
++  }, [isEnabled]);
+ 
+   if (!isEnabled) {
+     return null;
+
