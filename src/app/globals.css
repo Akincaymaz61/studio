@@ -73,7 +73,7 @@
     size: A4;
     margin: 0;
   }
-  body {
+  body, .print-container {
     background-color: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -81,13 +81,14 @@
   .no-print {
     display: none !important;
   }
-   *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     box-shadow: none !important;
     text-shadow: none !important;
+    border-color: transparent !important;
   }
   .print-container .bg-card {
-    background-color: transparent !important;
+    background-color: white !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }

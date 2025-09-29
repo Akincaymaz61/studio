@@ -75,7 +75,7 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
                 </div>
             </section>
 
-            <section className="mb-8">
+            <section className="mb-8 break-after-page">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-primary text-primary-foreground">
@@ -103,15 +103,17 @@ export function QuotePreview({ quote, calculations, onBackToEdit }: QuotePreview
             </section>
             
             <section className="mt-8">
-              {quote.notes && (
-                  <div className="w-full print:w-full mb-8 break-inside-avoid">
-                      <div className="bg-muted/50 p-4 rounded-lg h-full">
-                      <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                      <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+               <div className="break-inside-avoid-page">
+                  {quote.notes && (
+                      <div className="w-full mb-8">
+                          <div className="bg-muted/50 p-4 rounded-lg h-full">
+                          <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+                          </div>
                       </div>
-                  </div>
-              )}
-               <div className="w-full max-w-xs ml-auto break-inside-avoid print:w-full">
+                  )}
+               </div>
+               <div className="break-inside-avoid-page w-full max-w-xs ml-auto">
                   <div className="space-y-2">
                       <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                         <div className="flex justify-between">
