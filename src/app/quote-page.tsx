@@ -147,11 +147,7 @@ export default function QuotePage() {
     }
     if (modifier && event.key === 'p') {
       event.preventDefault();
-      setIsPreview(true);
-      setTimeout(() => {
-          window.print();
-          setIsPreview(false);
-      }, 100);
+      handlePdfExport();
     }
      if (modifier && event.key === 'n') {
       event.preventDefault();
@@ -192,8 +188,8 @@ export default function QuotePage() {
     setIsPreview(true);
     setTimeout(() => {
       window.print();
-      setIsPreview(false);
       document.title = originalTitle;
+      setIsPreview(false);
     }, 100);
   }, [getValues]);
 
