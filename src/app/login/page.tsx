@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Building } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth.tsx';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function LoginPage() {
         title: 'Giriş Başarılı',
         description: `Hoş geldiniz, ${username}.`,
       });
-      router.push('/');
+      router.push('/'); // Anında yönlendirme
     } else {
       toast({
         title: 'Giriş Başarısız',

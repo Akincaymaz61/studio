@@ -330,7 +330,11 @@ export default function QuotePage() {
 
 
   if (loading || !getValues('id')) {
-    return null;
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+    );
   }
 
   const KBD = ({ children }: { children: React.ReactNode }) => (
