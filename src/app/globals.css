@@ -88,12 +88,16 @@
     margin: 0;
   }
   body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    transform: scale(0.90);
+    transform-origin: top left;
+    width: 111%;
+    height: 111%;
     font-size: 9pt;
   }
   body, #__next, main {
     background-color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
   .no-print {
     display: none !important;
