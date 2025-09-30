@@ -45,7 +45,6 @@ export default function QuotePage() {
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       ...defaultQuote,
-      discountValue: 0
     }
   });
 
@@ -76,7 +75,6 @@ export default function QuotePage() {
           price: 0,
           tax: 20,
       }],
-      discountValue: 0,
       ...(currentCompanyInfo || {}),
     };
     return newQuote;
@@ -182,37 +180,55 @@ export default function QuotePage() {
     
     if (isMobile) {
       setIsGeneratingPdf(true);
-      setIsPreview(true); // Önizleme moduna geç
-      
-      // DOM'un güncellenmesi için kısa bir bekleme
+      setIsPreview(true);
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const printArea = document.getElementById('print-area');
       if (printArea) {
         try {
           const canvas = await html2canvas(printArea, {
-            scale: 2, // Daha yüksek çözünürlük için
+            scale: 2,
             useCORS: true,
             logging: false,
           });
           const imgData = canvas.toDataURL('image/png');
+          
           const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'px',
-            format: [canvas.width, canvas.height]
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
           });
-          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const canvasWidth = canvas.width;
+          const canvasHeight = canvas.height;
+          const canvasAspectRatio = canvasWidth / canvasHeight;
+          
+          let finalWidth = pdfWidth;
+          let finalHeight = finalWidth / canvasAspectRatio;
+
+          // Eğer yükseklik sayfaya sığmıyorsa, yüksekliğe göre ölçekle
+          if (finalHeight > pdfHeight) {
+            finalHeight = pdfHeight;
+            finalWidth = finalHeight * canvasAspectRatio;
+          }
+
+          const x = (pdfWidth - finalWidth) / 2;
+          const y = 0; 
+          
+          pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
           pdf.save(`${quoteNumber}.pdf`);
+
         } catch (error) {
           console.error("PDF oluşturulurken hata:", error);
           toast({ title: "PDF Oluşturulamadı", description: "PDF oluşturulurken bir hata meydana geldi.", variant: "destructive" });
         }
       }
       
-      setIsPreview(false); // Önizleme modundan çık
+      setIsPreview(false);
       setIsGeneratingPdf(false);
     } else {
-      // Masaüstü için mevcut yazdırma mantığı
       const originalTitle = document.title;
       document.title = quoteNumber;
       setIsPreview(true);

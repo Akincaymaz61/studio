@@ -32,6 +32,10 @@ export function ItemsTable() {
   };
   
   const handleNumericChange = (field: any, value: string) => {
+    if (value === '' || value === '-') {
+       field.onChange('');
+       return;
+    }
     const parsedValue = parseFloat(value);
     field.onChange(isNaN(parsedValue) ? '' : parsedValue);
   };
@@ -69,7 +73,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.quantity`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} value={field.value ?? ''} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-20" />}
+                      render={({ field }) => <Input type="number" {...field} value={field.value ?? 0} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-20" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -92,7 +96,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.price`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} value={field.value ?? ''} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-28" />}
+                      render={({ field }) => <Input type="number" {...field} value={field.value ?? 0} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-28" />}
                     />
                   </TableCell>
                   <TableCell>
