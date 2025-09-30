@@ -45,55 +45,7 @@ import { CompanyProfile, companyProfileSchema } from '@/lib/schema';
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-
-const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = document.createElement('img');
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      if (typeof e.target?.result !== 'string') {
-        return reject(new Error('Dosya okunamadı.'));
-      }
-      img.src = e.target.result;
-    };
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        return reject(new Error('Canvas oluşturulamadı.'));
-      }
-
-      let { width, height } = img;
-      const ratio = width / height;
-
-      if (width > maxWidth) {
-        width = maxWidth;
-        height = width / ratio;
-      }
-
-      if (height > maxHeight) {
-        height = maxHeight;
-        width = height * ratio;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-
-      ctx.drawImage(img, 0, 0, width, height);
-
-      resolve(canvas.toDataURL('image/png'));
-    };
-
-    img.onerror = (error) => {
-      reject(error);
-    };
-
-    reader.readAsDataURL(file);
-  });
-};
+import { uploadLogo } from '@/app/actions';
 
 
 const LogoUploader = ({
@@ -113,21 +65,29 @@ const LogoUploader = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB Limit
-        toast({ title: "Dosya Çok Büyük", description: "Lütfen 5MB'dan küçük bir logo dosyası seçin.", variant: "destructive" });
+    if (file.size > 4.5 * 1024 * 1024) { // Vercel Blob Hobby plan limit is 4.5MB
+        toast({ title: "Dosya Çok Büyük", description: "Lütfen 4.5MB'dan küçük bir logo dosyası seçin.", variant: "destructive" });
         return;
     }
 
     setIsProcessing(true);
     try {
-       const resizedDataUrl = await resizeImage(file, 240, 90);
-       onChange(resizedDataUrl);
-       toast({ title: "Logo Yüklendi", description: "Logo başarıyla yeniden boyutlandırıldı ve yüklendi." });
-    } catch (error) {
-      console.error("Image processing error:", error);
-      toast({ title: "Logo İşlenemedi", description: "Logo işlenirken bir hata oluştu.", variant: "destructive" });
+       const result = await uploadLogo(file);
+       if(result.success && result.url) {
+          onChange(result.url);
+          toast({ title: "Logo Yüklendi", description: "Logo başarıyla sunucuya yüklendi." });
+       } else {
+          throw new Error(result.error || "Bilinmeyen bir hata oluştu.");
+       }
+    } catch (error: any) {
+      console.error("Logo yükleme hatası:", error);
+      toast({ title: "Logo Yüklenemedi", description: error.message || "Logo sunucuya yüklenirken bir hata oluştu.", variant: "destructive" });
     } finally {
         setIsProcessing(false);
+        // Reset file input to allow re-uploading the same file
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     }
   };
 
@@ -157,7 +117,7 @@ const LogoUploader = ({
           disabled={isProcessing}
         >
           <Upload className="mr-2 h-4 w-4" />
-          {isProcessing ? 'İşleniyor...' : 'Logo Yükle'}
+          {isProcessing ? 'Yükleniyor...' : 'Logo Yükle'}
         </Button>
       </div>
       <Input
@@ -167,7 +127,7 @@ const LogoUploader = ({
         accept="image/png, image/jpeg, image/gif, image/webp"
         onChange={handleFileChange}
       />
-       <p className="text-xs text-muted-foreground">Logo otomatik olarak 240x90 piksel alana sığacak şekilde yeniden boyutlandırılacaktır.</p>
+       <p className="text-xs text-muted-foreground">En fazla 4.5 MB boyutunda bir resim dosyası yükleyebilirsiniz.</p>
     </div>
   );
 };
