@@ -40,7 +40,7 @@ const processLogoFlow = ai.defineFlow(
       model: 'googleai/gemini-2.5-flash-image-preview',
       prompt: [
         { media: { url: logoDataUri } },
-        { text: 'Take this logo. The final image dimensions must be exactly 240px wide and 90px tall. Resize the original logo to fit within these dimensions while maintaining its aspect ratio. Place the resized logo onto a completely transparent background. Do not add any shadows, borders, or effects. The output must be a PNG file with full transparency.' },
+        { text: 'Your task is to resize an image. Do not alter, edit, or change the content, design, or colors of the original logo in any way. The final image dimensions must be exactly 240px wide and 90px tall. Resize the original logo to fit within these dimensions while maintaining its aspect ratio. Place the resized logo onto a completely transparent background. The output must be a PNG file with full transparency.' },
       ],
       config: {
         responseModalities: ['IMAGE'],
