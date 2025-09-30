@@ -170,7 +170,7 @@ export default function QuotePage() {
   
   const handlePdfExport = useCallback(() => {
     if (typeof html2pdf === 'undefined') {
-        toast({ title: "Hata", description: "PDF oluşturma kütüphanesi henüz yüklenmedi.", variant: 'destructive'});
+        toast({ title: "Hata", description: "PDF oluşturma kütüphanesi henüz yüklenmedi. Lütfen bir saniye sonra tekrar deneyin.", variant: 'destructive'});
         return;
     }
     setIsPreview(true);
@@ -185,9 +185,18 @@ export default function QuotePage() {
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
-        html2pdf().from(element).set(opt).save().then(() => {
+        
+        const worker = html2pdf().from(element).set(opt);
+        
+        // Önce önizlemeden çık, sonra kaydetmeyi başlat. Bu, kullanıcı arayüzünün donmasını engeller.
+        worker.save().then(() => {
+             setIsPreview(false);
+        }).catch(err => {
+            console.error("PDF oluşturma hatası:", err);
+            toast({ title: "PDF Oluşturulamadı", description: "Beklenmedik bir hata oluştu.", variant: 'destructive' });
             setIsPreview(false);
         });
+
     }, 100);
   }, [getValues, toast]);
 
@@ -383,3 +392,5 @@ export default function QuotePage() {
         </FormProvider>
   );
 }
+
+    
