@@ -2,7 +2,7 @@
 
 Bu proje, [Firebase Studio](https://studio.firebase.google.com/) ortamında geliştirilmiş, Next.js tabanlı modern bir web uygulamasıdır. Tekliflerinizi kolayca oluşturmanıza, yönetmenize ve müşterilerinize göndermenize olanak tanır.
 
-Uygulamanın verileri, ücretsiz bir JSON depolama hizmeti olan **JSONBin.io** üzerinde kalıcı olarak saklanır.
+Uygulamanın verileri, ücretsiz bir JSON depolama hizmeti olan **JSONBin.io** üzerinde kalıcı olarak saklanır. Firma logoları ise doğrudan **Vercel Blob Storage** üzerinde barındırılır.
 
 ## Projeyi İndirme ve Kendi Sitenizde Yayınlama
 
@@ -52,9 +52,9 @@ Uygulamanızı Vercel'de yayınlamanın en kolay yolu, projenizi bir GitHub depo
 
 ---
 
-### Adım 4: Veritabanını Kurma (JSONBin.io) - EN ÖNEMLİ ADIM
+### Adım 4: Veritabanını Kurma (JSONBin.io)
 
-Uygulamanın verilerini saklayabilmesi için ücretsiz bir bulut veritabanı kurmamız gerekiyor.
+Uygulamanın metin verilerini (teklifler, müşteriler) saklayabilmesi için ücretsiz bir bulut veritabanı kurmamız gerekiyor.
 
 1.  **JSONBin.io'ya Kaydolun:**
     *   [jsonbin.io](https://jsonbin.io/) adresine gidin ve ücretsiz bir hesap oluşturun.
@@ -70,30 +70,35 @@ Uygulamanın verilerini saklayabilmesi için ücretsiz bir bulut veritabanı kur
 
 Artık elinizde 2 önemli bilgi var: **Bin ID** ve **API Anahtarı (X-Access-Key)**.
 
-### Adım 5: Projeyi Vercel'de Yayınlama ve Veritabanını Bağlama
+### Adım 5: Projeyi Vercel'de Yayınlama ve Ortam Değişkenlerini Ayarlama
 
 1.  **Vercel'e Kaydolun:** [vercel.com](https://vercel.com) adresine gidin ve GitHub hesabınızla giriş yapın.
 2.  **Vercel'de Yeni Proje Oluşturun:**
     *   Vercel kontrol panelinde "Add New... -> Project" seçeneğine tıklayın.
     *   Bir önceki adımda oluşturduğunuz GitHub deposunu seçin ve "Import" deyin.
-3.  **Ortam Değişkenlerini (Environment Variables) Ayarlayın:**
-    *   **Bu en kritik adımdır.** Vercel, uygulamanızın veritabanı gibi dış servislerle konuşabilmesi için bu değişkenlere ihtiyaç duyar.
+3.  **Vercel Blob Storage Entegrasyonu:**
     *   Projenizi Vercel'e aktardıktan sonra, projenizin ana sayfasına gidin.
-    *   Üst menüden **"Settings"** sekmesine tıklayın.
-    *   Soldaki menüden **"Environment Variables"** seçeneğini bulun.
-    *   Burada iki adet değişken oluşturacağız:
+    *   Üst menüden **"Storage"** sekmesine tıklayın ve **Vercel Blob**'u projenize bağlayın. Bu işlem genellikle tek bir tıklama ile tamamlanır.
+4.  **Ortam Değişkenlerini (Environment Variables) Ayarlayın:**
+    *   **Bu en kritik adımdır.** Vercel, uygulamanızın veritabanı ve dosya depolama gibi dış servislerle konuşabilmesi için bu değişkenlere ihtiyaç duyar.
+    *   Projenizin ana sayfasından **"Settings"** sekmesine ve soldaki menüden **"Environment Variables"** seçeneğine gidin.
+    *   Burada **üç adet** değişken oluşturacağız:
 
-        *   **Değişken 1:**
+        *   **Değişken 1 (Veritabanı API Anahtarı):**
             *   **Name:** `JSONBIN_API_KEY`
             *   **Value:** JSONBin.io'dan aldığınız **API Anahtarını (X-Access-Key)** buraya yapıştırın.
             *   "Add" butonuna tıklayın.
 
-        *   **Değişken 2:**
+        *   **Değişken 2 (Veritabanı ID):**
             *   **Name:** `JSONBIN_BIN_ID`
             *   **Value:** JSONBin.io'dan aldığınız **Bin ID**'yi buraya yapıştırın.
             *   "Add" butonuna tıklayın.
+        
+        *   **Değişken 3 (Logo Depolama Anahtarı):**
+            *   **Name:** `BLOB_READ_WRITE_TOKEN`
+            *   **Value:** Vercel projenizin "Settings" -> "Environment Variables" bölümünde bu değişkenin Vercel tarafından otomatik olarak oluşturulmuş olması gerekir. Değerini kopyalayıp buraya yapıştırmanıza gerek yoktur, Vercel bunu otomatik olarak projeye bağlar. Eğer burada listelenmiyorsa, Vercel projenizin **Storage** sekmesinden bir Blob mağazası oluşturduğunuzdan emin olun.
 
-4.  **Değişiklikleri Aktif Edin (Redeploy):**
+5.  **Değişiklikleri Aktif Edin (Redeploy):**
     *   Ortam değişkenlerini kaydettikten sonra, Vercel projenizin "Deployments" sekmesine gidin.
     *   En son dağıtımın yanındaki üç noktaya (...) tıklayın ve **"Redeploy"** seçeneğini seçin. Bu, Vercel'in projenizi yeni eklediğiniz değişkenlerle birlikte yeniden başlatmasını sağlar.
 
