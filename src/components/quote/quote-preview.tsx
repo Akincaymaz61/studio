@@ -27,7 +27,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
   }
   
   const companyProfile = companyProfiles.find(p => p.id === quote.companyProfileId);
-  const companyLogoUrl = companyProfile?.companyLogoUrl;
+  const companyLogoUrl = companyProfile?.companyLogoUrl || quote.companyLogoUrl;
 
   return (
     <div className="space-y-4">
