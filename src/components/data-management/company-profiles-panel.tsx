@@ -45,7 +45,56 @@ import { CompanyProfile, companyProfileSchema } from '@/lib/schema';
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { processLogo } from '@/ai/flows/process-logo-flow';
+
+const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (typeof e.target?.result !== 'string') {
+        return reject(new Error('Dosya okunamadı.'));
+      }
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        return reject(new Error('Canvas oluşturulamadı.'));
+      }
+
+      let { width, height } = img;
+      const ratio = width / height;
+
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / ratio;
+      }
+
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * ratio;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    img.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
+
 
 const LogoUploader = ({
   value,
@@ -71,25 +120,14 @@ const LogoUploader = ({
 
     setIsProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const logoDataUri = reader.result as string;
-        try {
-          const result = await processLogo({ logoDataUri });
-          onChange(result.optimizedLogoUrl);
-           toast({ title: "Logo İşlendi", description: "Logo başarıyla optimize edildi ve yüklendi." });
-        } catch (aiError) {
-          console.error("AI logo processing error:", aiError);
-          toast({ title: "Logo İşlenemedi", description: "Yapay zeka logoyu işlerken bir hata oluştu.", variant: "destructive" });
-        } finally {
-            setIsProcessing(false);
-        }
-      };
-      reader.readAsDataURL(file);
+       const resizedDataUrl = await resizeImage(file, 240, 90);
+       onChange(resizedDataUrl);
+       toast({ title: "Logo Yüklendi", description: "Logo başarıyla yeniden boyutlandırıldı ve yüklendi." });
     } catch (error) {
-      console.error("File reading error:", error);
-      toast({ title: "Dosya Okunamadı", description: "Logo dosyası okunurken bir hata oluştu.", variant: "destructive" });
-      setIsProcessing(false);
+      console.error("Image processing error:", error);
+      toast({ title: "Logo İşlenemedi", description: "Logo işlenirken bir hata oluştu.", variant: "destructive" });
+    } finally {
+        setIsProcessing(false);
     }
   };
 
@@ -129,7 +167,7 @@ const LogoUploader = ({
         accept="image/png, image/jpeg, image/gif, image/webp"
         onChange={handleFileChange}
       />
-       <p className="text-xs text-muted-foreground">Önerilen boyut: 240x90 piksel. PNG, JPG, GIF formatları desteklenir.</p>
+       <p className="text-xs text-muted-foreground">Logo otomatik olarak 240x90 piksel alana sığacak şekilde yeniden boyutlandırılacaktır.</p>
     </div>
   );
 };
