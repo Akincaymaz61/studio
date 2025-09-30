@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Quote, QuoteStatus, quoteStatusSchema, User, UserRole } from '@/lib/schema';
+import { Quote, QuoteStatus, quoteStatusSchema, User } from '@/lib/schema';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical, PlusCircle, Users, Briefcase } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -16,16 +16,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import UserManagement from '../data-management/user-management';
+import { useAuth } from '@/hooks/use-auth';
 
 interface DashboardProps {
   quotes: Quote[];
-  users: User[];
-  currentUser: User | null;
   onStatusChange: (quoteId: string, status: QuoteStatus) => void;
   onDeleteQuote: (quoteId: string) => void;
   onReviseQuote: (quoteId: string) => string | undefined;
-  onSaveUser: (user: User) => Promise<void>;
-  onDeleteUser: (userId: string) => Promise<void>;
 }
 
 const statusColors: Record<QuoteStatus, string> = {
@@ -148,11 +145,13 @@ const QuotesTable = ({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: {
   )
 }
 
-export default function Dashboard({ quotes, users, currentUser, onStatusChange, onDeleteQuote, onReviseQuote, onSaveUser, onDeleteUser }: DashboardProps) {
+export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: DashboardProps) {
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('all');
+  const { currentUser } = useAuth();
+
 
   const filteredQuotesByDate = useMemo(() => {
     const now = new Date();
@@ -257,11 +256,7 @@ export default function Dashboard({ quotes, users, currentUser, onStatusChange, 
                             <CardDescription>Alt kullanıcıları yönetin, ekleyin veya silin.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <UserManagement 
-                                users={users}
-                                onSaveUser={onSaveUser}
-                                onDeleteUser={onDeleteUser}
-                            />
+                            <UserManagement />
                         </CardContent>
                     </Card>
                 )}

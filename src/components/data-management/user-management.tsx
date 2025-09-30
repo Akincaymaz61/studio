@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { User, userSchema, userRoleSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
@@ -12,7 +12,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const UserForm = ({ user, onSave, closeDialog }: { user?: User; onSave: (data: User) => void; closeDialog: () => void; }) => {
     const form = useForm<User>({
@@ -74,19 +76,27 @@ const UserForm = ({ user, onSave, closeDialog }: { user?: User; onSave: (data: U
 };
 
 
-interface UserManagementProps {
-    users: User[];
-    onSaveUser: (user: User) => Promise<void>;
-    onDeleteUser: (userId: string) => Promise<void>;
-}
-
-export default function UserManagement({ users, onSaveUser, onDeleteUser }: UserManagementProps) {
+export default function UserManagement() {
     const [isFormOpen, setFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
+    const { users, addUser, deleteUser } = useAuth();
+    const { toast } = useToast();
     
-    const handleSave = async (user: User) => {
-        await onSaveUser(user);
+    const handleSave = (user: User) => {
+        addUser(user);
+        const isEditing = users.some(u => u.id === user.id);
+        toast({ title: `Kullanıcı ${isEditing ? 'Güncellendi' : 'Kaydedildi'}` });
     };
+
+    const handleDelete = (userId: string) => {
+        const success = deleteUser(userId);
+        if (success) {
+            toast({ title: 'Kullanıcı Silindi', variant: 'destructive' });
+        } else {
+            toast({ title: 'Silme Başarısız', description: 'Ana admin kullanıcısı silinemez.', variant: 'destructive' });
+        }
+    };
+
 
     return (
         <div className="space-y-4">
@@ -128,7 +138,7 @@ export default function UserManagement({ users, onSaveUser, onDeleteUser }: User
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>İptal</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => onDeleteUser(user.id)} className="bg-destructive hover:bg-destructive/90">
+                                                <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
                                                     Sil
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>

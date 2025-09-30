@@ -8,34 +8,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Building } from 'lucide-react';
-import { useQuoteLayout } from '@/components/quote/quote-layout';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { login, isAuthenticated, isAuthLoading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { users, loading, isAuthenticated } = useQuoteLayout();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isAuthLoading && isAuthenticated) {
       router.push('/');
     }
-  }, [isAuthenticated, router]);
-
+  }, [isAuthenticated, isAuthLoading, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (isAuthLoading) return;
 
-    const user = users.find(u => u.username === username && u.password === password);
+    const success = login(username, password);
 
-    if (user) {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('currentUser', JSON.stringify(user));
+    if (success) {
       toast({
         title: 'Giriş Başarılı',
-        description: `Hoş geldiniz, ${user.username}.`,
+        description: `Hoş geldiniz, ${username}.`,
       });
       router.push('/');
     } else {
@@ -85,7 +82,7 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={isAuthLoading}>
                 Giriş Yap
               </Button>
             </form>
