@@ -55,6 +55,7 @@ import {
   customerSchema,
 } from '@/lib/schema';
 import { useState } from 'react';
+import { ScrollArea } from '../ui/scroll-area';
 
 const CustomerForm = ({
   customer,
@@ -150,7 +151,7 @@ export default function CustomersPanel({
               <PlusCircle className="mr-2 h-4 w-4" /> Yeni Müşteri Ekle
             </Button>
           </div>
-            <div className="max-h-[70vh] overflow-y-auto border rounded-md">
+            <ScrollArea className="h-[75vh] border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -211,7 +212,7 @@ export default function CustomersPanel({
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
         </div>
       </SheetContent>
 

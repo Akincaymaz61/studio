@@ -10,6 +10,7 @@ const initialData: DbData = {
   quotes: [],
   customers: [],
   companyProfiles: [],
+  users: [],
 };
 
 function getHeaders() {

@@ -65,13 +65,32 @@ export const quoteSchema = z.object({
 export type Quote = z.infer<typeof quoteSchema>;
 export type QuoteItem = z.infer<typeof quoteItemSchema>;
 
+export const userRoleSchema = z.enum(['admin', 'user']);
+export type UserRole = z.infer<typeof userRoleSchema>;
+
+export const userSchema = z.object({
+  id: z.string(),
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  role: userRoleSchema.default('user'),
+});
+export type User = z.infer<typeof userSchema>;
+
+
 export const dbDataSchema = z.object({
     quotes: z.array(quoteSchema),
     customers: z.array(customerSchema),
     companyProfiles: z.array(companyProfileSchema),
+    users: z.array(userSchema),
 });
 export type DbData = z.infer<typeof dbDataSchema>;
 
+export const defaultAdminUser: User = {
+    id: 'user-admin-default',
+    username: 'admin',
+    password: '001998ac',
+    role: 'admin',
+};
 
 export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items' | 'companyName' | 'customerName'> = {
   companyAddress: '',

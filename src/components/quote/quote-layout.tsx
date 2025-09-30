@@ -20,27 +20,35 @@ import {
   Users,
   Loader2,
   LogOut,
+  UserCog
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import CompanyProfilesPanel from '../data-management/company-profiles-panel';
 import CustomersPanel from '../data-management/customers-panel';
-import { Customer, CompanyProfile, Quote, DbData, QuoteStatus } from '@/lib/schema';
+import { Customer, CompanyProfile, Quote, DbData, QuoteStatus, User, userSchema, defaultAdminUser } from '@/lib/schema';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getDbData, saveDbData } from '@/lib/db-actions';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
+import UserManagement from '../data-management/user-management';
+
 
 type QuoteLayoutContextType = {
   quotes: Quote[];
   customers: Customer[];
   companyProfiles: CompanyProfile[];
+  users: User[];
+  currentUser: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
   handleSaveAll: (data: DbData) => Promise<boolean>;
   handleSaveCustomer: (customer: Customer) => Promise<void>;
   handleDeleteCustomer: (id: string) => Promise<void>;
   handleSaveCompanyProfile: (profile: CompanyProfile) => Promise<void>;
   handleDeleteCompanyProfile: (id: string) => Promise<void>;
+  handleSaveUser: (user: User) => Promise<void>;
+  handleDeleteUser: (userId: string) => Promise<void>;
   handleStatusChange: (quoteId: string, status: QuoteStatus) => Promise<void>;
   handleDeleteQuote: (quoteId: string) => Promise<void>;
   handleReviseQuote: (quoteId: string) => string | undefined;
@@ -64,6 +72,9 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -71,6 +82,19 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     // Check for auth status only on client-side
     const authStatus = localStorage.getItem('isAuthenticated') === 'true';
     setIsAuthenticated(authStatus);
+
+    if (authStatus) {
+        const storedUser = localStorage.getItem('currentUser');
+        if(storedUser) {
+            try {
+                setCurrentUser(JSON.parse(storedUser));
+            } catch(e) {
+                console.error("Mevcut kullanıcı verisi okunamadı.", e);
+                handleLogout(); // Corrupted data, force logout
+            }
+        }
+    }
+
     if (!authStatus && pathname !== '/login') {
       router.push('/login');
     } else if (authStatus && pathname === '/login') {
@@ -83,10 +107,10 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     const result = await saveDbData(data);
     
     if (result.success) {
-      // Veritabanına başarıyla kaydedildiyse, local state'i güncelle
       setQuotes(data.quotes);
       setCustomers(data.customers);
       setCompanyProfiles(data.companyProfiles);
+      setUsers(data.users);
       return true;
     } else {
       console.error("Veritabanına kaydetme hatası: ", result.error);
@@ -100,16 +124,25 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated && pathname !== '/login') return;
     
     const fetchData = async () => {
       setLoading(true);
       try {
         const data = await getDbData();
-        // getDbData artık her zaman doğrulanmış veya boş bir DbData nesnesi döndürür.
         setQuotes(data.quotes);
         setCustomers(data.customers);
         setCompanyProfiles(data.companyProfiles);
+        // Ensure there is at least one admin user
+        if (data.users.length === 0) {
+            console.log("Kullanıcı listesi boş, varsayılan admin oluşturuluyor.");
+            const initialUsers = [defaultAdminUser];
+            setUsers(initialUsers);
+            await handleSaveAll({ ...data, users: initialUsers });
+        } else {
+            setUsers(data.users);
+        }
+
       } catch (error) {
         console.error('Veri yüklenirken beklenmedik bir hata oluştu:', error);
          toast({ title: "Kritik Veri Yükleme Hatası", description: "Veritabanı yüklenemedi. Lütfen konsol kayıtlarını kontrol edin.", variant: "destructive" });
@@ -118,7 +151,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       }
     };
     fetchData();
-  }, [toast, isAuthenticated]);
+  }, [toast, isAuthenticated, pathname, handleSaveAll]);
 
   const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
     const profileExists = companyProfiles.some(p => p.id === profile.id);
@@ -126,7 +159,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
       ? companyProfiles.map(p => p.id === profile.id ? profile : p)
       : [...companyProfiles, profile];
     
-    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles, users });
     if (success) {
         toast({ title: `Firma Profili ${profileExists ? 'Güncellendi' : 'Kaydedildi'}` });
     }
@@ -134,7 +167,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
 
   const handleDeleteCompanyProfile = async (profileId: string) => {
     const newProfiles = companyProfiles.filter(p => p.id !== profileId);
-    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles });
+    const success = await handleSaveAll({ quotes, customers, companyProfiles: newProfiles, users });
     if (success) {
         toast({ title: 'Profil Silindi', variant: 'destructive' });
     }
@@ -145,7 +178,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
      const newCustomers = customerExists
       ? customers.map(c => c.id === customer.id ? customer : c)
       : [...customers, customer];
-    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles, users });
     if (success) {
         toast({ title: `Müşteri ${customerExists ? 'Güncellendi' : 'Kaydedildi'}` });
     }
@@ -153,9 +186,32 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
 
   const handleDeleteCustomer = async (customerId: string) => {
     const newCustomers = customers.filter(c => c.id !== customerId);
-    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles });
+    const success = await handleSaveAll({ quotes, customers: newCustomers, companyProfiles, users });
     if (success) {
         toast({ title: 'Müşteri Silindi', variant: 'destructive' });
+    }
+  };
+  
+  const handleSaveUser = async (user: User) => {
+    const userExists = users.some(u => u.id === user.id);
+     const newUsers = userExists
+      ? users.map(u => u.id === user.id ? user : u)
+      : [...users, user];
+    const success = await handleSaveAll({ quotes, customers, companyProfiles, users: newUsers });
+    if (success) {
+        toast({ title: `Kullanıcı ${userExists ? 'Güncellendi' : 'Kaydedildi'}` });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (userId === defaultAdminUser.id) {
+        toast({ title: 'Silme Başarısız', description: 'Ana admin kullanıcısı silinemez.', variant: 'destructive' });
+        return;
+    }
+    const newUsers = users.filter(u => u.id !== userId);
+    const success = await handleSaveAll({ quotes, customers, companyProfiles, users: newUsers });
+    if (success) {
+        toast({ title: 'Kullanıcı Silindi', variant: 'destructive' });
     }
   };
 
@@ -163,7 +219,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     const newQuotes = quotes.map(q =>
       q.id === quoteId ? { ...q, status, updatedAt: new Date() } : q
     );
-    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles, users });
     if (success) {
         toast({ title: 'Teklif Durumu Güncellendi', description: `Teklif durumu "${status}" olarak değiştirildi.` });
     }
@@ -171,7 +227,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   
   const handleDeleteQuote = async (quoteId: string) => {
     const newQuotes = quotes.filter(q => q.id !== quoteId);
-    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles });
+    const success = await handleSaveAll({ quotes: newQuotes, customers, companyProfiles, users });
     if (success) {
          toast({
           title: "Teklif Silindi",
@@ -205,7 +261,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
 
     const newQuotesList = [...quotesWithRevision, newRevisionQuote];
     
-    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles }).then(success => {
+    handleSaveAll({ quotes: newQuotesList, customers, companyProfiles, users }).then(success => {
         if (success) {
              toast({
               title: "Teklif Revize Edildi",
@@ -219,7 +275,9 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
   
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('currentUser');
     setIsAuthenticated(false);
+    setCurrentUser(null);
     toast({
         title: 'Çıkış Yapıldı',
         description: 'Güvenli bir şekilde çıkış yaptınız.'
@@ -231,19 +289,28 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
     quotes,
     customers,
     companyProfiles,
+    users,
+    currentUser,
     loading,
+    isAuthenticated,
     handleSaveAll,
     handleSaveCustomer,
     handleDeleteCustomer,
     handleSaveCompanyProfile,
     handleDeleteCompanyProfile,
+    handleSaveUser,
+    handleDeleteUser,
     handleStatusChange,
     handleDeleteQuote,
     handleReviseQuote,
   };
   
-  if (pathname === '/login') {
-     return <main className="p-4 sm:p-6 md:p-8">{children}</main>;
+   if (pathname === '/login') {
+     return (
+       <QuoteLayoutContext.Provider value={contextValue}>
+         <main className="p-4 sm:p-6 md:p-8">{children}</main>
+       </QuoteLayoutContext.Provider>
+     );
   }
 
   if (!isAuthenticated) {
@@ -260,7 +327,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
         <Sidebar className="no-print">
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2">
-              <h2 className="text-xl font-bold text-primary">TeklifAI</h2>
+              <h2 className="text-xl font-bold text-primary">MEDIA ELA® | SATIŞ</h2>
             </div>
           </SidebarHeader>
           <SidebarContent>

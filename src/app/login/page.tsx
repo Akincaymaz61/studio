@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,21 +8,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Building } from 'lucide-react';
+import { useQuoteLayout } from '@/components/quote/quote-layout';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { users, loading, isAuthenticated } = useQuoteLayout();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple authentication for demo purposes
-    if (username === 'admin' && password === '001998ac') {
+    if (loading) return;
+
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (user) {
       localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('currentUser', JSON.stringify(user));
       toast({
         title: 'Giriş Başarılı',
-        description: 'Programa hoş geldiniz.',
+        description: `Hoş geldiniz, ${user.username}.`,
       });
       router.push('/');
     } else {
@@ -39,7 +52,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center text-center">
         <div className="flex items-center gap-2 mb-4">
             <Building className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-primary">TeklifAI</h1>
+            <h1 className="text-3xl font-bold text-primary">MEDIA ELA® | SATIŞ</h1>
         </div>
         <p className="text-2xl font-semibold mb-2">Fiyat Teklif Programına Hoşgeldiniz</p>
         <p className="text-muted-foreground mb-8">Devam etmek için lütfen giriş yapın.</p>
@@ -55,7 +68,7 @@ export default function LoginPage() {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="admin"
+                  placeholder="Kullanıcı adınız"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -72,15 +85,12 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={loading}>
                 Giriş Yap
               </Button>
             </form>
           </CardContent>
         </Card>
-         <p className="text-xs text-muted-foreground mt-6">
-            Demo için kullanıcı adı: <strong>admin</strong>, şifre: <strong>001998ac</strong>
-        </p>
       </div>
     </main>
   );

@@ -8,7 +8,7 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "TeklifAI",
+  title: "MEDIA ELA® | SATIŞ",
   description: "Yapay Zeka Destekli Fiyat Teklifi Oluşturucu",
 };
 

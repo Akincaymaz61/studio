@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Quote, QuoteStatus, quoteStatusSchema } from '@/lib/schema';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical } from 'lucide-react';
+import { Quote, QuoteStatus, quoteStatusSchema, User, UserRole } from '@/lib/schema';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical, PlusCircle, Users, Briefcase } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -15,12 +15,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import UserManagement from '../data-management/user-management';
 
 interface DashboardProps {
   quotes: Quote[];
+  users: User[];
+  currentUser: User | null;
   onStatusChange: (quoteId: string, status: QuoteStatus) => void;
   onDeleteQuote: (quoteId: string) => void;
   onReviseQuote: (quoteId: string) => string | undefined;
+  onSaveUser: (user: User) => Promise<void>;
+  onDeleteUser: (userId: string) => Promise<void>;
 }
 
 const statusColors: Record<QuoteStatus, string> = {
@@ -143,7 +148,7 @@ const QuotesTable = ({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: {
   )
 }
 
-export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onReviseQuote }: DashboardProps) {
+export default function Dashboard({ quotes, users, currentUser, onStatusChange, onDeleteQuote, onReviseQuote, onSaveUser, onDeleteUser }: DashboardProps) {
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | 'Tümü'>('Tümü');
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -232,16 +237,36 @@ export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onRev
                 <StatCard title="Reddedilenler" value={stats.Reddedildi} icon={<XCircle size={20} />} onClick={() => handleCardClick('Reddedildi')} colorClass="bg-red-500" />
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Son Aktiviteler</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <QuotesTable quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="grid gap-8 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Son Aktiviteler</CardTitle>
+                        <CardDescription>En son güncellenen 10 teklif.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <QuotesTable quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {currentUser?.role === 'admin' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Kullanıcı Yönetimi</CardTitle>
+                            <CardDescription>Alt kullanıcıları yönetin, ekleyin veya silin.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <UserManagement 
+                                users={users}
+                                onSaveUser={onSaveUser}
+                                onDeleteUser={onDeleteUser}
+                            />
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+
         </div>
         <DialogContent className="max-w-4xl">
             <DialogHeader>
