@@ -368,6 +368,8 @@ export default function QuotePage() {
                 <QuotePreview
                 quote={getValues()}
                 calculations={calculations}
+                companyProfiles={companyProfiles}
+                onBackToEdit={() => setIsPreview(false)}
                 />
             ) : (
                 <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {

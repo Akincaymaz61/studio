@@ -109,7 +109,15 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
             
             <section className="mt-8">
                 <div className="flex flex-col-reverse md:flex-row justify-between gap-8">
-                    <div className="w-full md:w-1/2 flex justify-end">
+                    <div className="w-full md:w-1/2">
+                        {quote.notes && (
+                            <div className="break-inside-avoid">
+                                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                                <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
+                            </div>
+                        )}
+                    </div>
+                     <div className="w-full md:w-1/2 flex justify-end">
                          <div className="w-full max-w-xs break-inside-avoid print-summary-box">
                             <div className="space-y-2">
                                 <div className="p-4 bg-muted/50 rounded-lg space-y-3">
@@ -134,14 +142,6 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                                 </div>
                             </div>
                         </div>
-                    </div>
-                     <div className="w-full md:w-1/2">
-                        {quote.notes && (
-                            <div className="break-inside-avoid">
-                                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                                <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
-                            </div>
-                        )}
                     </div>
                 </div>
             </section>
