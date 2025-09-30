@@ -292,6 +292,10 @@ export function QuoteForm({
         <ItemsTable />
       </FormSection>
       
+      <FormSection title="Notlar" icon={<StickyNote />}>
+        <RichTextEditor name="notes" />
+      </FormSection>
+
       <FormSection title="Özet" icon={<Calculator />}>
         <div className="flex justify-end">
           <div className="w-full max-w-sm space-y-4">
@@ -343,10 +347,6 @@ export function QuoteForm({
             </div>
           </div>
         </div>
-      </FormSection>
-
-      <FormSection title="Notlar" icon={<StickyNote />}>
-        <RichTextEditor name="notes" />
       </FormSection>
 
     </div>
