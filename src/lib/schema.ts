@@ -57,7 +57,7 @@ export const quoteSchema = z.object({
   notes: z.string().optional(),
   
   discountType: z.enum(['percentage', 'fixed']).default('percentage'),
-  discountValue: z.coerce.number().min(0).default(0),
+  discountValue: z.coerce.number().min(0).optional().default(0),
 
   status: quoteStatusSchema.default('Taslak'),
 });

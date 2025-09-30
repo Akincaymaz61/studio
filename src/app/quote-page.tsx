@@ -10,16 +10,22 @@ import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Keyboard } from 'lucide-react';
+import { Keyboard, Loader2 } from 'lucide-react';
 import { isMacOS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuoteLayout } from '@/components/quote/quote-layout';
+import { useIsMobile } from '@/hooks/use-mobile';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 export default function QuotePage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const {
     quotes,
@@ -37,6 +43,10 @@ export default function QuotePage() {
   
   const form = useForm<Quote>({
     resolver: zodResolver(quoteSchema),
+    defaultValues: {
+      ...defaultQuote,
+      discountValue: 0
+    }
   });
 
   const { handleSubmit, reset, watch, getValues, setValue, formState: { isDirty } } = form;
@@ -66,6 +76,7 @@ export default function QuotePage() {
           price: 0,
           tax: 20,
       }],
+      discountValue: 0,
       ...(currentCompanyInfo || {}),
     };
     return newQuote;
@@ -166,16 +177,53 @@ export default function QuotePage() {
   }, [getValues, quotes, customers, companyProfiles, handleSaveAll, toast]);
 
   
-  const handlePdfExport = useCallback(() => {
-    const originalTitle = document.title;
-    document.title = getValues('quoteNumber') || 'teklif';
-    setIsPreview(true);
-    setTimeout(() => {
-      window.print();
-      document.title = originalTitle;
-      setIsPreview(false);
-    }, 100);
-  }, [getValues]);
+  const handlePdfExport = useCallback(async () => {
+    const quoteNumber = getValues('quoteNumber') || 'teklif';
+    
+    if (isMobile) {
+      setIsGeneratingPdf(true);
+      setIsPreview(true); // Önizleme moduna geç
+      
+      // DOM'un güncellenmesi için kısa bir bekleme
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const printArea = document.getElementById('print-area');
+      if (printArea) {
+        try {
+          const canvas = await html2canvas(printArea, {
+            scale: 2, // Daha yüksek çözünürlük için
+            useCORS: true,
+            logging: false,
+          });
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${quoteNumber}.pdf`);
+        } catch (error) {
+          console.error("PDF oluşturulurken hata:", error);
+          toast({ title: "PDF Oluşturulamadı", description: "PDF oluşturulurken bir hata meydana geldi.", variant: "destructive" });
+        }
+      }
+      
+      setIsPreview(false); // Önizleme modundan çık
+      setIsGeneratingPdf(false);
+    } else {
+      // Masaüstü için mevcut yazdırma mantığı
+      const originalTitle = document.title;
+      document.title = quoteNumber;
+      setIsPreview(true);
+      setTimeout(() => {
+        window.print();
+        document.title = originalTitle;
+        setIsPreview(false);
+      }, 100);
+    }
+  }, [getValues, isMobile, toast]);
+
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
@@ -330,6 +378,7 @@ export default function QuotePage() {
             onPreviewToggle={() => setIsPreview(!isPreview)}
             onPdfExport={handlePdfExport}
             isPreviewing={isPreview}
+            isGeneratingPdf={isGeneratingPdf}
             savedQuotes={quotes}
             onLoadQuote={handleLoadQuote}
             onDeleteQuote={handleDeleteQuoteAndRedirect}

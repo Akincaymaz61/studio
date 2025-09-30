@@ -319,20 +319,25 @@ export function QuoteForm({
                             </Select>
                         </FormItem>
                     )} />
-                    <FormField name="discountValue" control={control} render={({ field }) => (
-                        <FormItem>
-                        <FormControl>
-                           <Input
-                              type="number"
-                              min="0"
-                              {...field}
-                              onChange={e => handleNumericChange(field, e.target.value)}
-                              onFocus={e => e.target.select()}
-                              className="w-24 h-8"
-                            />
-                        </FormControl>
-                        </FormItem>
-                    )} />
+                    <Controller
+                        name="discountValue"
+                        control={control}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                {...field}
+                                value={field.value ?? ''}
+                                onChange={e => handleNumericChange(field, e.target.value)}
+                                onFocus={e => e.target.select()}
+                                className="w-24 h-8"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
                 </div>
                 <span className="font-medium text-red-500">-{formatCurrency(calculations.discountAmount, currency)}</span>
             </div>

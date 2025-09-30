@@ -11,7 +11,6 @@ import { formatCurrency } from '@/lib/utils';
 
 export function ItemsTable() {
   const { control } = useFormContext<Quote>();
-
   const currency = useWatch({ control, name: 'currency' });
 
   const { fields, append, remove } = useFieldArray({
@@ -70,7 +69,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.quantity`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-20" />}
+                      render={({ field }) => <Input type="number" {...field} value={field.value ?? ''} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-20" />}
                     />
                   </TableCell>
                   <TableCell>
@@ -93,7 +92,7 @@ export function ItemsTable() {
                     <Controller
                       name={`items.${index}.price`}
                       control={control}
-                      render={({ field }) => <Input type="number" {...field} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-28" />}
+                      render={({ field }) => <Input type="number" {...field} value={field.value ?? ''} onChange={e => handleNumericChange(field, e.target.value)} onFocus={(e) => e.target.select()} className="w-28" />}
                     />
                   </TableCell>
                   <TableCell>

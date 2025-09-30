@@ -16,6 +16,7 @@ import {
   Trash2,
   List,
   Copy,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
@@ -28,6 +29,7 @@ type ToolbarProps = {
   onPreviewToggle: () => void;
   onPdfExport: () => void;
   isPreviewing: boolean;
+  isGeneratingPdf?: boolean;
   savedQuotes: Quote[];
   onLoadQuote: (quoteId: string) => void;
   onDeleteQuote: (quoteId: string) => void;
@@ -50,6 +52,7 @@ export function Toolbar({
   onPreviewToggle,
   onPdfExport,
   isPreviewing,
+  isGeneratingPdf,
   savedQuotes,
   onLoadQuote,
   onDeleteQuote,
@@ -132,7 +135,10 @@ export function Toolbar({
       <div className="flex flex-wrap gap-2">
         <Button onClick={onSaveQuote}><Save /> Teklifi Kaydet</Button>
         <Button variant="secondary" onClick={onPreviewToggle}><Eye /> {isPreviewing ? 'Düzenle' : 'Önizle'}</Button>
-        <Button variant="default" onClick={onPdfExport}><FileDown /> PDF İndir</Button>
+        <Button variant="default" onClick={onPdfExport} disabled={isGeneratingPdf}>
+          {isGeneratingPdf ? <Loader2 className="animate-spin" /> : <FileDown />}
+          {isGeneratingPdf ? 'Oluşturuluyor...' : 'PDF İndir'}
+        </Button>
       </div>
     </div>
   );
