@@ -28,17 +28,6 @@ export async function processLogo(input: ProcessLogoInput): Promise<ProcessLogoO
   return processLogoFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'processLogoPrompt',
-  input: {schema: ProcessLogoInputSchema},
-  output: {schema: ProcessLogoOutputSchema},
-  prompt: `You are an expert image processor. You will take the provided logo image and process it.
-The output should be a PNG file, resized to be 240px wide and 90px tall. The image should be optimized for web usage.
-Do not change the aspect ratio, fit it within the dimensions by padding with transparent background if necessary.
-Return the result as a data URI.
-
-Image: {{media url=logoDataUri}}`,
-});
 
 const processLogoFlow = ai.defineFlow(
   {
@@ -46,8 +35,24 @@ const processLogoFlow = ai.defineFlow(
     inputSchema: ProcessLogoInputSchema,
     outputSchema: ProcessLogoOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async ({ logoDataUri }) => {
+    const { media } = await ai.generate({
+      model: 'googleai/gemini-2.5-flash-image-preview',
+      prompt: [
+        { media: { url: logoDataUri } },
+        { text: 'Take this logo, resize it to be 240px wide and 90px tall. Maintain aspect ratio by padding with transparent background if necessary. Return the result as a PNG.' },
+      ],
+      config: {
+        responseModalities: ['IMAGE'],
+      }
+    });
+
+    if (!media?.url) {
+      throw new Error('AI did not return an optimized logo.');
+    }
+
+    return {
+      optimizedLogoUrl: media.url
+    };
   }
 );
