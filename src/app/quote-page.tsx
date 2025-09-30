@@ -168,11 +168,7 @@ export default function QuotePage() {
   }, [getValues, quotes, customers, companyProfiles, handleSaveAll, toast]);
 
   
-  const handlePdfExport = useCallback(() => {
-    if (typeof html2pdf === 'undefined') {
-        toast({ title: "Hata", description: "PDF oluşturma kütüphanesi henüz yüklenmedi. Lütfen bir saniye sonra tekrar deneyin.", variant: 'destructive'});
-        return;
-    }
+  const performPdfExport = useCallback(() => {
     setIsPreview(true);
     
     setTimeout(() => {
@@ -188,7 +184,6 @@ export default function QuotePage() {
         
         const worker = html2pdf().from(element).set(opt);
         
-        // Önce önizlemeden çık, sonra kaydetmeyi başlat. Bu, kullanıcı arayüzünün donmasını engeller.
         worker.save().then(() => {
              setIsPreview(false);
         }).catch(err => {
@@ -199,6 +194,24 @@ export default function QuotePage() {
 
     }, 100);
   }, [getValues, toast]);
+
+  const handlePdfExport = useCallback(() => {
+    const checkLibrary = (retries = 5, delay = 300) => {
+      if (typeof html2pdf !== 'undefined') {
+        performPdfExport();
+      } else if (retries > 0) {
+        setTimeout(() => checkLibrary(retries - 1, delay), delay);
+      } else {
+        toast({ 
+          title: "Hata", 
+          description: "PDF oluşturma kütüphanesi yüklenemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.", 
+          variant: 'destructive'
+        });
+      }
+    };
+    checkLibrary();
+  }, [performPdfExport, toast]);
+
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
@@ -392,5 +405,7 @@ export default function QuotePage() {
         </FormProvider>
   );
 }
+
+    
 
     
