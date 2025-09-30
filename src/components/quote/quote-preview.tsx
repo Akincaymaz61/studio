@@ -43,7 +43,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
 
       <div id="print-area" className="print-container">
         <Card className="print:shadow-none print:border-none print:rounded-none">
-          <CardContent className="p-8 md:p-12 print:p-12">
+          <CardContent className="p-8 md:p-12 print:p-8">
             <header className="flex justify-between items-start mb-8">
                 <div className="w-1/2">
                   {companyLogoUrl && (
@@ -62,8 +62,8 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 </div>
             </header>
             
-            <section className="grid grid-cols-2 gap-8 mt-8 mb-8 print:grid-cols-2">
-               <div>
+            <section className="grid grid-cols-2 gap-12 mt-8 mb-8 print:grid-cols-2">
+               <div className="text-sm leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                   <p className="font-bold">{quote.customerName}</p>
                   {quote.customerContact && <p>{quote.customerContact}</p>}
@@ -71,7 +71,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                   <p>Tel: {quote.customerPhone}</p>
                   <p>E-posta: {quote.customerEmail}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right text-sm leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Teklifi Veren:</h3>
                   <p className="font-bold">{quote.companyName}</p>
                   <p>{quote.companyAddress}</p>
