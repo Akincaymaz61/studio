@@ -18,7 +18,7 @@ export default function LoginPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Simple authentication for demo purposes
-    if (username === 'admin' && password === 'admin') {
+    if (username === 'admin' && password === '001998ac') {
       localStorage.setItem('isAuthenticated', 'true');
       toast({
         title: 'Giriş Başarılı',
@@ -79,7 +79,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
          <p className="text-xs text-muted-foreground mt-6">
-            Demo için kullanıcı adı: <strong>admin</strong>, şifre: <strong>admin</strong>
+            Demo için kullanıcı adı: <strong>admin</strong>, şifre: <strong>001998ac</strong>
         </p>
       </div>
     </main>
