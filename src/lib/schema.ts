@@ -4,7 +4,7 @@ import { addDays, format } from 'date-fns';
 export const companyProfileSchema = z.object({
   id: z.string(),
   companyName: z.string().min(1, 'Firma adı gereklidir'),
-  companyLogoId: z.string().optional(),
+  companyLogoUrl: z.string().optional(),
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
   companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),

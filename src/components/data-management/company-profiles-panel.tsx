@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Upload, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,12 +42,98 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { CompanyProfile, companyProfileSchema } from '@/lib/schema';
-import { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import Image from 'next/image';
-import { LOGOS } from '@/lib/logos';
-import { cn } from '@/lib/utils';
+import { processLogo } from '@/ai/flows/process-logo-flow';
+
+const LogoUploader = ({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (value: string) => void;
+}) => {
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB Limit
+        toast({ title: "Dosya Çok Büyük", description: "Lütfen 5MB'dan küçük bir logo dosyası seçin.", variant: "destructive" });
+        return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const logoDataUri = reader.result as string;
+        try {
+          const result = await processLogo({ logoDataUri });
+          onChange(result.optimizedLogoUrl);
+           toast({ title: "Logo İşlendi", description: "Logo başarıyla optimize edildi ve yüklendi." });
+        } catch (aiError) {
+          console.error("AI logo processing error:", aiError);
+          toast({ title: "Logo İşlenemedi", description: "Yapay zeka logoyu işlerken bir hata oluştu.", variant: "destructive" });
+        } finally {
+            setIsProcessing(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File reading error:", error);
+      toast({ title: "Dosya Okunamadı", description: "Logo dosyası okunurken bir hata oluştu.", variant: "destructive" });
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <FormLabel>Firma Logosu</FormLabel>
+      <div className="flex items-center gap-4">
+        <div className="w-40 h-20 rounded-md border flex items-center justify-center bg-muted/30 overflow-hidden">
+          {isProcessing ? (
+             <Loader2 className="animate-spin h-8 w-8 text-primary" />
+          ) : value ? (
+            <Image
+              src={value}
+              alt="Logo Önizleme"
+              width={160}
+              height={80}
+              className="object-contain"
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground">Önizleme</span>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessing}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          {isProcessing ? 'İşleniyor...' : 'Logo Yükle'}
+        </Button>
+      </div>
+      <Input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/png, image/jpeg, image/gif, image/webp"
+        onChange={handleFileChange}
+      />
+       <p className="text-xs text-muted-foreground">Önerilen boyut: 240x90 piksel. PNG, JPG, GIF formatları desteklenir.</p>
+    </div>
+  );
+};
+
 
 const CompanyProfileForm = ({
   profile,
@@ -64,7 +150,7 @@ const CompanyProfileForm = ({
       profile || {
         id: `CP-${Date.now()}`,
         companyName: '',
-        companyLogoId: 'logo1',
+        companyLogoUrl: '',
         companyAddress: '',
         companyPhone: '',
         companyEmail: '',
@@ -95,49 +181,10 @@ const CompanyProfileForm = ({
           />
           <FormField
             control={form.control}
-            name="companyLogoId"
+            name="companyLogoUrl"
             render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Firma Logosu Seçin</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="grid grid-cols-3 gap-4"
-                  >
-                    {LOGOS.map(logo => (
-                      <FormItem
-                        key={logo.id}
-                        className="flex items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <RadioGroupItem
-                            value={logo.id}
-                            id={logo.id}
-                            className="sr-only"
-                          />
-                        </FormControl>
-                        <FormLabel
-                          htmlFor={logo.id}
-                          className={cn(
-                            'flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer w-full',
-                            field.value === logo.id &&
-                              'border-primary'
-                          )}
-                        >
-                          <Image
-                            src={logo.url}
-                            alt={logo.name}
-                            width={120}
-                            height={45}
-                            className="mb-2 object-contain h-[45px]"
-                          />
-                          {logo.name}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
+              <FormItem>
+                <LogoUploader value={field.value} onChange={field.onChange} />
                 <FormMessage />
               </FormItem>
             )}
