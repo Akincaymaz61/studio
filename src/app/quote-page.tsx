@@ -181,26 +181,17 @@ export default function QuotePage() {
     if (isMobile) {
       setIsGeneratingPdf(true);
       setIsPreview(true);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait for preview to render
+      await new Promise(resolve => setTimeout(resolve, 200)); 
 
       const printArea = document.getElementById('print-area');
       if (printArea) {
         try {
-          // Temporarily scale down the content for the screenshot
-          printArea.style.transform = 'scale(0.5)';
-          printArea.style.transformOrigin = 'top left';
-
           const canvas = await html2canvas(printArea, {
-            scale: 2, // Use a higher scale for better resolution
+            scale: 2, // Capture at high resolution
             useCORS: true,
             logging: false,
-            width: printArea.scrollWidth,
-            height: printArea.scrollHeight,
           });
-
-          // Revert the style after taking the screenshot
-          printArea.style.transform = '';
-          printArea.style.transformOrigin = '';
 
           const imgData = canvas.toDataURL('image/png');
           
@@ -211,29 +202,15 @@ export default function QuotePage() {
           });
 
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const canvasAspectRatio = canvas.width / canvas.height;
+          const imgProps = pdf.getImageProperties(imgData);
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
           
-          let finalWidth = pdfWidth;
-          let finalHeight = finalWidth / canvasAspectRatio;
-
-          if (finalHeight > pdfHeight) {
-            finalHeight = pdfHeight;
-            finalWidth = finalHeight * canvasAspectRatio;
-          }
-          
-          pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           pdf.save(`${quoteNumber}.pdf`);
 
         } catch (error) {
           console.error("PDF oluşturulurken hata:", error);
           toast({ title: "PDF Oluşturulamadı", description: "PDF oluşturulurken bir hata meydana geldi.", variant: "destructive" });
-        } finally {
-           if (printArea) {
-             // Ensure styles are always reverted
-             printArea.style.transform = '';
-             printArea.style.transformOrigin = '';
-           }
         }
       }
       
@@ -445,5 +422,3 @@ export default function QuotePage() {
         </FormProvider>
   );
 }
-
-    
