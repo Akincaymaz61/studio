@@ -62,7 +62,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 </div>
             </header>
             
-            <section className="grid grid-cols-2 gap-12 mt-8 mb-8 print:grid-cols-2">
+            <section className="grid grid-cols-2 gap-8 mt-8 mb-8 print:grid-cols-2">
                <div>
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                   <p className="font-bold">{quote.customerName}</p>
