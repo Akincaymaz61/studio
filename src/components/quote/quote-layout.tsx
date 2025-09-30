@@ -267,7 +267,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link href="/">
-                  <SidebarMenuButton isActive={pathname === '/'}>
+                  <SidebarMenuButton size="lg" isActive={pathname === '/'}>
                     <LayoutDashboard />
                     Dashboard
                   </SidebarMenuButton>
@@ -275,7 +275,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Link href="/quote">
-                  <SidebarMenuButton isActive={pathname.startsWith('/quote')}>
+                  <SidebarMenuButton size="lg" isActive={pathname.startsWith('/quote')}>
                     <FilePlus2 />
                     Teklif Oluşturucu
                   </SidebarMenuButton>
@@ -286,7 +286,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
                   onSave={handleSaveCompanyProfile} 
                   onDelete={handleDeleteCompanyProfile}
               >
-                  <SidebarMenuButton>
+                  <SidebarMenuButton size="lg">
                       <Building />
                       Firma Profilleri
                   </SidebarMenuButton>
@@ -296,7 +296,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
                   onSave={handleSaveCustomer}
                   onDelete={handleDeleteCustomer}
               >
-                  <SidebarMenuButton>
+                  <SidebarMenuButton size="lg">
                       <Users />
                       Müşteriler
                   </SidebarMenuButton>
@@ -307,7 +307,7 @@ export function QuoteLayout({ children }: { children: React.ReactNode }) {
             <SidebarSeparator />
              <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout}>
+                    <SidebarMenuButton size="lg" onClick={handleLogout}>
                         <LogOut />
                         Çıkış Yap
                     </SidebarMenuButton>
