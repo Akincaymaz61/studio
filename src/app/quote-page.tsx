@@ -15,8 +15,8 @@ import { isMacOS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuoteLayout } from '@/components/quote/quote-layout';
+import html2pdf from 'html2pdf.js';
 
-declare const html2pdf: any;
 
 export default function QuotePage() {
   const { toast } = useToast();
@@ -168,11 +168,18 @@ export default function QuotePage() {
   }, [getValues, quotes, customers, companyProfiles, handleSaveAll, toast]);
 
   
-  const performPdfExport = useCallback(() => {
+  const handlePdfExport = useCallback(() => {
     setIsPreview(true);
     
+    // We need to wait for the DOM to update to preview mode.
     setTimeout(() => {
         const element = document.getElementById('print-area');
+        if (!element) {
+            toast({ title: "Hata", description: "PDF oluşturulacak alan bulunamadı.", variant: 'destructive'});
+            setIsPreview(false);
+            return;
+        }
+        
         const quoteNumber = getValues('quoteNumber') || 'teklif';
         const opt = {
             margin:       0,
@@ -182,9 +189,7 @@ export default function QuotePage() {
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
         
-        const worker = html2pdf().from(element).set(opt);
-        
-        worker.save().then(() => {
+        html2pdf().from(element).set(opt).save().then(() => {
              setIsPreview(false);
         }).catch(err => {
             console.error("PDF oluşturma hatası:", err);
@@ -194,23 +199,6 @@ export default function QuotePage() {
 
     }, 100);
   }, [getValues, toast]);
-
-  const handlePdfExport = useCallback(() => {
-    const checkLibrary = (retries = 5, delay = 300) => {
-      if (typeof html2pdf !== 'undefined') {
-        performPdfExport();
-      } else if (retries > 0) {
-        setTimeout(() => checkLibrary(retries - 1, delay), delay);
-      } else {
-        toast({ 
-          title: "Hata", 
-          description: "PDF oluşturma kütüphanesi yüklenemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.", 
-          variant: 'destructive'
-        });
-      }
-    };
-    checkLibrary();
-  }, [performPdfExport, toast]);
 
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -286,6 +274,7 @@ export default function QuotePage() {
       setValue('companyPhone', profile.companyPhone || '');
       setValue('companyEmail', profile.companyEmail || '');
       setValue('companyProfileId', profile.id);
+      setValue('companyLogoUrl', profile.companyLogoUrl || '');
     }
   };
   
@@ -379,8 +368,6 @@ export default function QuotePage() {
                 <QuotePreview
                 quote={getValues()}
                 calculations={calculations}
-                companyProfiles={companyProfiles}
-                onBackToEdit={() => setIsPreview(false)}
                 />
             ) : (
                 <form onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => {
@@ -405,7 +392,3 @@ export default function QuotePage() {
         </FormProvider>
   );
 }
-
-    
-
-    
