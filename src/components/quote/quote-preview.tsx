@@ -44,7 +44,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
       <div id="print-area" className="print-container">
         <Card className="print:shadow-none print:border-none print:rounded-none">
           <CardContent className="p-8 md:p-12 print:p-8">
-            <header className="flex justify-between items-start mb-8">
+            <header className="flex justify-between items-start mb-8 break-after-avoid">
                 <div className="w-1/2">
                   {companyLogoUrl && (
                     <div className="mb-4 relative w-56 h-28">
@@ -62,25 +62,25 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 </div>
             </header>
             
-            <section className="grid grid-cols-2 gap-8 mt-8 mb-8 print:grid-cols-2">
-               <div className="text-sm leading-snug space-y-1">
+            <section className="grid grid-cols-2 gap-12 mt-8 mb-8 break-after-avoid print:grid-cols-2">
+               <div className="leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
-                  <p className="font-bold">{quote.customerName}</p>
+                  <p className="font-bold text-sm">{quote.customerName}</p>
                   {quote.customerContact && <p className="text-sm">{quote.customerContact}</p>}
                   <p className="text-sm">{quote.customerAddress}</p>
                   <p className="text-sm">Tel: {quote.customerPhone}</p>
                   <p className="text-sm">E-posta: {quote.customerEmail}</p>
                 </div>
-                <div className="text-right text-sm leading-snug space-y-1">
+                <div className="text-right leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Teklifi Veren:</h3>
-                  <p className="font-bold">{quote.companyName}</p>
+                  <p className="font-bold text-sm">{quote.companyName}</p>
                   <p className="text-sm">{quote.companyAddress}</p>
                   <p className="text-sm">Tel: {quote.companyPhone}</p>
                   <p className="text-sm">E-posta: {quote.companyEmail}</p>
                 </div>
             </section>
 
-            <section className="mb-8">
+            <section className="mb-8 break-inside-avoid-page">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-primary text-primary-foreground">
@@ -94,7 +94,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 </thead>
                 <tbody>
                   {quote.items.map((item, index) => (
-                    <tr key={item.id} className={cn("border-b", index % 2 === 0 ? 'bg-white' : 'bg-muted/50')}>
+                    <tr key={item.id} className={cn("border-b break-inside-avoid", index % 2 === 0 ? 'bg-white' : 'bg-muted/50')}>
                       <td className="p-3">{item.description}</td>
                       <td className="p-3 text-center">{item.quantity}</td>
                       <td className="p-3 text-center">{item.unit}</td>
@@ -107,15 +107,15 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
               </table>
             </section>
             
-            <section className="mt-8">
+            <section className="mt-8 break-inside-avoid-page">
                 {quote.notes && (
-                    <div className="mb-8">
+                    <div className="mb-8 break-inside-avoid">
                         <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
                         <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
                     </div>
                 )}
                 
-                <div className="ml-auto w-full max-w-xs break-inside-avoid">
+                <div className="ml-auto w-full max-w-sm break-inside-avoid">
                     <div className="space-y-2">
                         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                         <div className="flex justify-between">
@@ -133,7 +133,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                             <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
                         </div>
                         </div>
-                        <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground">
+                        <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground print-summary-box">
                             <span>Genel Toplam:</span>
                             <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                         </div>

@@ -75,6 +75,10 @@
     .break-inside-avoid-page {
         break-inside: avoid-page;
     }
+    .print-summary-box {
+      transform-origin: bottom right;
+      transform: scale(0.82);
+    }
 }
 
 
