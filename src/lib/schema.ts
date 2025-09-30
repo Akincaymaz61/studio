@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { addDays, format } from 'date-fns';
 
 export const companyProfileSchema = z.object({
   id: z.string(),
@@ -39,6 +38,7 @@ export const quoteSchema = z.object({
   companyAddress: z.string().optional(),
   companyPhone: z.string().optional(),
   companyEmail: z.string().email('Geçersiz e-posta').optional().or(z.literal('')),
+  companyLogoUrl: z.string().optional(),
   companyProfileId: z.string().optional(),
   
   customerName: z.string().min(1, "Müşteri adı boş bırakılamaz."),
@@ -76,15 +76,15 @@ export const userSchema = z.object({
 });
 export type User = z.infer<typeof userSchema>;
 
-
+// This is the schema for the data stored in JSONBin
 export const dbDataSchema = z.object({
     quotes: z.array(quoteSchema),
     customers: z.array(customerSchema),
     companyProfiles: z.array(companyProfileSchema),
-    users: z.array(userSchema),
 });
 export type DbData = z.infer<typeof dbDataSchema>;
 
+// Default user for initial setup
 export const defaultAdminUser: User = {
     id: 'user-admin-default',
     username: 'admin',
@@ -96,6 +96,7 @@ export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'val
   companyAddress: '',
   companyPhone: '',
   companyEmail: '',
+  companyLogoUrl: '',
   companyProfileId: undefined,
   customerContact: '',
   customerAddress: '',
