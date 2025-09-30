@@ -200,15 +200,21 @@ export default function QuotePage() {
           });
 
           const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
           const canvasWidth = canvas.width;
           const canvasHeight = canvas.height;
           const canvasAspectRatio = canvasWidth / canvasHeight;
           
-          const finalWidth = pdfWidth * 0.95; // Use 95% of page width to have some margin
-          const finalHeight = finalWidth / canvasAspectRatio;
+          let finalWidth = pdfWidth;
+          let finalHeight = finalWidth / canvasAspectRatio;
+
+          if (finalHeight > pdfHeight) {
+            finalHeight = pdfHeight;
+            finalWidth = finalHeight * canvasAspectRatio;
+          }
           
           const x = (pdfWidth - finalWidth) / 2;
-          const y = x; // Use same margin for top
+          const y = 0;
           
           pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
           pdf.save(`${quoteNumber}.pdf`);
