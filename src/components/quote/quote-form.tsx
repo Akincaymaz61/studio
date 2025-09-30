@@ -328,6 +328,7 @@ export function QuoteForm({
                               <Input
                                 type="number"
                                 min="0"
+                                {...field}
                                 value={field.value ?? 0}
                                 onChange={e => handleNumericChange(field, e.target.value)}
                                 onFocus={e => e.target.select()}
