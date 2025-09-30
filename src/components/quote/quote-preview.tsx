@@ -107,24 +107,16 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
               </table>
             </section>
             
-<<<<<<< HEAD
-            <section className="mt-8 break-inside-avoid-page">
-                {quote.notes && (
-                    <div className="mb-8 break-inside-avoid">
-                        <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                        <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
-                    </div>
-                )}
-                
-                <div className="ml-auto w-full max-w-sm break-inside-avoid">
-                    <div className="space-y-2">
-                        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Ara Toplam:</span>
-                            <span className="font-medium">{formatCurrency(calculations.subtotal, quote.currency)}</span>
-=======
             <section className="mt-8">
                 <div className="flex flex-col-reverse md:flex-row justify-between gap-8">
+                     <div className="w-full md:w-1/2">
+                        {quote.notes && (
+                            <div className="break-inside-avoid">
+                                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
+                                <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
+                            </div>
+                        )}
+                    </div>
                     <div className="w-full md:w-1/2 flex justify-end">
                          <div className="w-full max-w-xs break-inside-avoid print-summary-box">
                             <div className="space-y-2">
@@ -149,28 +141,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                                     <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
                                 </div>
                             </div>
->>>>>>> bcc982b718e0be872b82866e281cc39f4bf7ba17
                         </div>
-                    </div>
-                     <div className="w-full md:w-1/2">
-                        {quote.notes && (
-                            <div className="break-inside-avoid">
-                                <h3 className="font-semibold mb-2 text-primary">Notlar:</h3>
-                                <div className="text-sm text-gray-800 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.notes }} />
-                            </div>
-                        )}
-<<<<<<< HEAD
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">KDV Toplam:</span>
-                            <span className="font-medium">{formatCurrency(calculations.taxTotal, quote.currency)}</span>
-                        </div>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg p-4 rounded-lg bg-primary text-primary-foreground print-summary-box">
-                            <span>Genel Toplam:</span>
-                            <span>{formatCurrency(calculations.grandTotal, quote.currency)}</span>
-                        </div>
-=======
->>>>>>> bcc982b718e0be872b82866e281cc39f4bf7ba17
                     </div>
                 </div>
             </section>

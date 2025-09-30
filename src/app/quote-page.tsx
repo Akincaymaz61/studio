@@ -15,13 +15,9 @@ import { isMacOS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuoteLayout } from '@/components/quote/quote-layout';
-<<<<<<< HEAD
 import { useIsMobile } from '@/hooks/use-mobile';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-=======
-import html2pdf from 'html2pdf.js';
->>>>>>> bcc982b718e0be872b82866e281cc39f4bf7ba17
 
 
 export default function QuotePage() {
@@ -179,7 +175,6 @@ export default function QuotePage() {
   }, [getValues, quotes, customers, companyProfiles, handleSaveAll, toast]);
 
   
-<<<<<<< HEAD
   const handlePdfExport = useCallback(async () => {
     const quoteNumber = getValues('quoteNumber') || 'teklif';
     
@@ -232,39 +227,6 @@ export default function QuotePage() {
       }, 100);
     }
   }, [getValues, isMobile, toast]);
-=======
-  const handlePdfExport = useCallback(() => {
-    setIsPreview(true);
-    
-    // We need to wait for the DOM to update to preview mode.
-    setTimeout(() => {
-        const element = document.getElementById('print-area');
-        if (!element) {
-            toast({ title: "Hata", description: "PDF oluşturulacak alan bulunamadı.", variant: 'destructive'});
-            setIsPreview(false);
-            return;
-        }
-        
-        const quoteNumber = getValues('quoteNumber') || 'teklif';
-        const opt = {
-            margin:       0,
-            filename:     `${quoteNumber}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-        };
-        
-        html2pdf().from(element).set(opt).save().then(() => {
-             setIsPreview(false);
-        }).catch(err => {
-            console.error("PDF oluşturma hatası:", err);
-            toast({ title: "PDF Oluşturulamadı", description: "Beklenmedik bir hata oluştu.", variant: 'destructive' });
-            setIsPreview(false);
-        });
-
-    }, 100);
-  }, [getValues, toast]);
->>>>>>> bcc982b718e0be872b82866e281cc39f4bf7ba17
 
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
