@@ -105,10 +105,6 @@
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  .print-summary-box {
-    transform: scale(0.82);
-    transform-origin: bottom right;
-  }
   .break-inside-avoid {
     break-inside: avoid;
   }

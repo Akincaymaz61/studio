@@ -62,21 +62,21 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                 </div>
             </header>
             
-            <section className="grid grid-cols-2 gap-12 mt-8 mb-8 print:grid-cols-2">
+            <section className="grid grid-cols-2 gap-8 mt-8 mb-8 print:grid-cols-2">
                <div className="text-sm leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Müşteri Bilgileri:</h3>
                   <p className="font-bold">{quote.customerName}</p>
-                  {quote.customerContact && <p>{quote.customerContact}</p>}
-                  <p>{quote.customerAddress}</p>
-                  <p>Tel: {quote.customerPhone}</p>
-                  <p>E-posta: {quote.customerEmail}</p>
+                  {quote.customerContact && <p className="text-sm">{quote.customerContact}</p>}
+                  <p className="text-sm">{quote.customerAddress}</p>
+                  <p className="text-sm">Tel: {quote.customerPhone}</p>
+                  <p className="text-sm">E-posta: {quote.customerEmail}</p>
                 </div>
                 <div className="text-right text-sm leading-snug space-y-1">
                   <h3 className="text-primary font-semibold mb-2 border-b border-primary/20 pb-1">Teklifi Veren:</h3>
                   <p className="font-bold">{quote.companyName}</p>
-                  <p>{quote.companyAddress}</p>
-                  <p>Tel: {quote.companyPhone}</p>
-                  <p>E-posta: {quote.companyEmail}</p>
+                  <p className="text-sm">{quote.companyAddress}</p>
+                  <p className="text-sm">Tel: {quote.companyPhone}</p>
+                  <p className="text-sm">E-posta: {quote.companyEmail}</p>
                 </div>
             </section>
 
@@ -115,7 +115,7 @@ export function QuotePreview({ quote, calculations, companyProfiles, onBackToEdi
                     </div>
                 )}
                 
-                <div className="ml-auto w-full max-w-xs break-inside-avoid print-summary-box">
+                <div className="ml-auto w-full max-w-xs break-inside-avoid">
                     <div className="space-y-2">
                         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                         <div className="flex justify-between">

@@ -186,11 +186,22 @@ export default function QuotePage() {
       const printArea = document.getElementById('print-area');
       if (printArea) {
         try {
+          // Temporarily scale down the content for the screenshot
+          printArea.style.transform = 'scale(0.5)';
+          printArea.style.transformOrigin = 'top left';
+
           const canvas = await html2canvas(printArea, {
-            scale: 2,
+            scale: 2, // Use a higher scale for better resolution
             useCORS: true,
             logging: false,
+            width: printArea.scrollWidth,
+            height: printArea.scrollHeight,
           });
+
+          // Revert the style after taking the screenshot
+          printArea.style.transform = '';
+          printArea.style.transformOrigin = '';
+
           const imgData = canvas.toDataURL('image/png');
           
           const pdf = new jsPDF({
@@ -201,9 +212,7 @@ export default function QuotePage() {
 
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
-          const canvasWidth = canvas.width;
-          const canvasHeight = canvas.height;
-          const canvasAspectRatio = canvasWidth / canvasHeight;
+          const canvasAspectRatio = canvas.width / canvas.height;
           
           let finalWidth = pdfWidth;
           let finalHeight = finalWidth / canvasAspectRatio;
@@ -213,15 +222,18 @@ export default function QuotePage() {
             finalWidth = finalHeight * canvasAspectRatio;
           }
           
-          const x = (pdfWidth - finalWidth) / 2;
-          const y = 0;
-          
-          pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+          pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
           pdf.save(`${quoteNumber}.pdf`);
 
         } catch (error) {
           console.error("PDF oluşturulurken hata:", error);
           toast({ title: "PDF Oluşturulamadı", description: "PDF oluşturulurken bir hata meydana geldi.", variant: "destructive" });
+        } finally {
+           if (printArea) {
+             // Ensure styles are always reverted
+             printArea.style.transform = '';
+             printArea.style.transformOrigin = '';
+           }
         }
       }
       
