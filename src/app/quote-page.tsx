@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, quoteSchema, defaultQuote, QuoteStatus, Customer } from '@/lib/schema';
+import { Quote, quoteSchema, defaultQuote, QuoteStatus, Customer, CompanyProfile } from '@/lib/schema';
 import { Toolbar } from '@/components/quote/toolbar';
 import { QuoteForm } from '@/components/quote/quote-form';
 import { QuotePreview } from '@/components/quote/quote-preview';
@@ -15,6 +15,8 @@ import { isMacOS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuoteLayout } from '@/components/quote/quote-layout';
+
+declare const html2pdf: any;
 
 export default function QuotePage() {
   const { toast } = useToast();
@@ -167,15 +169,27 @@ export default function QuotePage() {
 
   
   const handlePdfExport = useCallback(() => {
-    const originalTitle = document.title;
-    document.title = getValues('quoteNumber') || 'teklif';
+    if (typeof html2pdf === 'undefined') {
+        toast({ title: "Hata", description: "PDF oluşturma kütüphanesi henüz yüklenmedi.", variant: 'destructive'});
+        return;
+    }
     setIsPreview(true);
+    
     setTimeout(() => {
-      window.print();
-      document.title = originalTitle;
-      setIsPreview(false);
+        const element = document.getElementById('print-area');
+        const quoteNumber = getValues('quoteNumber') || 'teklif';
+        const opt = {
+            margin:       0,
+            filename:     `${quoteNumber}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(element).set(opt).save().then(() => {
+            setIsPreview(false);
+        });
     }, 100);
-  }, [getValues]);
+  }, [getValues, toast]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const modifier = isMacOS() ? event.metaKey : event.ctrlKey;
