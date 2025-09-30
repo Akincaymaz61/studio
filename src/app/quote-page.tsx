@@ -200,22 +200,15 @@ export default function QuotePage() {
           });
 
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
           const canvasWidth = canvas.width;
           const canvasHeight = canvas.height;
           const canvasAspectRatio = canvasWidth / canvasHeight;
           
-          let finalWidth = pdfWidth;
-          let finalHeight = finalWidth / canvasAspectRatio;
-
-          // Eğer yükseklik sayfaya sığmıyorsa, yüksekliğe göre ölçekle
-          if (finalHeight > pdfHeight) {
-            finalHeight = pdfHeight;
-            finalWidth = finalHeight * canvasAspectRatio;
-          }
-
+          const finalWidth = pdfWidth * 0.95; // Use 95% of page width to have some margin
+          const finalHeight = finalWidth / canvasAspectRatio;
+          
           const x = (pdfWidth - finalWidth) / 2;
-          const y = 0; 
+          const y = x; // Use same margin for top
           
           pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
           pdf.save(`${quoteNumber}.pdf`);
@@ -434,3 +427,5 @@ export default function QuotePage() {
         </FormProvider>
   );
 }
+
+    
