@@ -166,7 +166,7 @@ export function QuoteForm({
               <FormField name="companyName" control={control} render={({ field }) => (
                 <FormItem>
                   <FormLabel>Firma Adı</FormLabel>
-                  <FormControl><Input placeholder="Firma adınızı girin" {...field} /></FormControl>
+                  <FormControl><Input placeholder="Firma adınızı girin" {...field} value={field.value ?? ''} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -177,20 +177,20 @@ export function QuoteForm({
           <FormField name="companyAddress" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>Firma Adresi</FormLabel>
-              <FormControl><Textarea placeholder="Firma adresinizi girin" {...field} /></FormControl>
+              <FormControl><Textarea placeholder="Firma adresinizi girin" {...field} value={field.value ?? ''} /></FormControl>
             </FormItem>
           )} />
           <div className="grid sm:grid-cols-2 gap-6">
             <FormField name="companyPhone" control={control} render={({ field }) => (
               <FormItem>
                 <FormLabel>Telefon</FormLabel>
-                <FormControl><Input placeholder="Telefon" {...field} /></FormControl>
+                <FormControl><Input placeholder="Telefon" {...field} value={field.value ?? ''} /></FormControl>
               </FormItem>
             )} />
             <FormField name="companyEmail" control={control} render={({ field }) => (
               <FormItem>
                 <FormLabel>E-posta</FormLabel>
-                <FormControl><Input type="email" placeholder="E-posta" {...field} /></FormControl>
+                <FormControl><Input type="email" placeholder="E-posta" {...field} value={field.value ?? ''} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -204,7 +204,7 @@ export function QuoteForm({
                  <FormField name="customerName" control={control} render={({ field }) => (
                   <FormItem>
                     <FormLabel>Müşteri Adı</FormLabel>
-                    <FormControl><Input placeholder="Müşteri adını girin..." {...field} /></FormControl>
+                    <FormControl><Input placeholder="Müşteri adını girin..." {...field} value={field.value ?? ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -212,7 +212,7 @@ export function QuoteForm({
                 <FormField name="customerContact" control={control} render={({ field }) => (
                     <FormItem>
                     <FormLabel>İlgili Kişi</FormLabel>
-                    <FormControl><Input placeholder="İletişim kurulacak kişi" {...field} /></FormControl>
+                    <FormControl><Input placeholder="İletişim kurulacak kişi" {...field} value={field.value ?? ''} /></FormControl>
                     </FormItem>
                 )} />
             </div>
@@ -224,21 +224,21 @@ export function QuoteForm({
         <FormField name="customerAddress" control={control} render={({ field }) => (
           <FormItem>
             <FormLabel>Müşteri Adresi</FormLabel>
-            <FormControl><Textarea placeholder="Müşteri adresini girin" {...field} /></FormControl>
+            <FormControl><Textarea placeholder="Müşteri adresini girin" {...field} value={field.value ?? ''} /></FormControl>
           </FormItem>
         )} />
         <div className="grid md:grid-cols-2 gap-6">
           <FormField name="customerEmail" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>E-posta</FormLabel>
-              <FormControl><Input type="email" placeholder="Müşteri e-posta adresi" {...field} /></FormControl>
+              <FormControl><Input type="email" placeholder="Müşteri e-posta adresi" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
           <FormField name="customerPhone" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>Telefon</FormLabel>
-              <FormControl><Input placeholder="Müşteri telefon numarası" {...field} /></FormControl>
+              <FormControl><Input placeholder="Müşteri telefon numarası" {...field} value={field.value ?? ''} /></FormControl>
             </FormItem>
           )} />
         </div>
@@ -255,7 +255,7 @@ export function QuoteForm({
           <FormField name="quoteNumber" control={control} render={({ field }) => (
             <FormItem>
               <FormLabel>Teklif Numarası</FormLabel>
-              <FormControl><Input placeholder="TEK-2025-001" {...field} /></FormControl>
+              <FormControl><Input placeholder="TEK-2025-001" {...field} value={field.value ?? ''} /></FormControl>
             </FormItem>
           )} />
           <FormField name="quoteDate" control={control} render={({ field }) => (
@@ -329,7 +329,7 @@ export function QuoteForm({
                                 type="number"
                                 min="0"
                                 {...field}
-                                value={field.value ?? 0}
+                                value={field.value ?? ''}
                                 onChange={e => handleNumericChange(field, e.target.value)}
                                 onFocus={e => e.target.select()}
                                 className="w-24 h-8"
