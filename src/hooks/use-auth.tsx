@@ -36,7 +36,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     try {
-        const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+        let storedUsers = null;
+        if (typeof window !== 'undefined') {
+            storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+        }
+        
         if (storedUsers) {
             const parsedUsers = JSON.parse(storedUsers);
             const adminExists = parsedUsers.some((u: User) => u.id === defaultAdminUser.id);
@@ -47,10 +51,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         } else {
             setUsers([defaultAdminUser]);
-            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([defaultAdminUser]));
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([defaultAdminUser]));
+            }
         }
 
-        const storedCurrentUser = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
+        let storedCurrentUser = null;
+        if (typeof window !== 'undefined') {
+            storedCurrentUser = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
+        }
         if (storedCurrentUser) {
             setCurrentUser(JSON.parse(storedCurrentUser));
         }
@@ -112,5 +121,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     deleteUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
