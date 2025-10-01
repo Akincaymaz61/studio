@@ -198,27 +198,6 @@ export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onRev
         <div className="space-y-8 p-4 sm:p-6 md:p-8">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             
-            <div className="flex flex-wrap gap-4">
-               <a
-                href="https://www.musiccleaner.fiyatteklifprogrami.online/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-4 text-center p-4 bg-primary text-primary-foreground rounded-lg shadow-lg hover:bg-primary/90 transition-colors h-16 text-lg font-bold min-w-[250px]"
-              >
-                <Music className="h-8 w-8" />
-                MusicCleaner
-              </a>
-              <a
-                href="https://tagcleaner.fiyatteklifprogrami.online/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-4 text-center p-4 bg-primary text-primary-foreground rounded-lg shadow-lg hover:bg-primary/90 transition-colors h-16 text-lg font-bold min-w-[250px]"
-              >
-                <Tags className="h-8 w-8" />
-                TagCleaner
-              </a>
-            </div>
-
             <Card>
                 <CardHeader>
                     <CardTitle>Filtreler</CardTitle>

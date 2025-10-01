@@ -20,6 +20,8 @@ import {
   Users,
   Loader2,
   LogOut,
+  Music,
+  Tags,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,6 +33,7 @@ import { getDbData, saveDbData } from '@/lib/db-actions';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { Button } from '../ui/button';
 
 type QuoteLayoutContextType = {
   quotes: Quote[];
@@ -61,7 +64,7 @@ function QuoteLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const { isAuthenticated, isAuthLoading, logout } = useAuth();
+  const { isAuthenticated, isAuthLoading, logout, currentUser } = useAuth();
 
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -319,8 +322,19 @@ function QuoteLayoutInner({ children }: { children: React.ReactNode }) {
         <SidebarInset>
           <header className="flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6 lg:h-[60px] no-print">
             <SidebarTrigger className="md:hidden" />
-            <div className='flex-1'>
-              {/* Header Content can go here */}
+            <div className='flex-1 flex items-center justify-end gap-2'>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="https://www.musiccleaner.fiyatteklifprogrami.online/" target="_blank" rel="noopener noreferrer">
+                  <Music className="mr-2 h-4 w-4"/>
+                  MusicCleaner
+                </a>
+              </Button>
+               <Button variant="ghost" size="sm" asChild>
+                <a href="https://tagcleaner.fiyatteklifprogrami.online/" target="_blank" rel="noopener noreferrer">
+                  <Tags className="mr-2 h-4 w-4"/>
+                  TagCleaner
+                </a>
+              </Button>
             </div>
           </header>
           <main className="flex-1">
