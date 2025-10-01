@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Quote, QuoteStatus, quoteStatusSchema, User } from '@/lib/schema';
+import { Quote, QuoteStatus, quoteStatusSchema } from '@/lib/schema';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { FileText, CheckCircle2, XCircle, Edit, Send, FolderOpen, Copy, Trash2, MoreVertical } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -15,8 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-import UserManagement from '../data-management/user-management';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth.tsx';
 
 interface DashboardProps {
   quotes: Quote[];
@@ -236,32 +235,17 @@ export default function Dashboard({ quotes, onStatusChange, onDeleteQuote, onRev
                 <StatCard title="Reddedilenler" value={stats.Reddedildi} icon={<XCircle size={20} />} onClick={() => handleCardClick('Reddedildi')} colorClass="bg-red-500" />
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Son Aktiviteler</CardTitle>
-                        <CardDescription>En son güncellenen 10 teklif.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <QuotesTable quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {currentUser?.role === 'admin' && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Kullanıcı Yönetimi</CardTitle>
-                            <CardDescription>Alt kullanıcıları yönetin, ekleyin veya silin.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <UserManagement />
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
-
+            <Card>
+                <CardHeader>
+                    <CardTitle>Son Aktiviteler</CardTitle>
+                    <CardDescription>En son güncellenen 10 teklif.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <QuotesTable quotes={sortedRecentQuotes.slice(0,10)} onStatusChange={onStatusChange} onDeleteQuote={onDeleteQuote} onReviseQuote={onReviseQuote} />
+                    </div>
+                </CardContent>
+            </Card>
         </div>
         <DialogContent className="max-w-4xl">
             <DialogHeader>

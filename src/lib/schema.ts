@@ -84,13 +84,22 @@ export const dbDataSchema = z.object({
 });
 export type DbData = z.infer<typeof dbDataSchema>;
 
-// Default user for initial setup
-export const defaultAdminUser: User = {
-    id: 'user-admin-default',
-    username: 'admin',
-    password: '001998ac',
-    role: 'admin',
-};
+// Statically defined application users
+export const appUsers: User[] = [
+    {
+        id: 'user-admin-default',
+        username: 'admin',
+        password: '001998ac',
+        role: 'admin',
+    },
+    {
+        id: 'user-yasin-01',
+        username: 'yasin',
+        password: '001985ysn',
+        role: 'user',
+    }
+];
+
 
 export const defaultQuote: Omit<Quote, 'id' | 'quoteNumber' | 'quoteDate' | 'validUntil' | 'updatedAt' | 'items' | 'companyName' | 'customerName'> = {
   companyAddress: '',

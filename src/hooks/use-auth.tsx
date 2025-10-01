@@ -1,11 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { User, defaultAdminUser } from '@/lib/schema';
+import { useState, useEffect, createContext, useContext } from 'react';
+import { User, appUsers } from '@/lib/schema';
 
-const USERS_STORAGE_KEY = 'app_users';
 const CURRENT_USER_STORAGE_KEY = 'app_current_user';
 
 type AuthContextType = {
@@ -15,8 +13,6 @@ type AuthContextType = {
   isAuthLoading: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
-  addUser: (user: User) => void;
-  deleteUser: (userId: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,53 +26,41 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
+  // On component mount, check if a user is logged in from a previous session
   useEffect(() => {
     try {
-        let storedUsers = null;
-        if (typeof window !== 'undefined') {
-            storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-        }
-        
-        if (storedUsers) {
-            const parsedUsers = JSON.parse(storedUsers);
-            const adminExists = parsedUsers.some((u: User) => u.id === defaultAdminUser.id);
-            if (!adminExists) {
-                setUsers([defaultAdminUser, ...parsedUsers.filter((u:User) => u.id !== defaultAdminUser.id)]);
-            } else {
-                setUsers(parsedUsers);
-            }
-        } else {
-            setUsers([defaultAdminUser]);
-            if (typeof window !== 'undefined') {
-                localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([defaultAdminUser]));
-            }
-        }
-
         let storedCurrentUser = null;
         if (typeof window !== 'undefined') {
             storedCurrentUser = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
         }
         if (storedCurrentUser) {
-            setCurrentUser(JSON.parse(storedCurrentUser));
+            const potentialUser = JSON.parse(storedCurrentUser);
+            // Verify that the stored user is still a valid user in our static list
+            const isValid = appUsers.some(u => u.id === potentialUser.id && u.username === potentialUser.username);
+            if (isValid) {
+                setCurrentUser(potentialUser);
+            } else {
+                localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+            }
         }
     } catch (e) {
-        console.error("localStorage'dan kullanıcı verisi okunurken hata", e);
-        setUsers([defaultAdminUser]);
-        setCurrentUser(null);
+        console.error("Error reading current user from localStorage", e);
+        // Clear potentially corrupted storage
+        localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
     } finally {
         setIsAuthLoading(false);
     }
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    const user = users.find(u => u.username === username && u.password === password);
+    const user = appUsers.find(u => u.username === username && u.password === password);
     if (user) {
-      setCurrentUser(user);
-      localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+      const userToStore = { id: user.id, username: user.username, role: user.role };
+      setCurrentUser(userToStore);
+      localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(userToStore));
       return true;
     }
     return false;
@@ -87,38 +71,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
   };
   
-  const addUser = (user: User) => {
-    setUsers(prevUsers => {
-      const userExists = prevUsers.some(u => u.id === user.id);
-      const newUsers = userExists
-        ? prevUsers.map(u => u.id === user.id ? user : u)
-        : [...prevUsers, user];
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(newUsers));
-      return newUsers;
-    });
-  };
-
-  const deleteUser = (userId: string): boolean => {
-    if (userId === defaultAdminUser.id) {
-        return false; // Can't delete the default admin
-    }
-    setUsers(prevUsers => {
-        const newUsers = prevUsers.filter(u => u.id !== userId);
-        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(newUsers));
-        return newUsers;
-    });
-    return true;
-  };
-
-  const value = {
-    users,
+  const value: AuthContextType = {
+    users: appUsers, // Provide the static list of users
     currentUser,
     isAuthenticated: !!currentUser,
     isAuthLoading,
     login,
     logout,
-    addUser,
-    deleteUser,
   };
 
   return (
